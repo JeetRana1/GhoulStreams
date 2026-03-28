@@ -1,7 +1,23 @@
 {
+  "functions": {
+    "api/index.js": {
+      "includeFiles": [
+        "index.html",
+        "watch.html",
+        "Privacy Policy.md",
+        "Terms of Service.md",
+        "*.svg",
+        "*.png"
+      ]
+    }
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/:path*",
       "destination": "/api/index.js"
     }
   ]

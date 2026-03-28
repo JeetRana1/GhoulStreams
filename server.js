@@ -11,6 +11,10 @@ const streamAvailability = new Map();
 app.use(express.static(__dirname));
 app.use(express.json());
 
+app.get('/', (_req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 const AVAILABILITY_TTL_MS = 1000 * 60 * 45;
 
