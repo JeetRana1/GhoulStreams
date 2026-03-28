@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Live Sports Streams</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23090b10' width='100' height='100'/><circle cx='50' cy='50' r='36' fill='%231ea7fd'/><path d='M42 32l26 18-26 18z' fill='white'/></svg>">
+    <title>GhouldStreams</title>
+    <link rel="icon" type="image/svg+xml" href="/Logo.svg?v=1">
     <style>
         :root {
             --bg: #05070c;
@@ -46,7 +46,7 @@
 
         /* ── Reset ── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; scrollbar-gutter: stable; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             background: var(--bg);
@@ -56,6 +56,25 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(72, 159, 214, 0.72) rgba(5, 10, 19, 0.95);
+        }
+        *::-webkit-scrollbar {
+            width: 11px;
+            height: 11px;
+        }
+        *::-webkit-scrollbar-track {
+            background: linear-gradient(180deg, rgba(3, 8, 16, 0.94), rgba(6, 12, 22, 0.98));
+        }
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(74, 173, 232, 0.88), rgba(45, 122, 184, 0.86));
+            border: 2px solid rgba(5, 10, 19, 0.95);
+            border-radius: 999px;
+        }
+        *::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(109, 198, 249, 0.95), rgba(63, 148, 216, 0.95));
         }
         /* Ambient background glow */
         body::after {
@@ -115,7 +134,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 14px;
-            padding: 14px 20px;
+            padding: 14px 20px 14px 6px;
             border-radius: var(--r-xl);
             margin-bottom: 14px;
             flex-wrap: wrap;
@@ -124,14 +143,28 @@
             z-index: 100;
         }
         .brand {
-            font-size: clamp(1.3rem, 3.5vw, 1.75rem);
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
+            font-size: clamp(1.6rem, 4.2vw, 2.25rem);
             font-weight: 800;
             letter-spacing: -0.04em;
             flex-shrink: 0;
+            margin-left: -14px;
             background: linear-gradient(135deg, #fff 30%, rgba(30,167,253,0.85) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+        .brand span {
+            margin-left: -14px;
+        }
+        .brand-logo {
+            height: clamp(52px, 4.8vw, 66px);
+            width: auto;
+            display: block;
+            flex-shrink: 0;
+            filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.35));
         }
         .nav {
             display: flex;
@@ -514,6 +547,156 @@
             font-size: 0.9rem;
         }
 
+        /* ── Footer ── */
+        .site-footer {
+            margin-top: 18px;
+            margin-bottom: calc(-1 * max(var(--pad), env(safe-area-inset-bottom)));
+            border-radius: var(--r-xl);
+            background:
+                radial-gradient(ellipse 120% 80% at 50% 0%, rgba(30,167,253,0.08), transparent 55%),
+                linear-gradient(180deg, rgba(3,8,16,0.94) 0%, rgba(1,4,10,0.97) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 14px 44px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.05) inset;
+            padding: clamp(28px, 4.2vw, 46px) 20px;
+            text-align: center;
+        }
+        .site-footer h2 {
+            margin-bottom: 14px;
+            font-size: clamp(2.1rem, 4.2vw, 3.1rem);
+            letter-spacing: -0.04em;
+            font-weight: 900;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff 30%, rgba(30,167,253,0.85) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .site-footer h2 span {
+            color: inherit;
+        }
+        .site-footer p {
+            max-width: 720px;
+            margin: 0 auto;
+            color: #d6deec;
+            font-size: clamp(0.94rem, 1.15vw, 1.08rem);
+            line-height: 1.75;
+        }
+        .footer-links {
+            margin-top: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: #ecf2fb;
+            font-size: 0.9rem;
+            padding: 7px 12px;
+            border-radius: var(--r-pill);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+        .footer-links button {
+            color: #ecf2fb;
+            font-size: 0.9rem;
+            padding: 7px 12px;
+            border-radius: var(--r-pill);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            cursor: pointer;
+        }
+        .footer-links a:hover {
+            color: #8bc8ff;
+            border-color: rgba(139, 200, 255, 0.55);
+            background: rgba(139, 200, 255, 0.12);
+        }
+        .footer-links button:hover {
+            color: #8bc8ff;
+            border-color: rgba(139, 200, 255, 0.55);
+            background: rgba(139, 200, 255, 0.12);
+        }
+        .footer-copy {
+            margin-top: 18px;
+            color: #8a93a4;
+            font-size: 0.86rem;
+            letter-spacing: 0.02em;
+        }
+
+        /* ── Privacy Modal ── */
+        .policy-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 1300;
+        }
+        .policy-modal.open { display: flex; }
+        .policy-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 7, 13, 0.72);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .policy-dialog {
+            position: relative;
+            width: min(900px, 95vw);
+            max-height: min(84vh, 900px);
+            border-radius: var(--r-xl);
+            border: 1px solid rgba(255,255,255,0.12);
+            background: linear-gradient(180deg, rgba(9, 16, 27, 0.96), rgba(5, 10, 19, 0.98));
+            box-shadow: 0 30px 90px rgba(0,0,0,0.55);
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+        }
+        .policy-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03);
+        }
+        .policy-head h3 {
+            margin: 0;
+            font-size: 1.02rem;
+            letter-spacing: 0.01em;
+            color: #eef3fb;
+        }
+        .policy-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.05);
+            color: #dbe5f5;
+            font-size: 1.1rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .policy-close:hover {
+            border-color: rgba(139, 200, 255, 0.45);
+            color: #9dd2ff;
+        }
+        .policy-content {
+            padding: 16px;
+            overflow: auto;
+            color: #d7deea;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(97, 183, 237, 0.76) rgba(6, 13, 23, 0.94);
+        }
+        body.policy-open { overflow: hidden; }
+
         /* ══════════════════════════════════════
            RESPONSIVE
         ══════════════════════════════════════ */
@@ -536,6 +719,19 @@
             .hero-chip:last-child { border-right: none; }
         }
 
+        /* Laptop/Desktop full-bleed footer */
+        @media (min-width: 1024px) {
+            .site-footer {
+                margin-left: calc(50% - 50vw);
+                margin-right: calc(50% - 50vw);
+                border-left: none;
+                border-right: none;
+                border-radius: 0;
+                padding-left: max(34px, env(safe-area-inset-left));
+                padding-right: max(34px, env(safe-area-inset-right));
+            }
+        }
+
         /* Tablet portrait */
         @media (max-width: 768px) {
             :root { --pad: 14px; --r-xl: 20px; --r-lg: 16px; }
@@ -544,9 +740,10 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
-                padding: 14px 16px;
+                padding: 14px 16px 14px 6px;
             }
-            .brand { font-size: 1.4rem; }
+            .brand { font-size: 1.75rem; }
+            .brand-logo { height: 50px; }
             .nav { justify-content: flex-start; gap: 6px; }
             .nav-link { padding: 7px 12px; font-size: 0.8rem; }
             .hero-copy { padding: 20px 18px 18px; }
@@ -569,7 +766,7 @@
         /* Mobile */
         @media (max-width: 540px) {
             :root { --pad: 12px; --r-xl: 18px; --r-lg: 14px; --r-md: 11px; }
-            .topbar { border-radius: var(--r-xl); }
+            .topbar { border-radius: var(--r-xl); padding-left: 4px; }
             .nav-link { padding: 6px 10px; font-size: 0.76rem; }
             .hero-copy { padding: 18px 16px 16px; }
             .hero-copy h1 { font-size: clamp(1.35rem, 6vw, 1.9rem); }
@@ -583,12 +780,19 @@
             .logo-badge { width: 38px; height: 38px; padding: 7px; }
             .btn { font-size: 0.78rem; padding: 8px 10px; }
             .live-indicator { font-size: 0.62rem; padding: 4px 8px; }
+            .site-footer { border-radius: var(--r-lg); padding: 28px 14px; }
+            .footer-links { gap: 14px; }
+            .footer-copy { font-size: 0.8rem; }
+            .policy-modal { padding: 10px; }
+            .policy-dialog { width: 100%; max-height: 88vh; border-radius: var(--r-lg); }
+            .policy-content { font-size: 0.88rem; }
         }
 
         /* Small phones (iPhone SE, Galaxy A series) */
         @media (max-width: 390px) {
             :root { --pad: 10px; --r-xl: 16px; --r-lg: 12px; }
-            .brand { font-size: 1.25rem; }
+            .brand { font-size: 1.45rem; }
+            .brand-logo { height: 42px; }
             .nav-link { padding: 5px 9px; font-size: 0.72rem; }
             .hero-copy h1 { font-size: 1.3rem; }
             .event-row { padding: 10px; }
@@ -612,7 +816,10 @@
 <body>
     <div class="shell">
         <header class="topbar glass">
-            <a class="brand" href="/">GhoulStreams</a>
+            <a class="brand" href="/" aria-label="GhoulStreams home">
+                <img class="brand-logo" src="/GhoulStream-Logo.svg" alt="">
+                <span>GhoulStreams</span>
+            </a>
             <nav class="nav">
                 <a class="nav-link active" href="#" data-filter="">All</a>
                 <a class="nav-link" href="#" data-filter="nfl">NFL</a>
@@ -652,6 +859,39 @@
             </section>
 
         </div>
+
+        <footer class="site-footer">
+            <h2><span>Ghoul</span>Streams</h2>
+            <p>GhoulStreams does not host or store any media files on its own servers and only provides links to content hosted on third-party services. 🔒</p>
+            <div class="footer-links">
+                <button type="button" data-open-policy>Privacy Policy 🛡️</button>
+                <button type="button" data-open-terms>Terms of Service ⚖️</button>
+                <a href="#">Contact 📬</a>
+            </div>
+            <div class="footer-copy">&copy; 2026 GhoulStreams. All rights reserved.</div>
+        </footer>
+
+        <div class="policy-modal" id="privacyPolicyModal" aria-hidden="true">
+            <div class="policy-backdrop" data-close-policy></div>
+            <div class="policy-dialog">
+                <div class="policy-head">
+                    <h3>Privacy Policy 🛡️</h3>
+                    <button class="policy-close" type="button" data-close-policy aria-label="Close privacy policy">×</button>
+                </div>
+                <div class="policy-content" id="privacyPolicyContent">Loading privacy policy... ⏳</div>
+            </div>
+        </div>
+
+        <div class="policy-modal" id="termsModal" aria-hidden="true">
+            <div class="policy-backdrop" data-close-terms></div>
+            <div class="policy-dialog">
+                <div class="policy-head">
+                    <h3>Terms of Service ⚖️</h3>
+                    <button class="policy-close" type="button" data-close-terms aria-label="Close terms of service">×</button>
+                </div>
+                <div class="policy-content" id="termsContent">Loading terms of service... ⏳</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -685,6 +925,65 @@
         let availabilityEndpointEnabled = true;
         let verificationInFlight = false;
         const verifiedEvents = new Set();
+        let privacyPolicyLoaded = false;
+        let termsLoaded = false;
+
+        const privacyPolicyModal = document.getElementById('privacyPolicyModal');
+        const privacyPolicyContent = document.getElementById('privacyPolicyContent');
+        const termsModal = document.getElementById('termsModal');
+        const termsContent = document.getElementById('termsContent');
+
+        async function loadPrivacyPolicyContent() {
+            if (privacyPolicyLoaded) return;
+            try {
+                const response = await fetch('/Privacy%20Policy.md', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Could not load privacy policy');
+                const text = await response.text();
+                privacyPolicyContent.textContent = text;
+                privacyPolicyLoaded = true;
+            } catch {
+                privacyPolicyContent.textContent = 'Privacy Policy is currently unavailable. ⚠️';
+            }
+        }
+
+        async function openPrivacyPolicyModal() {
+            privacyPolicyModal.classList.add('open');
+            privacyPolicyModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('policy-open');
+            await loadPrivacyPolicyContent();
+        }
+
+        function closePrivacyPolicyModal() {
+            privacyPolicyModal.classList.remove('open');
+            privacyPolicyModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('policy-open');
+        }
+
+        async function loadTermsContent() {
+            if (termsLoaded) return;
+            try {
+                const response = await fetch('/Terms%20of%20Service.md', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Could not load terms of service');
+                const text = await response.text();
+                termsContent.textContent = text;
+                termsLoaded = true;
+            } catch {
+                termsContent.textContent = 'Terms of Service is currently unavailable. ⚠️';
+            }
+        }
+
+        async function openTermsModal() {
+            termsModal.classList.add('open');
+            termsModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('policy-open');
+            await loadTermsContent();
+        }
+
+        function closeTermsModal() {
+            termsModal.classList.remove('open');
+            termsModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('policy-open');
+        }
 
         function cleanDisplayTitle(value) {
             return decodeHtmlEntities(String(value || ''))
@@ -1033,6 +1332,34 @@
         }
 
         document.addEventListener('click', (event) => {
+            const openPolicyButton = event.target.closest('[data-open-policy]');
+            if (openPolicyButton) {
+                event.preventDefault();
+                openPrivacyPolicyModal();
+                return;
+            }
+
+            const openTermsButton = event.target.closest('[data-open-terms]');
+            if (openTermsButton) {
+                event.preventDefault();
+                openTermsModal();
+                return;
+            }
+
+            const closePolicyButton = event.target.closest('[data-close-policy]');
+            if (closePolicyButton) {
+                event.preventDefault();
+                closePrivacyPolicyModal();
+                return;
+            }
+
+            const closeTermsButton = event.target.closest('[data-close-terms]');
+            if (closeTermsButton) {
+                event.preventDefault();
+                closeTermsModal();
+                return;
+            }
+
             const filterLink = event.target.closest('[data-filter]');
             if (filterLink) {
                 event.preventDefault();
@@ -1059,6 +1386,16 @@
                 setInterval(refreshHomepageData, 60000);
             } catch {
                 document.getElementById('streamsContainer').innerHTML = '<div class="glass empty">Error loading streams.</div>';
+            }
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && privacyPolicyModal.classList.contains('open')) {
+                closePrivacyPolicyModal();
+            }
+
+            if (event.key === 'Escape' && termsModal.classList.contains('open')) {
+                closeTermsModal();
             }
         });
     </script>

@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import BuffStreams from './BuffStreams.js';
+import BuffStreams from './Stream.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -252,10 +252,14 @@ app.get('/api/media-proxy', async (req, res) => {
 });
 
 const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`BuffStreams Test Server running on http://localhost:${PORT}`);
-    console.log('Check browser console (F12) for debug logs when playing streams');
-});
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`BuffStreams Test Server running on http://localhost:${PORT}`);
+        console.log('Check browser console (F12) for debug logs when playing streams');
+    });
+}
+
+export default app;
 
 
 
