@@ -1,14 +1,7 @@
 {
   "functions": {
     "api/index.js": {
-      "includeFiles": [
-        "index.html",
-        "watch.html",
-        "Privacy Policy.md",
-        "Terms of Service.md",
-        "*.svg",
-        "*.png"
-      ]
+      "includeFiles": "**/*.{html,md,svg,png}"
     }
   },
   "rewrites": [
