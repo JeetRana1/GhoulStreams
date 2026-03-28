@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#06080d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Live Sports Streams</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23090b10' width='100' height='100'/><circle cx='50' cy='50' r='36' fill='%231ea7fd'/><path d='M42 32l26 18-26 18z' fill='white'/></svg>">
+    <style>
+        :root {
+            --bg: #05070c;
+            --bg-soft: #080c14;
+            --panel: rgba(14, 18, 28, 0.72);
+            --panel-hover: rgba(20, 26, 40, 0.82);
+            --line: rgba(255, 255, 255, 0.07);
+            --line-strong: rgba(255, 255, 255, 0.13);
+            --line-accent: rgba(30, 167, 253, 0.22);
+            --text: #eef2f8;
+            --muted: #8a97ad;
+            --accent: #1ea7fd;
+            --primary: rgba(30, 167, 253, 0.14);
+            --primary-hover: rgba(30, 167, 253, 0.22);
+            --primary-border: rgba(30, 167, 253, 0.28);
+            --danger: rgba(255, 80, 110, 0.13);
+            --danger-border: rgba(255, 80, 110, 0.28);
+            --danger-text: #ff8ea3;
+            --success-bg: rgba(56, 189, 120, 0.12);
+            --success-border: rgba(56, 189, 120, 0.28);
+            --success-text: #5dd49a;
+            --button-disabled: rgba(255, 255, 255, 0.06);
+            --shadow-sm: 0 2px 12px rgba(0,0,0,0.28);
+            --shadow: 0 8px 32px rgba(0,0,0,0.36), 0 1px 0 rgba(255,255,255,0.04) inset;
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+            --blur: blur(24px) saturate(160%);
+            --blur-sm: blur(12px) saturate(140%);
+            --pad: 20px;
+            --r-xl: 24px;
+            --r-lg: 18px;
+            --r-md: 14px;
+            --r-sm: 10px;
+            --r-pill: 999px;
+        }
+
+        /* ── Reset ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            min-height: 100dvh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+        /* Ambient background glow */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 40% at 50% -10%, rgba(30,167,253,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 30% at 80% 80%, rgba(120,80,255,0.06) 0%, transparent 50%),
+                linear-gradient(180deg, #05070c 0%, #080c14 100%);
+            z-index: -1;
+        }
+        /* Subtle grid overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.05) 60%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.05) 60%, transparent 100%);
+            z-index: -1;
+        }
+        a { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+        img { max-width: 100%; height: auto; display: block; }
+        button { font-family: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; }
+
+        /* ── Shell ── */
+        .shell {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: var(--pad);
+            padding-left: max(var(--pad), env(safe-area-inset-left));
+            padding-right: max(var(--pad), env(safe-area-inset-right));
+            padding-bottom: max(var(--pad), env(safe-area-inset-bottom));
+        }
+
+        /* ── Glassmorphism base ── */
+        .glass {
+            background: rgba(12, 16, 26, 0.65);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.4),
+                0 1px 0 rgba(255,255,255,0.05) inset,
+                0 -1px 0 rgba(0,0,0,0.3) inset;
+        }
+
+        /* ── Top Bar ── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px 20px;
+            border-radius: var(--r-xl);
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+        .brand {
+            font-size: clamp(1.3rem, 3.5vw, 1.75rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #fff 30%, rgba(30,167,253,0.85) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: flex-end;
+            flex: 1;
+            min-width: 0;
+        }
+        .nav-link {
+            padding: 7px 14px;
+            border-radius: var(--r-pill);
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.04);
+            color: var(--muted);
+            font-size: 0.84rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+            letter-spacing: 0.01em;
+        }
+        .nav-link:hover {
+            color: var(--text);
+            border-color: rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.08);
+        }
+        .nav-link.active {
+            color: #c8e8ff;
+            border-color: rgba(30,167,253,0.35);
+            background: rgba(30,167,253,0.12);
+            box-shadow: 0 0 12px rgba(30,167,253,0.15);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0;
+            padding: 0;
+            border-radius: var(--r-xl);
+            margin-bottom: 14px;
+            overflow: hidden;
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(30,167,253,0.4), transparent);
+        }
+        .hero-copy {
+            padding: 28px 28px 24px;
+            min-width: 0;
+        }
+        .hero-copy h1 {
+            font-size: clamp(1.6rem, 3.5vw, 3.2rem);
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 40%, rgba(180,220,255,0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-copy p {
+            color: var(--muted);
+            line-height: 1.65;
+            font-size: clamp(0.82rem, 1.4vw, 0.96rem);
+            max-width: 560px;
+        }
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            padding-top: 20px;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .logo-row::-webkit-scrollbar { display: none; }
+        .logo-badge {
+            width: 42px;
+            height: 42px;
+            padding: 8px;
+            border-radius: var(--r-md);
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.05);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .logo-badge:hover {
+            border-color: rgba(30,167,253,0.3);
+            background: rgba(30,167,253,0.08);
+        }
+        .logo-badge img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* Hero side chips — vertical strip on desktop */
+        .hero-side {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            border-left: 1px solid rgba(255,255,255,0.06);
+            width: 240px;
+            flex-shrink: 0;
+        }
+        .hero-chip {
+            padding: 20px 18px;
+            flex: 1;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.02);
+            transition: background 0.2s;
+        }
+        .hero-chip:last-child { border-bottom: none; }
+        .hero-chip:hover { background: rgba(255,255,255,0.04); }
+        .hero-chip-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(30,167,253,0.15);
+            border: 1px solid rgba(30,167,253,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .hero-chip strong {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--text);
+        }
+        .hero-chip span {
+            color: var(--muted);
+            font-size: 0.76rem;
+            line-height: 1.55;
+        }
+
+        /* ── Content Grid ── */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            align-items: start;
+        }
+        .column-stack { display: flex; flex-direction: column; gap: 12px; }
+        .panel-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        /* ── Event Cards ── */
+        .event-card {
+            border-radius: var(--r-xl);
+            overflow: hidden;
+        }
+        .event-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 16px 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.025);
+        }
+        .event-header-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        .event-header-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        .event-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .event-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto auto;
+            gap: 10px;
+            align-items: center;
+            padding: 13px 14px;
+            border-radius: var(--r-lg);
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.025);
+            transition: background 0.18s, border-color 0.18s;
+        }
+        .event-row:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .team { font-size: 0.9rem; font-weight: 600; min-width: 0; }
+        .team.away, .team.home { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .team-wrap { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+        .team-meta {
+            font-size: 0.74rem;
+            color: var(--muted);
+            line-height: 1.3;
+            white-space: normal;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+        .team-meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: var(--r-pill);
+            border: 1px solid rgba(30,167,253,0.2);
+            background: rgba(30,167,253,0.08);
+            color: #a8d8f8;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+        .team-meta-badge::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 6px rgba(30,167,253,0.7);
+            flex-shrink: 0;
+        }
+        .team-meta-text { color: var(--muted); font-size: 0.72rem; }
+        .event-time {
+            min-width: 90px;
+            text-align: center;
+            font-size: 0.74rem;
+            color: var(--muted);
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        .event-status-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            border-radius: var(--r-pill);
+            border: 1px solid var(--success-border);
+            background: var(--success-bg);
+            color: var(--success-text);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            min-width: 0;
+            justify-content: flex-start;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .event-status-live::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--success-text);
+            box-shadow: 0 0 6px rgba(56,189,120,0.7);
+            flex-shrink: 0;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(56,189,120,0.7); }
+            50% { opacity: 0.6; box-shadow: 0 0 12px rgba(56,189,120,0.4); }
+        }
+        .row-actions {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            justify-content: flex-end;
+            flex-shrink: 0;
+        }
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 9px;
+            border-radius: var(--r-pill);
+            background: rgba(255,60,100,0.12);
+            border: 1px solid rgba(255,60,100,0.28);
+            color: #ff8ea3;
+            font-size: 0.66rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+        .live-indicator::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ff5c7a;
+            box-shadow: 0 0 8px rgba(255,92,122,0.9);
+            flex-shrink: 0;
+            animation: pulse-dot 1.4s ease-in-out infinite;
+        }
+        .btn {
+            border: 1px solid transparent;
+            border-radius: var(--r-md);
+            padding: 8px 14px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-width: 120px;
+            white-space: nowrap;
+            transition: all 0.18s ease;
+            letter-spacing: 0.01em;
+        }
+        .watch-btn {
+            background: linear-gradient(135deg, rgba(30,167,253,0.18), rgba(30,167,253,0.1));
+            border-color: rgba(30,167,253,0.32);
+            color: #c8e8ff;
+            box-shadow: 0 0 0 0 rgba(30,167,253,0);
+        }
+        .watch-btn:hover {
+            background: linear-gradient(135deg, rgba(30,167,253,0.28), rgba(30,167,253,0.18));
+            border-color: rgba(30,167,253,0.5);
+            box-shadow: 0 0 16px rgba(30,167,253,0.2);
+            transform: translateY(-1px);
+        }
+        .watch-btn:active { transform: scale(0.97); }
+        .watch-btn.locked {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.3);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .lock-icon {
+            width: 11px;
+            height: 11px;
+            display: inline-block;
+            position: relative;
+            border: 2px solid currentColor;
+            border-radius: 2px;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+        .lock-icon::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: -7px;
+            width: 7px;
+            height: 6px;
+            border: 2px solid currentColor;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            box-sizing: border-box;
+        }
+
+        /* ── States ── */
+        .loading, .empty {
+            border-radius: var(--r-xl);
+            padding: 36px 20px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+
+        /* Tablet landscape / small laptop */
+        @media (max-width: 1100px) {
+            .content { grid-template-columns: 1fr; }
+            .hero { grid-template-columns: 1fr; }
+            .hero-side {
+                flex-direction: row;
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid rgba(255,255,255,0.06);
+            }
+            .hero-chip {
+                flex: 1;
+                border-bottom: none;
+                border-right: 1px solid rgba(255,255,255,0.06);
+            }
+            .hero-chip:last-child { border-right: none; }
+        }
+
+        /* Tablet portrait */
+        @media (max-width: 768px) {
+            :root { --pad: 14px; --r-xl: 20px; --r-lg: 16px; }
+            .topbar {
+                position: static;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 14px 16px;
+            }
+            .brand { font-size: 1.4rem; }
+            .nav { justify-content: flex-start; gap: 6px; }
+            .nav-link { padding: 7px 12px; font-size: 0.8rem; }
+            .hero-copy { padding: 20px 18px 18px; }
+            .hero-copy h1 { font-size: clamp(1.5rem, 5.5vw, 2.2rem); }
+            .hero-side { flex-direction: column; border-top: 1px solid rgba(255,255,255,0.06); }
+            .hero-chip { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+            .hero-chip:last-child { border-bottom: none; }
+            .event-row {
+                grid-template-columns: minmax(0,1fr) auto;
+                grid-template-rows: auto auto;
+                gap: 8px;
+            }
+            .team-wrap { grid-column: 1 / -1; }
+            .event-time, .event-status-live { text-align: left; min-width: 0; }
+            .row-actions { grid-column: 1 / -1; justify-content: space-between; width: 100%; }
+            .team.away, .team.home { white-space: normal; }
+            .btn { min-width: 0; flex: 1; }
+        }
+
+        /* Mobile */
+        @media (max-width: 540px) {
+            :root { --pad: 12px; --r-xl: 18px; --r-lg: 14px; --r-md: 11px; }
+            .topbar { border-radius: var(--r-xl); }
+            .nav-link { padding: 6px 10px; font-size: 0.76rem; }
+            .hero-copy { padding: 18px 16px 16px; }
+            .hero-copy h1 { font-size: clamp(1.35rem, 6vw, 1.9rem); }
+            .hero-copy p { font-size: 0.8rem; }
+            .hero-chip { padding: 14px 16px; }
+            .event-row { padding: 11px 12px; gap: 7px; }
+            .event-list { padding: 8px; gap: 7px; }
+            .event-header { padding: 13px 13px 11px; }
+            .event-header-logo { width: 30px; height: 30px; }
+            .event-header-title { font-size: 0.84rem; }
+            .logo-badge { width: 38px; height: 38px; padding: 7px; }
+            .btn { font-size: 0.78rem; padding: 8px 10px; }
+            .live-indicator { font-size: 0.62rem; padding: 4px 8px; }
+        }
+
+        /* Small phones (iPhone SE, Galaxy A series) */
+        @media (max-width: 390px) {
+            :root { --pad: 10px; --r-xl: 16px; --r-lg: 12px; }
+            .brand { font-size: 1.25rem; }
+            .nav-link { padding: 5px 9px; font-size: 0.72rem; }
+            .hero-copy h1 { font-size: 1.3rem; }
+            .event-row { padding: 10px; }
+            .btn { font-size: 0.74rem; padding: 7px 9px; }
+            .team { font-size: 0.84rem; }
+        }
+
+        /* Touch targets */
+        @media (hover: none) and (pointer: coarse) {
+            .nav-link { min-height: 38px; display: inline-flex; align-items: center; }
+            .btn { min-height: 42px; }
+            .watch-btn:hover { background: linear-gradient(135deg, rgba(30,167,253,0.18), rgba(30,167,253,0.1)); transform: none; box-shadow: none; }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <header class="topbar glass">
+            <a class="brand" href="/">GhoulStreams</a>
+            <nav class="nav">
+                <a class="nav-link active" href="#" data-filter="">All</a>
+                <a class="nav-link" href="#" data-filter="nfl">NFL</a>
+                <a class="nav-link" href="#" data-filter="soccer">Football</a>
+                <a class="nav-link" href="#" data-filter="mma">MMA</a>
+                <a class="nav-link" href="#" data-filter="boxing">Boxing</a>
+                <a class="nav-link" href="#" data-filter="f1">Formula 1</a>
+                <a class="nav-link" href="#" data-filter="nba">NBA</a>
+            </nav>
+        </header>
+
+        <section class="hero glass">
+            <div class="hero-copy">
+                <h1>Live Sports Streams</h1>
+                <p>Track active events, spot upcoming fixtures, and open direct stream pages from a cleaner modern control room layout.</p>
+                <div class="logo-row" id="logoRow"></div>
+            </div>
+            <div class="hero-side">
+                <div class="hero-chip">
+                    <div class="hero-chip-icon">🔴</div>
+                    <strong>Live detection</strong>
+                    <span>Only in-progress events with a verified source keep the live badge and active button state.</span>
+                </div>
+                <div class="hero-chip">
+                    <div class="hero-chip-icon">✓</div>
+                    <strong>Auto verification</strong>
+                    <span>Likely-live streams are checked in the background and downgraded if no source is available.</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="content">
+            <section>
+                <div id="streamsContainer" class="column-stack">
+                    <div class="glass loading">Loading streams...</div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        const SPORT_META = {
+            nba: { label: 'NBA', icon: 'https://buffstreams.plus/images/nba.webp?v3e32' },
+            nfl: { label: 'NFL', icon: 'https://buffstreams.plus/images/nfl.webp?v3e32' },
+            soccer: { label: 'Football', icon: 'https://buffstreams.plus/images/soccer.webp?v3e32' },
+            nhl: { label: 'NHL', icon: 'https://buffstreams.plus/images/nhl.webp?v3e32' },
+            mlb: { label: 'MLB', icon: 'https://buffstreams.plus/images/mlb.webp?v3e32' },
+            boxing: { label: 'Boxing', icon: 'https://buffstreams.plus/images/boxing.webp?v3e32' },
+            mma: { label: 'MMA', icon: 'https://buffstreams.plus/images/ufc.webp?v3e32' },
+            f1: { label: 'Formula 1', icon: 'https://buffstreams.plus/images/f1.webp?v3e32' },
+            ncaa: { label: 'NCAA', icon: 'https://buffstreams.plus/images/ncaa.webp?v3e32' },
+            sports: { label: 'Live Sports', icon: 'https://buffstreams.plus/images/mlb.webp?v3e32' }
+        };
+        const TITLE_HINTS = [
+            { type: 'nba', patterns: [/\bnba\b/i, /cavaliers|lakers|warriors|knicks|celtics|bucks|nets|bulls|heat|spurs|raptors|mavericks|wizards|suns|rockets|pistons|pacers|pelicans|thunder|jazz|grizzlies|76ers|hornets|magic|kings|timberwolves|trail blazers|clippers|hawks|nuggets/i] },
+            { type: 'nhl', patterns: [/\bnhl\b/i, /bruins|rangers|maple leafs|canadiens|canucks|oilers|flames|penguins|flyers|senators|capitals|lightning|panthers|sabres|red wings|avalanche|stars|wild|jets|kraken|sharks|ducks|kings|predators|hurricanes|blackhawks|blue jackets|golden knights|devils|islanders/i] },
+            { type: 'mlb', patterns: [/\bmlb\b/i, /yankees|mets|red sox|dodgers|cubs|cardinals|astros|braves|phillies|padres|giants|blue jays|orioles|guardians|rockies|white sox|tigers|marlins|mariners|athletics|rangers|diamondbacks|brewers|twins|nationals|pirates|reds|rays|royals|angels/i, /world baseball classic/i] },
+            { type: 'nfl', patterns: [/\bnfl\b/i, /chiefs|eagles|cowboys|49ers|giants|jets|packers|bears|vikings|lions|steelers|ravens|browns|bengals|bills|dolphins|patriots|saints|falcons|panthers|buccaneers|seahawks|rams|chargers|raiders|broncos|colts|titans|jaguars|texans|commanders|cardinals/i] },
+            { type: 'soccer', patterns: [/soccer|football|premier league|la liga|serie a|bundesliga|ligue 1|uefa|champions league|europa/i, /united|city|arsenal|chelsea|liverpool|tottenham|barcelona|real madrid|atletico|juventus|inter|milan|roma|napoli|psg|bayern|dortmund|ajax|benfica|porto|celtic|rangers|west ham|brentford|sassuolo|lazio|real oviedo/i] },
+            { type: 'ncaa', patterns: [/\bncaa\b/i, /huskies|wildcats|bulldogs|tar heels|blue devils|boilermakers|spartans|longhorns|volunteers|crimson tide|fighting irish|wolfpack|gators|cardinal|jayhawks|cyclones|seminoles|orange|hoosiers|villanova/i] },
+            { type: 'mma', patterns: [/\bmma\b|\bufc\b|bellator|octagon/i] },
+            { type: 'boxing', patterns: [/boxing|title fight|heavyweight|welterweight|middleweight|featherweight/i] },
+            { type: 'f1', patterns: [/formula 1|\bf1\b|grand prix|qualifying|sprint race/i] }
+        ];
+
+        let allStreams = [];
+        let activeFilter = null;
+        let availability = {};
+        let availabilityEndpointEnabled = true;
+        let verificationInFlight = false;
+        const verifiedEvents = new Set();
+
+        function cleanDisplayTitle(value) {
+            return decodeHtmlEntities(String(value || ''))
+                .replace(/^https?:\/\/buffstreams\.plus\/?/i, '')
+                .replace(/^buffstreams\.?plus\/?/i, '')
+                .replace(/^title game\//i, '')
+                .replace(/\blive streams links\b/ig, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function getMainTitle(value) {
+            const clean = cleanDisplayTitle(value);
+            // Strip trailing time information (e.g., "- 11:29 AM ET")
+            return clean.replace(/\s*-\s*\d{1,2}:\d{2}\s*(AM|PM)(?:\s*ET)?$/i, '').trim();
+        }
+
+        function detectSportType(stream) {
+            if (stream.type && stream.type !== 'sports' && SPORT_META[stream.type]) return stream.type;
+            const haystack = `${stream.title || ''} ${stream.sectionTitle || ''}`.toLowerCase();
+            for (const rule of TITLE_HINTS) {
+                if (rule.patterns.some((pattern) => pattern.test(haystack))) return rule.type;
+            }
+            return 'sports';
+        }
+
+        function isActuallyLive(stream) {
+            const override = availability[stream.id];
+            if (override?.isLive === true) return true;
+            
+            // Check if the stream has live keywords in title/status
+            const haystack = `${stream.title || ''} ${stream.statusText || ''} ${stream.sectionTitle || ''}`.toLowerCase();
+            
+            // Enhanced live detection for F1 and other sports
+            const matchesLiveKeywords = /\bin progress\b|\blive\b|\bon\s*air\b|\bjust now\b|\b\d+\s+(?:hour|hours|hr|hrs|minute|minutes|min|mins)\s+ago\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\b|\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\bwarm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(haystack);
+            
+            // For F1 specifically, also check if it's a current session type
+            const isF1Stream = stream.type === 'f1' || /\bf1\b|\bformula 1\b|\bgrand prix\b/i.test(haystack);
+            const isF1Session = /\bfp\d*\b|\bfree practice\b|\bqualifying\b|\bsprint\b|\bsprint shootout\b|\bwarm.?up\b/i.test(haystack);
+            
+            if (matchesLiveKeywords || (isF1Stream && isF1Session)) return true;
+            if (typeof stream.isLive === 'boolean') return stream.isLive;
+            if (override?.isLive === false) return false;
+            return false;
+        }
+
+        function detectSessionLabel(stream) {
+            const haystack = `${stream.title || ''} ${stream.statusText || ''} ${stream.sectionTitle || ''}`.toLowerCase();
+            const mapping = [
+                { pattern: /\bpractice\s*1\b|\bfp1\b|\bfree practice 1\b/, label: 'Practice 1' },
+                { pattern: /\bpractice\s*2\b|\bfp2\b|\bfree practice 2\b/, label: 'Practice 2' },
+                { pattern: /\bpractice\s*3\b|\bfp3\b|\bfree practice 3\b/, label: 'Practice 3' },
+                { pattern: /\bqualifying\b/, label: 'Qualifying' },
+                { pattern: /\bsprint\s*qualifying\b|\bsprint\b/, label: 'Sprint' },
+                { pattern: /\bwarm\s*up\b/, label: 'Warm-up' },
+                { pattern: /\bpre\s*race\b/, label: 'Pre-Race' },
+                { pattern: /\bpost\s*race\b/, label: 'Post-Race' },
+                { pattern: /\bgrand prix\b|\bformula 1\b|\bf1\b/, label: 'Grand Prix' }
+            ];
+            const found = mapping.find((m) => m.pattern.test(haystack));
+            return found ? found.label : '';
+        }
+
+        function decodeHtmlEntities(value) {
+            const el = document.createElement('textarea');
+            el.innerHTML = String(value || '');
+            return el.value;
+        }
+
+        function getSportMeta(type) { return SPORT_META[type] || SPORT_META.sports; }
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function goToWatchPage(id, title) {
+            const params = new URLSearchParams({ id, title });
+            window.location.href = `/watch.html?${params.toString()}`;
+        }
+
+        function setActiveNav() {
+            document.querySelectorAll('.nav-link').forEach((link) => {
+                const filter = link.dataset.filter || null;
+                link.classList.toggle('active', filter === activeFilter || (!filter && !activeFilter));
+            });
+        }
+
+        function renderLogos(types) {
+            const row = document.getElementById('logoRow');
+            row.innerHTML = types.map((type) => {
+                const meta = getSportMeta(type);
+                return `<span class="logo-badge glass"><img src="${meta.icon}" alt="${escapeHtml(meta.label)}"></span>`;
+            }).join('');
+        }
+
+        function renderMetaLine(metaLine) {
+            const parts = String(metaLine || '').split(' � ');
+            const badgePart = parts.find((part) => /from now|to go|starting now|tomorrow|today|tonight/i.test(part)) || '';
+            const plainParts = parts.filter((part) => part !== badgePart);
+            return `<div class="team-meta">${badgePart ? `<span class="team-meta-badge">${escapeHtml(badgePart)}</span>` : ''}${plainParts.length ? `<span class="team-meta-text">${escapeHtml(plainParts.join(' � '))}</span>` : ''}</div>`;
+        }
+
+        function splitTeams(title, liveNow) {
+            const raw = cleanDisplayTitle(title);
+            const liveMatch = raw.match(/\b(In Progress|Live|On Air|1st half|2nd half|Halftime|OT|Overtime|Q1|Q2|Q3|Q4|1st quarter|2nd quarter|3rd quarter|4th quarter)\b/i);
+            if (liveNow && liveMatch) {
+                const status = liveMatch[0];
+                const parts = raw.split(liveMatch[0]).map((part) => part.trim()).filter(Boolean);
+                return { away: parts[0] || raw, time: status.toUpperCase(), home: parts[1] || '' };
+            }
+            return { away: raw, time: '', home: '' };
+        }
+
+        function extractScheduleInfo(stream) {
+            const cleanTitle = cleanDisplayTitle(stream.title || '');
+            const cleanStatus = cleanDisplayTitle(stream.statusText || '');
+            const exactMatch = cleanTitle.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?ET)?\b/i) || cleanStatus.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?ET)?\b/i);
+            const exactTime = exactMatch ? exactMatch[0].replace(/\s+/g, ' ').trim() : '';
+            const relativeText = /from now|tomorrow|today|tonight|later/i.test(cleanStatus) ? cleanStatus : '';
+            const eventDate = buildEasternEventDate(exactTime, relativeText);
+            const computedRelative = formatRelativeStart(eventDate);
+            const display = [exactTime, computedRelative && computedRelative !== 'Started' ? computedRelative : relativeText].filter(Boolean).join(' ? ');
+            return {
+                exactTime,
+                relativeText,
+                computedRelative,
+                eventDate,
+                display: display || cleanStatus || exactTime || 'Upcoming'
+            };
+        }
+
+        function getEasternNowParts() {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/New_York',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const parts = Object.fromEntries(formatter.formatToParts(new Date()).filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]));
+            return {
+                year: Number(parts.year),
+                month: Number(parts.month),
+                day: Number(parts.day),
+                hour: Number(parts.hour),
+                minute: Number(parts.minute),
+                second: Number(parts.second)
+            };
+        }
+
+        function buildEasternEventDate(exactTime, relativeText) {
+            if (!exactTime) return null;
+            const match = exactTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return null;
+
+            let hours = Number(match[1]) % 12;
+            const minutes = Number(match[2]);
+            const meridiem = match[3].toUpperCase();
+            if (meridiem === 'PM') hours += 12;
+
+            const easternNow = getEasternNowParts();
+            const easternNowUtc = Date.UTC(easternNow.year, easternNow.month - 1, easternNow.day, easternNow.hour + 4, easternNow.minute, easternNow.second);
+            let eventUtc = Date.UTC(easternNow.year, easternNow.month - 1, easternNow.day, hours + 4, minutes);
+
+            if (/tomorrow/i.test(relativeText || '')) {
+                eventUtc += 24 * 60 * 60 * 1000;
+            } else if (!/today/i.test(relativeText || '') && eventUtc < easternNowUtc - (6 * 60 * 60 * 1000)) {
+                eventUtc += 24 * 60 * 60 * 1000;
+            }
+
+            return new Date(eventUtc);
+        }
+
+        function formatRelativeStart(eventDate) {
+            if (!eventDate) return '';
+            const diffMs = eventDate.getTime() - Date.now();
+            const diffMinutes = Math.round(diffMs / 60000);
+            if (diffMinutes <= -10) return 'Started';
+            if (diffMinutes <= 5) return 'Starting now';
+            if (diffMinutes < 60) return diffMinutes + ' mins to go';
+            const hours = Math.floor(diffMinutes / 60);
+            const minutes = diffMinutes % 60;
+            if (hours < 24) return minutes ? (hours + 'h ' + minutes + 'm to go') : (hours + 'h to go');
+            const days = Math.floor(hours / 24);
+            return days === 1 ? '1 day to go' : (days + ' days to go');
+        }
+
+        function convertEasternToLocalLabel(eventDate) {
+            if (!eventDate) return '';
+            const timeText = new Intl.DateTimeFormat(undefined, {
+                hour: 'numeric',
+                minute: '2-digit'
+            }).format(eventDate);
+            return 'Your time ' + timeText;
+        }
+
+        function shouldVerifyStream(stream) {
+            if (verifiedEvents.has(stream.id)) return false;
+            if (isActuallyLive(stream)) return true;
+            const scheduleInfo = extractScheduleInfo(stream);
+            if (!scheduleInfo.eventDate) return false;
+            const diffMinutes = Math.round((scheduleInfo.eventDate.getTime() - Date.now()) / 60000);
+            return diffMinutes <= 30 && diffMinutes >= -240;
+        }
+
+        function renderStreams() {
+            const normalized = allStreams.map((stream) => ({ ...stream, displayType: detectSportType(stream), liveNow: isActuallyLive(stream) }));
+            const filtered = activeFilter ? normalized.filter((stream) => stream.displayType === activeFilter) : normalized;
+            const grouped = {};
+            filtered.forEach((stream) => {
+                const key = cleanDisplayTitle(stream.sectionTitle || getSportMeta(stream.displayType).label);
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(stream);
+            });
+            const types = [...new Set(normalized.map((stream) => stream.displayType).filter(Boolean))];
+            renderLogos(types);
+            const container = document.getElementById('streamsContainer');
+            const entries = Object.entries(grouped);
+            if (!entries.length) {
+                container.innerHTML = '<div class="glass empty">No streams found for this category.</div>';
+                return;
+            }
+            container.innerHTML = entries.map(([sectionTitle, streams]) => {
+                const lead = streams[0];
+                const meta = getSportMeta(lead.displayType);
+                const logo = lead.tournamentImage || lead.categoryImage || meta.icon;
+                const rows = streams.map((stream) => {
+                    const teams = splitTeams(stream.title, stream.liveNow);
+                    const sessionLabel = detectSessionLabel(stream);
+                    const providerStatus = cleanDisplayTitle(stream.statusText || '');
+                    const scheduleInfo = extractScheduleInfo(stream);
+                    const localTimeLabel = convertEasternToLocalLabel(scheduleInfo.eventDate);
+                    const autoLiveNow = !stream.liveNow && scheduleInfo.computedRelative === 'Started';
+                    const statusOverride = availability[stream.id]?.reason || '';
+                    const shouldShowOffline = Boolean(statusOverride) && !providerStatus && !scheduleInfo.exactTime;
+                    const centerText = (stream.liveNow || autoLiveNow)
+                        ? (providerStatus || teams.time || 'LIVE')
+                        : (shouldShowOffline ? 'OFFLINE' : (scheduleInfo.exactTime || providerStatus || 'UPCOMING'));
+                    const statusCell = (stream.liveNow || autoLiveNow)
+                        ? `<div class="event-status-live">${escapeHtml(centerText)}</div>`
+                        : `<div class="event-time">${escapeHtml(centerText)}</div>`;
+                    const liveBadge = (stream.liveNow || autoLiveNow) ? `<span class="live-indicator">Live</span>` : '';
+                    const buttonClass = (stream.liveNow || autoLiveNow) ? 'btn watch-btn' : 'btn watch-btn locked';
+                    const buttonLabel = (stream.liveNow || autoLiveNow) ? 'Watch Live Stream' : '<span class="lock-icon"></span><span>Not Live</span>';
+                    const disabledAttr = (stream.liveNow || autoLiveNow) ? '' : 'disabled aria-disabled="true"';
+                    const primaryTitle = getMainTitle(stream.title);
+                    const secondaryTitle = (stream.liveNow || autoLiveNow) ? teams.home : '';
+
+                    const isLiveSession = stream.liveNow || autoLiveNow || /in progress|live|just now|started|ongoing/i.test(providerStatus);
+                    const sessionBadge = isLiveSession && sessionLabel ? `<span class="team-meta-badge">${escapeHtml(sessionLabel)}</span>` : '';
+                    const scheduleText = [scheduleInfo.display, localTimeLabel].filter(Boolean).join(' ? ') || 'Upcoming';
+                    const scheduleHtml = `<span class="team-meta-text">${escapeHtml(scheduleText)}</span>`;
+                    const metaHtml = (sessionBadge || scheduleText)
+                        ? `<div class="team-meta">${sessionBadge}${scheduleText ? scheduleHtml : ''}</div>`
+                        : '';
+
+                    return `
+                        <div class="event-row">
+                            <div class="team-wrap">
+                                <div class="team away">${escapeHtml(primaryTitle)}</div>
+                                ${metaHtml}
+                            </div>
+                            ${statusCell}
+                            <div class="team home">${escapeHtml(secondaryTitle)}</div>
+                            <div class="row-actions">
+                                ${liveBadge}
+                                <button class="${buttonClass}" ${disabledAttr} data-stream-id="${encodeURIComponent(stream.id)}" data-stream-title="${encodeURIComponent(getMainTitle(stream.title))}">${buttonLabel}</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                return `
+                    <section class="event-card glass">
+                        <div class="event-header">
+                            <img class="event-header-logo" src="${logo}" alt="${escapeHtml(sectionTitle)}">
+                            <div class="event-header-title">${escapeHtml(sectionTitle)}</div>
+                        </div>
+                        <div class="event-list">${rows}</div>
+                    </section>
+                `;
+            }).join('');
+        }
+
+        async function loadAvailability() {
+            if (!availabilityEndpointEnabled) return;
+            try {
+                const response = await fetch('/api/stream-statuses', { cache: 'no-store' });
+                if (!response.ok) {
+                    availabilityEndpointEnabled = false;
+                    availability = {};
+                    return;
+                }
+                const result = await response.json();
+                if (result.success) availability = result.data || {};
+            } catch {
+                availabilityEndpointEnabled = false;
+                availability = {};
+            }
+        }
+
+        async function loadStreams() {
+            const response = await fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: '' }),
+                cache: 'no-store'
+            });
+            const result = await response.json();
+            if (!result.success) throw new Error('Failed to load streams');
+            allStreams = result.data || [];
+        }
+
+        async function verifyLikelyLiveStreams() {
+            if (verificationInFlight) return;
+            const candidates = allStreams.filter((stream) => shouldVerifyStream(stream)).slice(0, 10);
+            if (!candidates.length) return;
+            verificationInFlight = true;
+            try {
+                for (const stream of candidates) {
+                    verifiedEvents.add(stream.id);
+                    try {
+                        await fetch('/api/fetchSources', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ eventUrl: stream.id, background: true })
+                        });
+                    } catch {}
+                }
+                await loadAvailability();
+                renderStreams();
+            } finally {
+                verificationInFlight = false;
+            }
+        }
+
+        async function refreshHomepageData() {
+            try {
+                await loadStreams();
+                await loadAvailability();
+                renderStreams();
+                await verifyLikelyLiveStreams();
+            } catch {}
+        }
+
+        document.addEventListener('click', (event) => {
+            const filterLink = event.target.closest('[data-filter]');
+            if (filterLink) {
+                event.preventDefault();
+                activeFilter = filterLink.dataset.filter || null;
+                setActiveNav();
+                renderStreams();
+                return;
+            }
+            const watchButton = event.target.closest('.watch-btn:not(.locked)');
+            if (watchButton) {
+                const id = decodeURIComponent(watchButton.dataset.streamId || '');
+                const title = decodeURIComponent(watchButton.dataset.streamTitle || '');
+                if (id) goToWatchPage(id, title);
+            }
+        });
+
+        window.addEventListener('load', async () => {
+            try {
+                await loadStreams();
+                await loadAvailability();
+                setActiveNav();
+                renderStreams();
+                await verifyLikelyLiveStreams();
+                setInterval(refreshHomepageData, 60000);
+            } catch {
+                document.getElementById('streamsContainer').innerHTML = '<div class="glass empty">Error loading streams.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+

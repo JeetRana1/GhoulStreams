@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#05070c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Watch | ArenaHQ</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230d1117' width='100' height='100'/><circle cx='50' cy='50' r='36' fill='%2315c39a'/><path d='M42 32l26 18-26 18z' fill='white'/></svg>">
+    <style>
+        /* ── Tokens ── */
+        :root {
+            --bg: #05070c;
+            --panel: rgba(12, 16, 26, 0.65);
+            --line: rgba(255,255,255,0.07);
+            --line-strong: rgba(255,255,255,0.13);
+            --text: #eef2f8;
+            --muted: #8a97ad;
+            --accent: #19c89d;
+            --accent2: #4d9fff;
+            --live: #ff6278;
+            --shadow: 0 8px 40px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset;
+            --blur: blur(28px) saturate(180%);
+            --pad: 18px;
+            --r-xl: 22px;
+            --r-lg: 16px;
+            --r-md: 12px;
+            --r-pill: 999px;
+        }
+
+        /* ── Reset ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            min-height: 100dvh;
+            color: var(--text);
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 40% at 50% -10%, rgba(25,200,157,0.07) 0%, transparent 55%),
+                radial-gradient(ellipse 60% 30% at 80% 90%, rgba(77,159,255,0.05) 0%, transparent 50%),
+                linear-gradient(180deg, #05070c 0%, #080c14 100%);
+            z-index: -1;
+        }
+        a { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+        img { max-width: 100%; height: auto; display: block; }
+        button { font-family: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; }
+
+        /* ── Glass ── */
+        .glass, .card, .topbar {
+            background: rgba(12, 16, 26, 0.65);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            box-shadow: var(--shadow);
+        }
+
+        /* ── Wrap ── */
+        .wrap {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: var(--pad);
+            padding-left: max(var(--pad), env(safe-area-inset-left));
+            padding-right: max(var(--pad), env(safe-area-inset-right));
+            padding-bottom: max(var(--pad), env(safe-area-inset-bottom));
+        }
+
+        /* ── Top Bar ── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+            border-radius: var(--r-xl);
+            padding: 12px 16px;
+            flex-wrap: wrap;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+            padding: 8px 14px;
+            border-radius: var(--r-md);
+            font-size: 0.84rem;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: color 0.18s, border-color 0.18s;
+        }
+        .back-link:hover { color: var(--text); border-color: rgba(77,159,255,0.3); }
+        .top-meta {
+            flex: 1;
+            min-width: 0;
+            text-align: center;
+        }
+        .top-title h1 {
+            font-size: clamp(0.95rem, 2.5vw, 1.6rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .top-badges {
+            margin-top: 6px;
+            display: inline-flex;
+            gap: 7px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .status-badge, .stream-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 10px;
+            border-radius: var(--r-pill);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(18,22,30,0.5);
+            color: rgba(238,242,255,0.85);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .stream-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--live);
+            box-shadow: 0 0 8px var(--live);
+            flex-shrink: 0;
+        }
+        .status-badge.active::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(25,200,157,0.6);
+            flex-shrink: 0;
+        }
+        .status-badge.halftime::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #ffb400;
+            box-shadow: 0 0 8px rgba(255,180,0,0.5);
+            flex-shrink: 0;
+        }
+        .top-meta p { color: var(--muted); font-size: 0.8rem; }
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 12px;
+            border-radius: var(--r-pill);
+            background: rgba(255,98,120,0.12);
+            border: 1px solid rgba(255,98,120,0.22);
+            color: #ff99a8;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .live-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--live);
+            box-shadow: 0 0 10px var(--live);
+            flex-shrink: 0;
+        }
+
+        /* ── Scoreboard ── */
+        .scoreboard {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+            gap: 14px;
+            align-items: center;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--line);
+        }
+        .score-team { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .score-team.right { justify-content: flex-end; text-align: right; }
+        .score-team-logo { width: 44px; height: 44px; object-fit: contain; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 6px; flex-shrink: 0; }
+        .score-team-name { font-size: 1rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .score-meta { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .score-status { color: var(--text); font-weight: 800; font-size: 0.9rem; }
+        .score-pills { display: flex; align-items: center; gap: 10px; }
+        .score-pill { min-width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; border-radius: 12px; background: rgba(255,98,120,0.14); border: 1px solid rgba(255,98,120,0.3); color: #ffd3da; font-size: 1.1rem; font-weight: 800; }
+        .score-sub { color: var(--muted); font-size: 0.78rem; }
+
+        /* ── Layout ── */
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.65fr) 340px;
+            gap: 14px;
+            align-items: start;
+        }
+        .card { border-radius: var(--r-xl); overflow: hidden; }
+        .player-card { overflow: hidden; }
+
+        /* ── Player Head ── */
+        .player-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 18px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+        .player-head h2 {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: 700;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        .player-head p { color: var(--muted); font-size: 0.8rem; }
+
+        /* ── Player Shell & Frame ── */
+        .player-shell { padding: 14px; }
+        .player-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            background: radial-gradient(circle at top, rgba(77,159,255,0.15), transparent 30%), linear-gradient(180deg, #040913, #00070d);
+            border: 1px solid rgba(255,255,255,0.07);
+            isolation: isolate;
+        }
+        video { width: 100%; height: 100%; display: block; object-fit: cover; position: relative; z-index: 1; background: #000; }
+        .video-hud { position: absolute; inset: 0; z-index: 3; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 14px 14px 88px; transition: opacity 180ms ease; }
+        .video-hud.hidden { opacity: 0; }
+        .overlay-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: var(--r-pill);
+            background: rgba(5,12,22,0.72);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(14px);
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .chip.live::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--live);
+            box-shadow: 0 0 8px var(--live);
+            flex-shrink: 0;
+        }
+        .chip.time { font-variant-numeric: tabular-nums; }
+        .chip.note { color: var(--muted); }
+        .player-gradient { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(to bottom, rgba(3,8,16,0.6), transparent 20%), linear-gradient(to top, rgba(2,6,12,0.9), rgba(2,6,12,0.1) 32%, transparent 55%); transition: opacity 180ms ease; }
+        .player-gradient.hidden { opacity: 0.2; }
+        .control-surface { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; justify-content: center; padding: 14px; cursor: default; }
+        .control-surface.idle { cursor: none; }
+        .surface-hitbox { position: absolute; inset: 0; z-index: 0; }
+        .control-center { display: flex; align-items: center; justify-content: center; gap: 18px; position: relative; z-index: 1; transition: opacity 180ms ease, transform 180ms ease; }
+        .control-center.hidden { opacity: 0; transform: translateY(10px); pointer-events: none; }
+        .circle-btn, .icon-btn, .live-btn {
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(10,12,16,0.4);
+            color: var(--text);
+            backdrop-filter: blur(18px) saturate(160%);
+            transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+        }
+        .icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .icon-btn svg { width: 18px; height: 18px; display: block; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+        /* Volume popup */
+        .volume-pop {
+            position: absolute;
+            right: 14px;
+            bottom: 64px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(12,14,18,0.6);
+            border: 1px solid rgba(255,255,255,0.14);
+            backdrop-filter: blur(18px) saturate(160%);
+            box-shadow: 0 16px 50px rgba(0,0,0,0.55);
+            pointer-events: auto;
+        }
+        .volume-pop.open { display: inline-flex; }
+        .volume-pop-btn { width: 38px; height: 38px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .volume-pop-btn:hover { border-color: rgba(77,159,255,0.35); }
+        .volume-pop-btn svg { width: 16px; height: 16px; display: block; }
+        .volume-pop-slider { width: 120px; appearance: none; height: 4px; border-radius: var(--r-pill); background: linear-gradient(to right, rgba(25,200,157,0.95) 0%, rgba(25,200,157,0.95) var(--vol-percent, 100%), rgba(255,255,255,0.16) var(--vol-percent, 100%), rgba(255,255,255,0.16) 100%); outline: none; cursor: pointer; touch-action: none; }
+        .volume-pop-slider::-webkit-slider-thumb { appearance: none; width: 13px; height: 13px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 0 3px rgba(25,200,157,0.22); }
+        .volume-pop-slider::-moz-range-thumb { width: 13px; height: 13px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 0 3px rgba(25,200,157,0.22); }
+
+        .circle-btn:hover, .icon-btn:hover, .live-btn:hover { border-color: rgba(77,159,255,0.35); transform: translateY(-1px); }
+        .circle-btn { display: inline-flex; align-items: center; justify-content: center; width: 68px; height: 68px; border-radius: 50%; font-size: 1rem; font-weight: 800; }
+        #backTenBtn { transform: translateX(-60px); }
+        #forwardTenBtn { transform: translateX(60px); }
+        .circle-btn.play { width: 88px; height: 88px; background: rgba(255,255,255,0.06); border-color: rgba(25,200,157,0.4); box-shadow: 0 0 0 6px rgba(25,200,157,0.08); }
+        .circle-btn.play svg { width: 34px; height: 34px; }
+        .transport-icon { width: 44px; height: 44px; display: block; }
+        .play-icon { width: 34px; height: 34px; display: block; }
+        .control-bottom { position: absolute; left: 14px; right: 14px; bottom: 14px; z-index: 1; display: grid; gap: 10px; transition: opacity 180ms ease, transform 180ms ease; }
+        .control-bottom.hidden { opacity: 0; transform: translateY(10px); pointer-events: none; }
+        .seek-wrap { position: relative; display: flex; align-items: center; width: 100%; padding: 8px 0; }
+        .seek-track { position: absolute; left: 0; right: 0; height: 4px; border-radius: var(--r-pill); background: rgba(255,255,255,0.16); pointer-events: none; }
+        .seek-bar { width: 100%; appearance: none; height: 4px; border-radius: var(--r-pill); background: linear-gradient(to right, rgba(25,200,157,0.95) 0%, rgba(25,200,157,0.95) var(--seek-percent, 0%), rgba(255,255,255,0) var(--seek-percent, 0%), rgba(255,255,255,0) 100%); outline: none; cursor: pointer; position: relative; z-index: 1; }
+        .seek-bar::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 0 0 3px rgba(25,200,157,0.25); }
+        .seek-bar::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 0 0 3px rgba(25,200,157,0.25); }
+        .bottom-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .time-group { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: var(--r-md); background: rgba(6,14,26,0.72); border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-variant-numeric: tabular-nums; font-size: 0.82rem; white-space: nowrap; }
+        .time-sep { color: rgba(255,255,255,0.4); }
+        .actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .icon-btn, .live-btn { min-width: 40px; height: 40px; padding: 0 12px; border-radius: var(--r-md); font-weight: 700; font-size: 0.8rem; }
+        .live-btn.active { border-color: rgba(255,98,120,0.34); background: rgba(255,98,120,0.16); color: #ffd4da; }
+        .player-frame.is-paused .player-gradient,
+        .player-frame.is-paused .video-hud,
+        .player-frame.is-paused .control-center,
+        .player-frame.is-paused .control-bottom { opacity: 1; transform: none; }
+
+        /* ── Side Card ── */
+        .side-card { padding: 16px 18px; }
+        .side-card h3 { margin-bottom: 10px; font-size: 0.96rem; font-weight: 700; }
+        .side-card p { color: var(--muted); font-size: 0.86rem; line-height: 1.55; }
+        .sources { margin-top: 14px; }
+        .source-item { display: flex; flex-direction: column; gap: 10px; padding: 12px; margin-bottom: 10px; border-radius: var(--r-lg); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
+        .source-quality { display: inline-flex; width: fit-content; padding: 3px 8px; border-radius: var(--r-pill); background: rgba(77,159,255,0.14); border: 1px solid rgba(77,159,255,0.2); color: #a6cbff; font-size: 0.7rem; font-weight: 700; }
+        .source-btn { width: 100%; padding: 10px; border: 1px solid rgba(77,159,255,0.24); border-radius: var(--r-md); color: var(--text); cursor: pointer; background: linear-gradient(135deg, rgba(77,159,255,0.16), rgba(25,200,157,0.1)); font-weight: 700; font-size: 0.88rem; transition: border-color 0.18s; }
+        .source-btn:hover { border-color: rgba(25,200,157,0.42); }
+        .loading, .empty { color: var(--muted); text-align: center; padding: 24px 12px; font-size: 0.88rem; }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+
+        /* Collapse sidebar below 1180px */
+        @media (max-width: 1180px) {
+            .layout { grid-template-columns: 1fr; }
+        }
+
+        /* Tablet portrait */
+        @media (max-width: 768px) {
+            :root { --pad: 14px; --r-xl: 18px; --r-lg: 14px; }
+            .topbar { padding: 10px 14px; gap: 10px; }
+            .top-title h1 { font-size: clamp(0.88rem, 3.5vw, 1.2rem); }
+            .live-badge { display: none; }
+            .top-meta { text-align: left; }
+            .top-badges { justify-content: flex-start; }
+            .overlay-row { flex-direction: column; align-items: flex-start; }
+            .control-center { gap: 12px; }
+            .circle-btn { width: 58px; height: 58px; }
+            .circle-btn.play { width: 76px; height: 76px; }
+            .bottom-row { flex-direction: column; align-items: stretch; gap: 8px; }
+            .actions { justify-content: space-between; }
+            .time-group { min-width: 0; }
+            .player-head { padding: 12px 14px 10px; }
+            .player-shell { padding: 10px; }
+            .side-card { padding: 14px 16px; }
+        }
+
+        /* Mobile — player gets taller, layout tightens */
+        @media (max-width: 600px) {
+            :root { --pad: 12px; --r-xl: 16px; --r-lg: 12px; --r-md: 10px; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 14px; }
+            .back-link { font-size: 0.8rem; padding: 7px 12px; }
+            .top-meta { text-align: left; width: 100%; }
+            .top-title h1 { font-size: clamp(0.9rem, 4vw, 1.15rem); white-space: normal; }
+            .top-badges { margin-top: 5px; gap: 6px; }
+            .status-badge, .stream-badge { font-size: 0.65rem; padding: 4px 8px; }
+            /* Taller player on narrow screens */
+            .player-frame {
+                aspect-ratio: unset !important;
+                height: clamp(240px, 38dvh, 380px);
+                min-height: 240px;
+            }
+            .player-shell { padding: 8px; }
+            .player-head { padding: 12px 12px 10px; }
+            .player-head h2 { font-size: 0.9rem; }
+            .player-head p { font-size: 0.74rem; }
+            .video-hud { padding: 4px 10px 92px; }
+            .video-hud .overlay-row:first-child { margin-top: -4px; }
+            .video-hud .overlay-row:last-child { margin-bottom: 4px; }
+            .control-surface { padding: 10px; }
+            .control-bottom { left: 10px; right: 10px; bottom: 10px; margin-bottom: 0; }
+            .chip { font-size: 0.64rem; padding: 5px 8px; }
+            .circle-btn { width: 54px; height: 54px; }
+            .circle-btn.play { width: 72px; height: 72px; }
+            .circle-btn.play svg { width: 30px; height: 30px; }
+            /* Hide timer text and Live-edge button on narrow mobile — keep only volume + fullscreen */
+            .time-group { display: none; }
+            #goLiveBtn { display: none; }
+            .bottom-row { justify-content: flex-end; }
+            .icon-btn, .live-btn { height: 36px; min-width: 36px; padding: 0 10px; font-size: 0.74rem; }
+            .side-card { padding: 12px 14px; }
+            .side-card h3 { font-size: 0.9rem; }
+            .side-card p { font-size: 0.8rem; }
+            .source-btn { font-size: 0.82rem; padding: 9px; }
+            .scoreboard { padding: 12px 14px; gap: 10px; }
+            .score-team-logo { width: 36px; height: 36px; }
+            .score-team-name { font-size: 0.88rem; }
+            .score-pill { min-width: 32px; height: 32px; font-size: 1rem; }
+        }
+
+        /* Standard phones — iPhone 14/15, Pixel 7/8, Galaxy S */
+        @media (max-width: 430px) {
+            .player-frame {
+                aspect-ratio: unset !important;
+                height: clamp(230px, 39dvh, 360px);
+                min-height: 230px;
+            }
+        }
+
+        /* Small phones — iPhone SE, Galaxy A */
+        @media (max-width: 390px) {
+            :root { --pad: 10px; }
+            .player-frame {
+                aspect-ratio: unset !important;
+                height: clamp(220px, 40dvh, 340px);
+                min-height: 220px;
+            }
+            .back-link { font-size: 0.76rem; padding: 6px 10px; }
+            .top-title h1 { font-size: 0.88rem; }
+        }
+
+        /* Very small phones */
+        @media (max-width: 360px) {
+            .player-frame {
+                aspect-ratio: unset !important;
+                height: clamp(210px, 41dvh, 320px);
+                min-height: 210px;
+            }
+        }
+
+        /* Landscape phones — restore 16/9 */
+        @media (max-width: 900px) and (orientation: landscape) {
+            .player-frame {
+                aspect-ratio: 16 / 9 !important;
+                height: auto !important;
+                min-height: unset !important;
+            }
+            .topbar { flex-direction: row; }
+        }
+
+        /* Touch targets */
+        @media (hover: none) and (pointer: coarse) {
+            .circle-btn { min-width: 44px; min-height: 44px; }
+            .icon-btn, .live-btn { min-height: 44px; }
+            .back-link { min-height: 40px; }
+            .circle-btn:hover, .icon-btn:hover, .live-btn:hover { transform: none; }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <a class="back-link" href="/">Back to events</a>
+            <div class="top-meta">
+                <div class="top-title">
+                    <h1 id="pageTitle"><span id="pageTitleText">Loading stream...</span></h1>
+                </div>
+                <div class="top-badges">
+                    <span class="status-badge" id="topStatusBadge">Loading</span>
+                    <span class="stream-badge" id="topStreamBadge">Live Stream</span>
+                </div>
+                <p id="pageSubtitle" class="sr-only">Resolving direct live source</p>
+            </div>
+            <div class="live-badge" id="topLiveBadge">Live Feed</div>
+        </div>
+
+        <div class="layout">
+            <div class="card player-card">
+                <div class="scoreboard" id="scoreboard" style="display:none"></div>
+                <div class="player-head">
+                    <div>
+                        <h2 id="playerTitle"><span id="playerTitleText">Now Playing</span> <span class="live-badge" id="playerSessionBadge" style="display:none;">Sprint</span></h2>
+                        <p id="playerSubtitle">Direct live playback</p>
+                    </div>
+                    <div class="live-badge">On Air</div>
+                </div>
+                <div class="player-shell">
+                    <div class="player-frame is-paused" id="playerFrame">
+                        <video id="videoPlayer" autoplay playsinline></video>
+                        <div class="player-gradient" id="playerGradient"></div>
+                        <div class="video-hud" id="videoHud">
+                            <div class="overlay-row">
+                                <div class="chip live">Live</div>
+                                <div class="chip time" id="liveClock">--:--:--</div>
+                            </div>
+                            <div class="overlay-row">
+                                <div class="chip note" id="liveStatus">Connecting to feed</div>
+                                <div class="chip note" id="liveLatency">Syncing stream</div>
+                            </div>
+                        </div>
+                        <div class="control-surface" id="controlSurface">
+                            <div class="surface-hitbox" id="surfaceHitbox"></div>
+                            <div class="control-center" id="controlCenter">
+                                <button class="circle-btn" id="backTenBtn" type="button" aria-label="Skip back 10 seconds">
+                                    <svg class="transport-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M9.54004 15.92V10.5801L8.04004 12.2501" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M10.02 4.46997L12 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M4.91 7.79999C3.8 9.27999 3.10999 11.11 3.10999 13.11C3.10999 18.02 7.09 22 12 22C16.91 22 20.89 18.02 20.89 13.11C20.89 8.19999 16.91 4.21997 12 4.21997C11.32 4.21997 10.66 4.31002 10.02 4.46002" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M14 10.5801C15.1 10.5801 16 11.4801 16 12.5801V13.9301C16 15.0301 15.1 15.9301 14 15.9301C12.9 15.9301 12 15.0301 12 13.9301V12.5801C12 11.4701 12.9 10.5801 14 10.5801Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <span class="sr-only">Back 10</span>
+                                </button>
+                                <button class="circle-btn play" id="playPauseBtn" type="button" aria-label="Play">
+                                    <svg id="playIcon" class="play-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                                        <path d="M9 7.5v9l8-4.5-8-4.5Z" fill="currentColor"/>
+                                    </svg>
+                                    <svg id="pauseIcon" class="play-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" style="display:none">
+                                        <path d="M7 6h3v12H7V6Zm7 0h3v12h-3V6Z" fill="currentColor"/>
+                                    </svg>
+                                    <span class="sr-only">Play</span>
+                                </button>
+                                <button class="circle-btn" id="forwardTenBtn" type="button" aria-label="Skip forward 10 seconds">
+                                    <svg class="transport-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M19.6916 7.34849C19.4416 7.01849 18.9716 6.94849 18.6416 7.19849C18.3116 7.44849 18.2416 7.91849 18.4916 8.24849C19.5716 9.68849 20.1416 11.3685 20.1416 13.1085C20.1416 17.5985 16.4916 21.2485 12.0016 21.2485C7.51156 21.2485 3.86156 17.5985 3.86156 13.1085C3.86156 8.61849 7.51156 4.97849 12.0016 4.97849C12.5816 4.97849 13.1716 5.04849 13.8116 5.19849C13.8416 5.20849 13.8716 5.19849 13.9116 5.19849C13.9316 5.19849 13.9616 5.21849 13.9816 5.21849C14.0116 5.21849 14.0316 5.20849 14.0616 5.20849C14.1016 5.20849 14.1316 5.19849 14.1616 5.18849C14.2116 5.17849 14.2616 5.15849 14.3116 5.12849C14.3416 5.10849 14.3816 5.09849 14.4116 5.07849C14.4216 5.06849 14.4416 5.06849 14.4516 5.05849C14.4816 5.03849 14.4916 5.00849 14.5116 4.98849C14.5516 4.94849 14.5816 4.91849 14.6116 4.86849C14.6416 4.82849 14.6516 4.77849 14.6716 4.73849C14.6816 4.70849 14.7016 4.67849 14.7116 4.64849C14.7116 4.62849 14.7116 4.61849 14.7116 4.59849C14.7216 4.54849 14.7216 4.49849 14.7116 4.44849C14.7116 4.39849 14.7116 4.35849 14.7016 4.30849C14.6916 4.26849 14.6716 4.22849 14.6516 4.17849C14.6316 4.12849 14.6116 4.07849 14.5816 4.03849C14.5716 4.01849 14.5716 4.00849 14.5616 3.99849L12.5816 1.52849C12.3216 1.20849 11.8516 1.15849 11.5316 1.40849C11.2116 1.66849 11.1616 2.13849 11.4116 2.45849L12.2316 3.47849C12.1516 3.47849 12.0716 3.46849 11.9916 3.46849C6.68156 3.46849 2.35156 7.78849 2.35156 13.1085C2.35156 18.4285 6.67156 22.7485 11.9916 22.7485C17.3116 22.7485 21.6316 18.4285 21.6316 13.1085C21.6416 11.0385 20.9616 9.04849 19.6916 7.34849Z" fill="currentColor" />
+                                        <path d="M9.5415 16.6708C9.1315 16.6708 8.7915 16.3308 8.7915 15.9208V12.5308L8.6015 12.7508C8.3215 13.0608 7.8515 13.0808 7.5415 12.8108C7.2315 12.5308 7.2115 12.0608 7.4815 11.7508L8.9815 10.0808C9.1915 9.85081 9.5215 9.77081 9.8115 9.88081C10.1015 9.99081 10.2915 10.2708 10.2915 10.5808V15.9308C10.2915 16.3408 9.9615 16.6708 9.5415 16.6708Z" fill="currentColor" />
+                                        <path d="M14 16.6703C12.48 16.6703 11.25 15.4403 11.25 13.9203V12.5703C11.25 11.0503 12.48 9.82031 14 9.82031C15.52 9.82031 16.75 11.0503 16.75 12.5703V13.9203C16.75 15.4403 15.52 16.6703 14 16.6703ZM14 11.3303C13.31 11.3303 12.75 11.8903 12.75 12.5803V13.9303C12.75 14.6203 13.31 15.1803 14 15.1803C14.69 15.1803 15.25 14.6203 15.25 13.9303V12.5803C15.25 11.8903 14.69 11.3303 14 11.3303Z" fill="currentColor" />
+                                    </svg>
+                                    <span class="sr-only">Forward 10</span>
+                                </button>
+                            </div>
+                            <div class="control-bottom" id="controlBottom">
+                                <div class="seek-wrap">
+                                    <div class="seek-track"></div>
+                                    <input id="seekBar" class="seek-bar" type="range" min="0" max="100" step="0.1" value="0">
+                                </div>
+                                <div class="bottom-row">
+                                    <div class="time-group">
+                                        <span id="currentTime">0:00</span>
+                                        <span class="time-sep">/</span>
+                                        <span id="durationTime">0:00</span>
+                                    </div>
+                                    <div class="actions">
+                                        <button class="live-btn active" id="goLiveBtn" type="button">Live</button>
+                                        <button class="icon-btn" id="muteBtn" type="button" aria-label="Mute">
+                                            <svg id="muteIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                                                <path d="M11 5L6.5 9H3v6h3.5L11 19V5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                                <path d="M15.5 8.5a4.5 4.5 0 0 1 0 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                <path d="M17.8 6.2a8 8 0 0 1 0 11.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+                                            </svg>
+                                            <svg id="unmuteIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" style="display:none">
+                                                <path d="M11 5L6.5 9H3v6h3.5L11 19V5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                                <path d="M15 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                <path d="M21 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                            </svg>
+                                            <span class="sr-only">Mute</span>
+                                        </button>
+                                        <button class="icon-btn" id="fullscreenBtn" type="button" aria-label="Fullscreen">
+                                            <svg id="enterFsIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                                                <path d="M9 4H4v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M15 4h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M9 20H4v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M15 20h5v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                            <svg id="exitFsIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" style="display:none">
+                                                <path d="M9 9H4V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M15 9h5V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M9 15H4v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M15 15h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                            <span class="sr-only">Fullscreen</span>
+                                        </button>
+                                        <div class="volume-pop" id="volumePopover" aria-hidden="true">
+                                            <button class="volume-pop-btn" id="volumeToggle" type="button" aria-label="Mute">
+                                                <svg id="volIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                                                    <path d="M11 5L6.5 9H3v6h3.5L11 19V5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                                    <path d="M15.5 8.5a4.5 4.5 0 0 1 0 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                </svg>
+                                                <svg id="volMutedIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" style="display:none">
+                                                    <path d="M11 5L6.5 9H3v6h3.5L11 19V5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                                    <path d="M15 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                    <path d="M21 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                </svg>
+                                            </button>
+                                            <input class="volume-pop-slider" id="volumeSlider" type="range" min="0" max="100" step="1" value="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card side-card">
+                <h3>Sources</h3>
+                <p>The player opens here on its own page and stays focused on live playback. Additional direct sources are listed below when available.</p>
+                <div class="sources" id="sourcesList">
+                    <div class="loading">Loading sources...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+        let hlsInstance = null;
+        let lastReportedState = null;
+        let scoreRefreshTimer = null;
+        let shouldSnapToLiveEdge = true;
+        let isDvrMode = false;
+        let isLivePlaying = false;
+        // Remember the last known session label to keep it visible while streaming
+        let currentSessionLabel = '';
+        let controlsHideTimer = null;
+        let isDraggingSeek = false;
+        const PLAYER_STATE_KEY = 'watch_player_state';
+        const params = new URLSearchParams(window.location.search);
+        const streamId = params.get('id') || '';
+        const streamTitle = params.get('title') || 'Live Event';
+
+        function getVideoElement() { return document.getElementById('videoPlayer'); }
+        function formatTime(seconds) {
+            if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+            const total = Math.floor(seconds);
+            const hrs = Math.floor(total / 3600);
+            const mins = Math.floor((total % 3600) / 60);
+            const secs = total % 60;
+            if (hrs > 0) return hrs + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+            return mins + ':' + String(secs).padStart(2, '0');
+        }
+        function readPlayerState() {
+            try { return JSON.parse(sessionStorage.getItem(PLAYER_STATE_KEY) || '{}'); } catch { return {}; }
+        }
+        function savePlayerState(patch = {}) {
+            try {
+                const current = readPlayerState();
+                sessionStorage.setItem(PLAYER_STATE_KEY, JSON.stringify({ ...current, ...patch }));
+            } catch {}
+        }
+        async function ensurePlayback(video) {
+            try { await video.play(); }
+            catch {
+                video.muted = true;
+                savePlayerState({ muted: true });
+                try { await video.play(); } catch {}
+            }
+            updatePlayButton();
+        }
+        function syncToLiveEdge(video, hls) {
+            const livePos = Number(hls && hls.liveSyncPosition);
+            if (Number.isFinite(livePos) && livePos > 0) {
+                try { video.currentTime = Math.max(0, livePos - 0.5); } catch {}
+                return;
+            }
+            if (Number.isFinite(video.duration) && video.duration > 0) {
+                try { video.currentTime = Math.max(0, video.duration - 1); } catch {}
+            }
+        }
+        function applySavedPlayerState() {
+            const video = getVideoElement();
+            const state = readPlayerState();
+            video.muted = Boolean(state.muted);
+            const v = Number(state.volume);
+            if (Number.isFinite(v) && v >= 0 && v <= 1) {
+                try { video.volume = v; } catch {}
+            }
+        }
+        function updateLiveButton() {
+            const btn = document.getElementById('goLiveBtn');
+            btn.classList.toggle('active', !isDvrMode);
+            btn.textContent = isDvrMode ? 'Go Live' : 'Live';
+        }
+        function updateDvrMode() {
+            const video = getVideoElement();
+            if (!Number.isFinite(video.duration) || !Number.isFinite(video.currentTime)) return;
+            const distanceFromLive = video.duration - video.currentTime;
+            isDvrMode = distanceFromLive > 20;
+            document.getElementById('liveLatency').textContent = isDvrMode ? 'DVR mode' : 'Live edge';
+            updateLiveButton();
+        }
+        function updateLiveClock() {
+            const now = new Date();
+            document.getElementById('liveClock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        function updateTopStatusBadge(text) {
+            const badge = document.getElementById('topStatusBadge');
+            if (!badge) return;
+            const t = String(text || '').trim();
+            badge.textContent = t || 'Live';
+            badge.classList.remove('active', 'halftime');
+            const tl = t.toLowerCase();
+            if (tl.includes('halftime')) {
+                badge.classList.add('halftime');
+            } else if (/(live|on air|in progress|started|starting soon|1st|2nd|3rd|4th|quarter|half|ot|overtime|period)/i.test(t)) {
+                badge.classList.add('active');
+            }
+        }
+
+        function cleanDisplayTitle(value) {
+            const clean = String(value || '')
+                .replace(/^https?:\/\/buffstreams\.plus\/?/i, '')
+                .replace(/^buffstreams\.?:?plus\/?/i, '')
+                .replace(/^title game\//i, '')
+                .replace(/\blive streams links\b/ig, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            return clean.replace(/\s*-\s*\d{1,2}:\d{2}\s*(AM|PM)(?:\s*ET)?$/i, '').trim();
+        }
+
+        function getMainTitle(value) {
+            return cleanDisplayTitle(value);
+        }
+
+        function parseUtcTimestamp(value) {
+            if (!value) return null;
+            const match = String(value).trim().match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+            if (!match) return null;
+            const [, year, month, day, hour, minute] = match.map(Number);
+            return Date.UTC(year, month - 1, day, hour, minute);
+        }
+
+        function detectSessionLabelFromText(...values) {
+            const haystack = values.filter(Boolean).join(' ').toLowerCase();
+            const mapping = [
+                { pat: /\bpractice\s*1\b|\bfp1\b|\bfree practice 1\b/, label: 'Practice 1' },
+                { pat: /\bpractice\s*2\b|\bfp2\b|\bfree practice 2\b/, label: 'Practice 2' },
+                { pat: /\bpractice\s*3\b|\bfp3\b|\bfree practice 3\b/, label: 'Practice 3' },
+                { pat: /\bqualifying\b/, label: 'Qualifying' },
+                { pat: /\bsprint\s*qualifying\b|\bsprint\b/, label: 'Sprint' },
+                { pat: /\bwarm\s*up\b/, label: 'Warm-up' },
+                { pat: /\bpre\s*race\b/, label: 'Pre-Race' },
+                { pat: /\bpost\s*race\b/, label: 'Post-Race' },
+                { pat: /\bgrand prix\b|\bformula 1\b|\bf1\b/, label: 'Grand Prix' }
+            ];
+            const found = mapping.find((m) => m.pat.test(haystack));
+            return found ? found.label : '';
+        }
+
+        function parseUtcTimestamp(value) {
+            if (!value) return null;
+            const match = String(value).trim().match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+            if (!match) return null;
+            const [, year, month, day, hour, minute] = match.map(Number);
+            return Date.UTC(year, month - 1, day, hour, minute);
+        }
+
+        function normalizeStatus(status, when) {
+            const s = String(status || '').trim().toUpperCase();
+            if (!s) return '';
+
+            if (s === 'NOTSTARTED') {
+                const start = parseUtcTimestamp(when);
+                if (start) {
+                    const now = Date.now();
+                    if (now >= start) return 'Live';
+                    const diffMs = start - now;
+                    if (diffMs <= 30 * 60 * 1000) return 'Starting soon';
+                }
+                return 'Not started';
+            }
+            if (s === 'FINISHED' || s === 'COMPLETED') return 'Finished';
+            return status;
+        }
+
+        function setMeta(title, subtitle, status, latency, sessionLabel) {
+            if (sessionLabel) currentSessionLabel = sessionLabel;
+            const effectiveSessionLabel = sessionLabel || currentSessionLabel;
+
+            // Keep a clean title and show the session label in the top bar near the Live Feed badge.
+            document.getElementById('pageTitleText').textContent = title;
+            document.getElementById('playerTitleText').textContent = title;
+
+            const playerSessionBadge = document.getElementById('playerSessionBadge');
+            if (playerSessionBadge) {
+                if (effectiveSessionLabel) {
+                    playerSessionBadge.textContent = effectiveSessionLabel;
+                    playerSessionBadge.style.display = 'inline-flex';
+                } else {
+                    playerSessionBadge.style.display = 'none';
+                }
+            }
+            document.getElementById('pageSubtitle').textContent = subtitle;
+            document.getElementById('playerSubtitle').textContent = subtitle;
+            document.getElementById('liveStatus').textContent = status;
+            document.getElementById('liveLatency').textContent = latency;
+            // Centered top badge prefers match status/subtitle.
+            updateTopStatusBadge(status || subtitle);
+
+        }
+        function escapeHtml(value) {
+            return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function renderScoreboard(info) {
+            const el = document.getElementById('scoreboard');
+            const teams = info && info.teams || [];
+            if (teams.length < 2) {
+                el.style.display = 'none';
+                el.innerHTML = '';
+                return;
+            }
+            const left = teams[0] || {};
+            const right = teams[1] || {};
+            const leftScore = left.score || (info.scores || [])[0] || '-';
+            const rightScore = right.score || (info.scores || [])[1] || '-';
+            const leftLogo = left.logo ? '<img class="score-team-logo" src="' + escapeHtml(left.logo) + '" alt="' + escapeHtml(left.name || '') + '">' : '';
+            const rightLogo = right.logo ? '<img class="score-team-logo" src="' + escapeHtml(right.logo) + '" alt="' + escapeHtml(right.name || '') + '">' : '';
+            el.style.display = 'grid';
+            el.innerHTML = '<div class="score-team">' + leftLogo + '<div><div class="score-team-name">' + escapeHtml(left.name || 'Team 1') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div></div>' + '<div class="score-meta"><div class="score-status">' + escapeHtml(info.status || 'Live') + '</div><div class="score-pills"><span class="score-pill">' + escapeHtml(leftScore) + '</span><span class="score-pill">' + escapeHtml(rightScore) + '</span></div><div class="score-sub">' + escapeHtml(info.eventDate || '') + '</div></div>' + '<div class="score-team right"><div><div class="score-team-name">' + escapeHtml(right.name || 'Team 2') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div>' + rightLogo + '</div>';
+        }
+        async function reportStreamStatus(isLive, reason) {
+            if (!streamId) return;
+            const nextState = String(Boolean(isLive)) + ':' + (reason || '');
+            if (nextState === lastReportedState) return;
+            lastReportedState = nextState;
+            try {
+                await fetch('/api/report-stream-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: streamId, isLive: Boolean(isLive), reason: reason || '' })
+                });
+            } catch {}
+        }
+        function preparePlayableSources(sources) {
+            return (sources || []).map((source) => {
+                const referer = source.headers && (source.headers.Referer || source.headers.referer) || '';
+                const q = new URLSearchParams({ url: source.url });
+                if (referer) {
+                    q.set('referer', referer);
+                    q.set('root_referer', referer);
+                }
+                return { ...source, playUrl: '/api/media-proxy?' + q.toString() };
+            });
+        }
+        function displaySources(sources) {
+            const el = document.getElementById('sourcesList');
+            if (!sources.length) {
+                el.innerHTML = '<div class="empty">No sources available</div>';
+                return;
+            }
+            el.innerHTML = sources.map((source, index) => '<div class="source-item"><div><strong>Source ' + (index + 1) + '</strong></div><div class="source-quality">' + escapeHtml(source.quality) + ' ' + (source.isM3U8 ? '(HLS)' : '(MP4)') + '</div><button class="source-btn" data-url="' + escapeHtml(source.playUrl || source.url) + '" data-hls="' + (source.isM3U8 ? '1' : '0') + '">Play Source</button></div>').join('');
+        }
+        function updatePlayButton() {
+            const video = getVideoElement();
+            const frame = document.getElementById('playerFrame');
+            const btn = document.getElementById('playPauseBtn');
+            const playIcon = document.getElementById('playIcon');
+            const pauseIcon = document.getElementById('pauseIcon');
+            const isPlaying = !video.paused && !video.ended;
+            if (btn) btn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+            if (playIcon) playIcon.style.display = isPlaying ? 'none' : 'block';
+            if (pauseIcon) pauseIcon.style.display = isPlaying ? 'block' : 'none';
+            frame.classList.toggle('is-paused', !isPlaying);
+        }
+        function updateMuteButton() {
+            const video = getVideoElement();
+            const btn = document.getElementById('muteBtn');
+            const muteIcon = document.getElementById('muteIcon');
+            const unmuteIcon = document.getElementById('unmuteIcon');
+            const muted = Boolean(video.muted) || Number(video.volume) === 0;
+            if (btn) btn.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
+            if (muteIcon) muteIcon.style.display = muted ? 'none' : 'block';
+            if (unmuteIcon) unmuteIcon.style.display = muted ? 'block' : 'none';
+
+            const volIcon = document.getElementById('volIcon');
+            const volMutedIcon = document.getElementById('volMutedIcon');
+            const volToggle = document.getElementById('volumeToggle');
+            if (volToggle) volToggle.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
+            if (volIcon) volIcon.style.display = muted ? 'none' : 'block';
+            if (volMutedIcon) volMutedIcon.style.display = muted ? 'block' : 'none';
+        }
+function updateSeekUi() {
+            const video = getVideoElement();
+            const seekBar = document.getElementById('seekBar');
+            const current = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+            const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+            const percent = duration > 0 ? (current / duration) * 100 : 0;
+            if (!isDraggingSeek) seekBar.value = percent;
+            seekBar.style.setProperty('--seek-percent', percent + '%');
+            document.getElementById('currentTime').textContent = formatTime(current);
+            document.getElementById('durationTime').textContent = duration > 0 ? formatTime(duration) : 'LIVE';
+        }
+                function updateFullscreenButton() {
+            const enterIcon = document.getElementById('enterFsIcon');
+            const exitIcon = document.getElementById('exitFsIcon');
+            const btn = document.getElementById('fullscreenBtn');
+            const isFs = Boolean(document.fullscreenElement);
+            if (btn) btn.setAttribute('aria-label', isFs ? 'Exit fullscreen' : 'Fullscreen');
+            if (enterIcon) enterIcon.style.display = isFs ? 'none' : 'block';
+            if (exitIcon) exitIcon.style.display = isFs ? 'block' : 'none';
+        }
+function showControls(persistent) {
+            const surface = document.getElementById('controlSurface');
+            const hud = document.getElementById('videoHud');
+            const center = document.getElementById('controlCenter');
+            const bottom = document.getElementById('controlBottom');
+            const gradient = document.getElementById('playerGradient');
+            surface.classList.remove('idle');
+            hud.classList.remove('hidden');
+            center.classList.remove('hidden');
+            bottom.classList.remove('hidden');
+            gradient.classList.remove('hidden');
+            if (controlsHideTimer) clearTimeout(controlsHideTimer);
+            const video = getVideoElement();
+            if (!persistent && !video.paused) controlsHideTimer = setTimeout(hideControls, 2600);
+        }
+        function hideControls() {
+            const video = getVideoElement();
+            if (video.paused || isDraggingSeek) return;
+            document.getElementById('controlSurface').classList.add('idle');
+            document.getElementById('videoHud').classList.add('hidden');
+            document.getElementById('controlCenter').classList.add('hidden');
+            document.getElementById('controlBottom').classList.add('hidden');
+            document.getElementById('playerGradient').classList.add('hidden');
+        }
+        async function togglePlayPause() {
+            const video = getVideoElement();
+            if (video.paused) await ensurePlayback(video);
+            else video.pause();
+            updatePlayButton();
+            showControls(video.paused);
+        }
+        function seekRelative(seconds) {
+            const video = getVideoElement();
+            if (!Number.isFinite(video.currentTime)) return;
+            try { video.currentTime = Math.max(0, video.currentTime + seconds); } catch {}
+            shouldSnapToLiveEdge = false;
+            updateDvrMode();
+            showControls(true);
+        }
+        function goLive() {
+            const video = getVideoElement();
+            shouldSnapToLiveEdge = false;
+            if (hlsInstance) syncToLiveEdge(video, hlsInstance);
+            else if (Number.isFinite(video.duration) && video.duration > 0) {
+                try { video.currentTime = Math.max(0, video.duration - 1); } catch {}
+            }
+            isDvrMode = false;
+            updateDvrMode();
+            showControls(true);
+        }
+        async function playSource(url, isM3U8) {
+            const video = getVideoElement();
+            shouldSnapToLiveEdge = true;
+            savePlayerState({ lastUrl: url, isM3U8: Boolean(isM3U8) });
+            if (hlsInstance) {
+                hlsInstance.destroy();
+                hlsInstance = null;
+            }
+            video.removeAttribute('src');
+            video.load();
+            if (isM3U8 && Hls.isSupported()) {
+                const hls = new Hls({ liveDurationInfinity: false, lowLatencyMode: false, startPosition: -1, liveSyncDurationCount: 3, liveMaxLatencyDurationCount: 60, maxLiveSyncPlaybackRate: 1, backBufferLength: 90 });
+                hlsInstance = hls;
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, async () => {
+                    isLivePlaying = true;
+                    if (shouldSnapToLiveEdge) {
+                        syncToLiveEdge(video, hls);
+                        shouldSnapToLiveEdge = false;
+                    }
+                    setMeta(document.getElementById('pageTitle').textContent || streamTitle, document.getElementById('pageSubtitle').textContent || 'Dedicated live watch page', 'Live', 'Adaptive HLS live');
+                    await reportStreamStatus(true, 'playing');
+                    await ensurePlayback(video);
+                    updateSeekUi();
+                    updateDvrMode();
+                    updatePlayButton();
+                    showControls(false);
+                });
+                hls.on(Hls.Events.LEVEL_LOADED, async (_event, data) => {
+                    if (data && data.details && data.details.live) {
+                        if (shouldSnapToLiveEdge && !isDvrMode) {
+                            syncToLiveEdge(video, hls);
+                            shouldSnapToLiveEdge = false;
+                        }
+                        updateDvrMode();
+                    }
+                    await reportStreamStatus(true, 'playing');
+                });
+                hls.on(Hls.Events.ERROR, async (_event, data) => {
+                    if (!data || !data.fatal) return;
+                    isLivePlaying = false;
+                    shouldSnapToLiveEdge = true;
+                    document.getElementById('liveStatus').textContent = 'Live signal interrupted';
+                    document.getElementById('liveLatency').textContent = 'Source unavailable';
+                    await reportStreamStatus(false, data.details || data.type || 'signal_interrupted');
+                    showControls(true);
+                });
+                return;
+            }
+            video.src = url;
+            video.addEventListener('playing', () => {
+                isLivePlaying = true;
+                setMeta(document.getElementById('pageTitle').textContent || streamTitle, document.getElementById('pageSubtitle').textContent || 'Dedicated live watch page', 'Live', document.getElementById('liveLatency').textContent || 'Live edge');
+                reportStreamStatus(true, 'playing');
+            }, { once: true });
+            video.addEventListener('error', () => {
+                isLivePlaying = false;
+                reportStreamStatus(false, 'video_error');
+            }, { once: true });
+            await ensurePlayback(video);
+            updateSeekUi();
+            updatePlayButton();
+            showControls(false);
+        }
+        async function refreshEventInfo() {
+            if (!streamId) return;
+            try {
+                const infoResponse = await fetch('/api/fetchInfo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: streamId }),
+                    cache: 'no-store'
+                });
+                const infoResult = await infoResponse.json();
+                if (!infoResult.success) return;
+                const info = infoResult.data || {};
+                renderScoreboard(info);
+                const baseTitle = getMainTitle(info.title || document.getElementById('pageTitle').textContent || streamTitle);
+                const activeSession = info.activeSession || null;
+                const sessionLabel = activeSession?.name ? `${activeSession.name}` : detectSessionLabelFromText(info.title, info.status, streamTitle);
+                const sessionStatus = normalizeStatus(activeSession?.status || info.status, activeSession?.when || info.eventDate);
+                const sessionTime = activeSession?.when || info.eventDate;
+                const displayTitle = baseTitle;
+                const displaySubtitle = sessionTime || info.status || document.getElementById('pageSubtitle').textContent || 'Dedicated live watch page';
+                const displayStatus = isLivePlaying ? 'Live' : (sessionStatus || document.getElementById('liveStatus').textContent || 'On air');
+                const displayLatency = sessionTime || document.getElementById('liveLatency').textContent || 'Live edge';
+                setMeta(displayTitle, displaySubtitle, displayStatus, displayLatency, sessionLabel);
+            } catch {}
+        }
+        function openVolumePopover() {
+            const pop = document.getElementById('volumePopover');
+            if (!pop) return;
+            pop.classList.add('open');
+            pop.setAttribute('aria-hidden', 'false');
+        }
+        function closeVolumePopover() {
+            const pop = document.getElementById('volumePopover');
+            if (!pop) return;
+            pop.classList.remove('open');
+            pop.setAttribute('aria-hidden', 'true');
+        }
+        function toggleVolumePopover() {
+            const pop = document.getElementById('volumePopover');
+            if (!pop) return;
+            const open = pop.classList.contains('open');
+            if (open) closeVolumePopover();
+            else openVolumePopover();
+        }
+        function syncVolumeSlider() {
+            const video = getVideoElement();
+            const slider = document.getElementById('volumeSlider');
+            if (!slider) return;
+            const vol = Number(video.muted) ? 0 : Number(video.volume);
+            const pct = Math.round(Math.max(0, Math.min(1, vol)) * 100);
+            slider.value = String(pct);
+            slider.style.setProperty('--vol-percent', pct + '%');
+        }
+
+        function isMobileLikeDevice() {
+            return window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+        }
+
+        async function lockLandscapeOnMobile() {
+            if (!isMobileLikeDevice()) return;
+            try {
+                if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                    await screen.orientation.lock('landscape');
+                }
+            } catch {}
+        }
+
+        async function unlockOrientationOnMobile() {
+            if (!isMobileLikeDevice()) return;
+            try {
+                if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+                    screen.orientation.unlock();
+                } else if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                    await screen.orientation.lock('any');
+                }
+            } catch {}
+        }
+
+        function bindCustomPlayerUi() {
+            const video = getVideoElement();
+            const frame = document.getElementById('playerFrame');
+            const seekBar = document.getElementById('seekBar');
+            const sourcesList = document.getElementById('sourcesList');
+            document.getElementById('playPauseBtn').addEventListener('click', togglePlayPause);
+            document.getElementById('backTenBtn').addEventListener('click', () => seekRelative(-10));
+            document.getElementById('forwardTenBtn').addEventListener('click', () => seekRelative(10));
+            document.getElementById('goLiveBtn').addEventListener('click', goLive);
+            document.getElementById('muteBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleVolumePopover();
+                syncVolumeSlider();
+                updateMuteButton();
+                showControls(true);
+            });
+            document.getElementById('fullscreenBtn').addEventListener('click', async () => {
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                    await unlockOrientationOnMobile();
+                } else {
+                    if (frame.requestFullscreen) await frame.requestFullscreen();
+                    else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+                    await lockLandscapeOnMobile();
+                }
+                showControls(true);
+            });
+            const volumeToggle = document.getElementById('volumeToggle');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumePopover = document.getElementById('volumePopover');
+
+            if (volumeToggle) {
+                volumeToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    video.muted = !video.muted;
+                    if (!video.muted && Number(video.volume) === 0) video.volume = 0.5;
+                    savePlayerState({ muted: video.muted, volume: video.volume });
+                    updateMuteButton();
+                    syncVolumeSlider();
+                    showControls(true);
+                });
+            }
+
+            if (volumeSlider) {
+                const applySlider = (pct) => {
+                    const clamped = Math.max(0, Math.min(100, Number(pct)));
+                    volumeSlider.value = String(clamped);
+                    volumeSlider.style.setProperty('--vol-percent', clamped + '%');
+                    const nextVol = clamped / 100;
+                    video.volume = nextVol;
+                    video.muted = clamped === 0;
+                    savePlayerState({ muted: video.muted, volume: video.volume });
+                    updateMuteButton();
+                };
+
+                volumeSlider.addEventListener('input', (e) => {
+                    e.stopPropagation();
+                    applySlider(e.target.value);
+                    showControls(true);
+                });
+
+                // Better mobile dragging responsiveness.
+                volumeSlider.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    volumeSlider.setPointerCapture?.(e.pointerId);
+                });
+                volumeSlider.addEventListener('pointerup', (e) => {
+                    e.stopPropagation();
+                    if (volumeSlider.hasPointerCapture?.(e.pointerId)) volumeSlider.releasePointerCapture?.(e.pointerId);
+                });
+            }
+
+            // Click outside closes popover.
+            document.addEventListener('click', (e) => {
+                if (!volumePopover) return;
+                if (!volumePopover.classList.contains('open')) return;
+                if (e.target === document.getElementById('muteBtn')) return;
+                if (volumePopover.contains(e.target)) return;
+                closeVolumePopover();
+            });
+            frame.addEventListener('mousemove', () => showControls(false));
+            frame.addEventListener('mouseleave', () => hideControls());
+            frame.addEventListener('click', (event) => {
+                if (event.target.closest('button') || event.target === seekBar) return;
+                showControls(video.paused);
+            });
+            frame.addEventListener('dblclick', (event) => {
+                if (event.target.closest('button') || event.target === seekBar) return;
+                togglePlayPause();
+            });
+            seekBar.addEventListener('input', () => {
+                isDraggingSeek = true;
+                const percent = Number(seekBar.value || 0);
+                seekBar.style.setProperty('--seek-percent', percent + '%');
+                const duration = Number.isFinite(video.duration) ? video.duration : 0;
+                document.getElementById('currentTime').textContent = formatTime((percent / 100) * duration);
+                showControls(true);
+            });
+            const commitSeek = () => {
+                const duration = Number.isFinite(video.duration) ? video.duration : 0;
+                const percent = Number(seekBar.value || 0);
+                if (duration > 0) {
+                    try { video.currentTime = (percent / 100) * duration; } catch {}
+                }
+                isDraggingSeek = false;
+                shouldSnapToLiveEdge = false;
+                updateSeekUi();
+                updateDvrMode();
+                showControls(video.paused);
+            };
+            seekBar.addEventListener('change', commitSeek);
+            seekBar.addEventListener('mouseup', commitSeek);
+            seekBar.addEventListener('touchend', commitSeek);
+            video.addEventListener('play', () => { updatePlayButton(); showControls(false); });
+            video.addEventListener('pause', () => { updatePlayButton(); showControls(true); });
+            video.addEventListener('timeupdate', () => { if (!isDraggingSeek) updateSeekUi(); if (isDvrMode) updateDvrMode(); });
+            video.addEventListener('loadedmetadata', () => { updateSeekUi(); updateDvrMode(); });
+            video.addEventListener('volumechange', () => { savePlayerState({ muted: video.muted, volume: video.volume }); updateMuteButton(); syncVolumeSlider(); });
+            video.addEventListener('seeking', () => {
+                if (Number.isFinite(video.duration) && Number.isFinite(video.currentTime)) {
+                    const distanceFromLive = video.duration - video.currentTime;
+                    if (distanceFromLive > 20) {
+                        isDvrMode = true;
+                        shouldSnapToLiveEdge = false;
+                        document.getElementById('liveLatency').textContent = 'DVR mode';
+                        updateLiveButton();
+                    }
+                }
+            });
+            video.addEventListener('seeked', updateDvrMode);
+            sourcesList.addEventListener('click', (event) => {
+                const button = event.target.closest('.source-btn');
+                if (!button) return;
+                const url = button.getAttribute('data-url') || '';
+                const isHls = button.getAttribute('data-hls') === '1';
+                playSource(url, isHls);
+            });
+            document.addEventListener('fullscreenchange', () => {
+                updateFullscreenButton();
+                showControls(true);
+                if (!document.fullscreenElement) unlockOrientationOnMobile();
+            });
+            updatePlayButton();
+            updateMuteButton();
+            updateFullscreenButton();
+            syncVolumeSlider();
+            updateSeekUi();
+            updateLiveButton();
+            showControls(true);
+        }
+        async function loadWatchPage() {
+            if (!streamId) {
+                setMeta('No stream selected', 'Missing event id', 'Unavailable', 'Return to events');
+                document.getElementById('sourcesList').innerHTML = '<div class="empty">No event was provided. Go back and select a stream.</div>';
+                return;
+            }
+            setMeta(streamTitle, 'Resolving direct live source', 'Connecting to live feed', 'Syncing stream');
+            try {
+                const infoResponse = await fetch('/api/fetchInfo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: streamId })
+                });
+                const infoResult = await infoResponse.json();
+                if (!infoResult.success) throw new Error(infoResult.error || 'Failed to load stream info');
+                const info = infoResult.data || {};
+                renderScoreboard(info);
+                const baseTitle = getMainTitle(info.title || streamTitle);
+                const activeSession = info.activeSession || null;
+                const sessionLabel = activeSession?.name ? `${activeSession.name}` : detectSessionLabelFromText(info.title, info.status, streamTitle);
+                const sessionStatus = normalizeStatus(activeSession?.status || info.status, activeSession?.when || info.eventDate);
+                const sessionTime = activeSession?.when || info.eventDate;
+                const displayTitle = baseTitle;
+                const displaySubtitle = sessionTime || info.status || 'Dedicated live watch page';
+                const displayStatus = sessionStatus || 'Connecting to live feed';
+                const displayLatency = sessionTime || 'Syncing stream';
+                setMeta(displayTitle, displaySubtitle, displayStatus, displayLatency, sessionLabel);
+                if (scoreRefreshTimer) clearInterval(scoreRefreshTimer);
+                scoreRefreshTimer = setInterval(refreshEventInfo, 15000);
+                const sourcesResponse = await fetch('/api/fetchSources', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ eventUrl: infoResult.data.url })
+                });
+                const sourcesResult = await sourcesResponse.json();
+                if (!sourcesResult.success) throw new Error(sourcesResult.error || 'Failed to load sources');
+                const prepared = preparePlayableSources(sourcesResult.data.sources || []);
+                displaySources(prepared);
+                if (prepared[0]) {
+                    await reportStreamStatus(true, 'source_available');
+                    await playSource(prepared[0].playUrl, prepared[0].isM3U8);
+                } else {
+                    isLivePlaying = false;
+                    await reportStreamStatus(false, 'no_sources');
+                    setMeta(document.getElementById('pageTitle').textContent || streamTitle, 'No playable source returned', 'Live source missing', 'Unavailable');
+                }
+            } catch (error) {
+                isLivePlaying = false;
+                await reportStreamStatus(false, error.message || 'load_failed');
+                setMeta(document.getElementById('pageTitle').textContent || streamTitle, 'Playback request failed', 'Connection error', 'Retry required');
+                document.getElementById('sourcesList').innerHTML = '<div class="empty">' + escapeHtml(error.message) + '</div>';
+            }
+        }
+        applySavedPlayerState();
+        bindCustomPlayerUi();
+        updateLiveClock();
+        setInterval(updateLiveClock, 1000);
+        window.addEventListener('beforeunload', () => { if (scoreRefreshTimer) clearInterval(scoreRefreshTimer); });
+        window.addEventListener('load', loadWatchPage);
+    </script>
+</body>
+</html>
+
