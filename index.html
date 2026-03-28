@@ -1060,8 +1060,10 @@
         }
 
         function goToWatchPage(id, title) {
-            const params = new URLSearchParams({ id, title });
-            window.location.href = `/watch.html?${params.toString()}`;
+            try {
+                sessionStorage.setItem('selected_watch_event', JSON.stringify({ id, title, savedAt: Date.now() }));
+            } catch {}
+            window.location.href = '/watch.html';
         }
 
         function setActiveNav() {

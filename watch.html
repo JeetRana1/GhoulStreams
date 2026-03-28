@@ -642,8 +642,22 @@
         let isDraggingSeek = false;
         const PLAYER_STATE_KEY = 'watch_player_state';
         const params = new URLSearchParams(window.location.search);
-        const streamId = params.get('id') || '';
-        const streamTitle = params.get('title') || 'Live Event';
+        let streamId = params.get('id') || '';
+        let streamTitle = params.get('title') || 'Live Event';
+
+        try {
+            const saved = JSON.parse(sessionStorage.getItem('selected_watch_event') || 'null');
+            if (saved && typeof saved.id === 'string' && saved.id.trim()) {
+                streamId = saved.id;
+                streamTitle = saved.title || streamTitle;
+            } else if (streamId) {
+                sessionStorage.setItem('selected_watch_event', JSON.stringify({ id: streamId, title: streamTitle, savedAt: Date.now() }));
+            }
+        } catch {}
+
+        if (window.location.search) {
+            window.history.replaceState({}, document.title, '/watch.html');
+        }
 
         function getVideoElement() { return document.getElementById('videoPlayer'); }
         function formatTime(seconds) {
