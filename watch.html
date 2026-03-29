@@ -870,6 +870,12 @@
         let subtitleTrackOptions = [];
         let selectedSubtitleTrack = -1;
         let currentSubtitleCandidates = [];
+        const SOURCE_FAILURE_COOLDOWN_MS = 45000;
+        const SOURCE_SWITCH_MIN_INTERVAL_MS = 1500;
+        const HLS_BACKOFF_429_MS = 20000;
+        const HLS_BACKOFF_OTHER_MS = 30000;
+        const sourceFailureMap = new Map();
+        let hlsBackoffTimer = null;
         const PLAYER_STATE_KEY = 'watch_player_state';
         const VIDEO_FIT_MODES = [
             {
@@ -957,6 +963,28 @@
             if (Number.isFinite(video.duration) && video.duration > 0) {
                 try { video.currentTime = Math.max(0, video.duration - 1); } catch {}
             }
+        }
+        function markSourceFailure(url, statusCode, reason) {
+            if (!url) return;
+            sourceFailureMap.set(url, {
+                statusCode: Number(statusCode) || 0,
+                reason: String(reason || ''),
+                ts: Date.now()
+            });
+        }
+        function clearSourceFailure(url) {
+            if (!url) return;
+            sourceFailureMap.delete(url);
+        }
+        function isSourceCoolingDown(url) {
+            if (!url) return false;
+            const failure = sourceFailureMap.get(url);
+            if (!failure) return false;
+            if ((Date.now() - Number(failure.ts || 0)) >= SOURCE_FAILURE_COOLDOWN_MS) {
+                sourceFailureMap.delete(url);
+                return false;
+            }
+            return true;
         }
         function applySavedPlayerState() {
             const video = getVideoElement();
@@ -1509,6 +1537,10 @@ function showControls(persistent) {
             const preserveSourceQualityOptions = Boolean(options.preserveSourceQualityOptions);
             const backendSubtitles = Array.isArray(options.subtitleCandidates) ? options.subtitleCandidates : [];
             const video = getVideoElement();
+            if (hlsBackoffTimer) {
+                clearTimeout(hlsBackoffTimer);
+                hlsBackoffTimer = null;
+            }
             shouldSnapToLiveEdge = true;
             savePlayerState({ lastUrl: url, isM3U8: Boolean(isM3U8) });
             qualityCycleOptions = [];
@@ -1548,25 +1580,67 @@ function showControls(persistent) {
                 hlsInstance = hls;
                 hls.loadSource(url);
                 hls.attachMedia(video);
+                let switchInProgress = false;
+                let lastSwitchAt = 0;
+                let recentFloodErrors = 0;
+                let recentFloodWindowStart = 0;
+
+                const noteFloodError = () => {
+                    const now = Date.now();
+                    if ((now - recentFloodWindowStart) > 12000) {
+                        recentFloodWindowStart = now;
+                        recentFloodErrors = 1;
+                        return recentFloodErrors;
+                    }
+                    recentFloodErrors += 1;
+                    return recentFloodErrors;
+                };
+
+                const scheduleBackoffRetry = (statusCode) => {
+                    if (hlsBackoffTimer || hlsInstance !== hls) return;
+                    const waitMs = Number(statusCode) === 429 ? HLS_BACKOFF_429_MS : HLS_BACKOFF_OTHER_MS;
+                    try { hls.stopLoad(); } catch {}
+                    document.getElementById('liveStatus').textContent = 'Live signal throttled';
+                    document.getElementById('liveLatency').textContent = `Retrying in ${Math.ceil(waitMs / 1000)}s`;
+                    hlsBackoffTimer = setTimeout(() => {
+                        hlsBackoffTimer = null;
+                        if (hlsInstance === hls) {
+                            try { hls.startLoad(); } catch {}
+                        }
+                    }, waitMs);
+                };
 
                 const trySwitchToNextSource = async (reason) => {
-                    if (!qualitySourceOptions.length) return false;
+                    if (!qualitySourceOptions.length || switchInProgress) return false;
+                    const now = Date.now();
+                    if ((now - lastSwitchAt) < SOURCE_SWITCH_MIN_INTERVAL_MS) return false;
                     const currentIndex = qualitySourceOptions.findIndex((opt) => opt.url === url || opt.url === selectedQualitySourceUrl);
                     if (currentIndex < 0 || qualitySourceOptions.length < 2) return false;
-                    const next = qualitySourceOptions[(currentIndex + 1) % qualitySourceOptions.length];
-                    if (!next || !next.url || next.url === url) return false;
 
+                    const ordered = [
+                        ...qualitySourceOptions.slice(currentIndex + 1),
+                        ...qualitySourceOptions.slice(0, currentIndex + 1)
+                    ];
+                    const next = ordered.find((opt) => opt && opt.url && opt.url !== url && !isSourceCoolingDown(opt.url));
+                    if (!next || !next.url) return false;
+
+                    switchInProgress = true;
                     selectedQualitySourceUrl = next.url;
                     savePlayerState({ preferredQualityUrl: selectedQualitySourceUrl });
                     document.getElementById('liveStatus').textContent = 'Switching source';
                     document.getElementById('liveLatency').textContent = reason || 'Recovering stream';
                     await reportStreamStatus(false, reason || 'source_switch');
-                    await playSource(next.url, Boolean(next.isM3U8), {
-                        preserveSourceQualityOptions: true,
-                        subtitleCandidates: currentSubtitleCandidates
-                    });
-                    updateQualityButton();
-                    return true;
+                    try {
+                        await playSource(next.url, Boolean(next.isM3U8), {
+                            preserveSourceQualityOptions: true,
+                            subtitleCandidates: currentSubtitleCandidates
+                        });
+                        lastSwitchAt = Date.now();
+                        updateQualityButton();
+                        return true;
+                    } finally {
+                        switchInProgress = false;
+                    }
                 };
                 hls.on(Hls.Events.MANIFEST_PARSED, async () => {
                     console.log('📡 MANIFEST_PARSED - Video textTracks:', video.textTracks?.length);
@@ -1576,6 +1650,9 @@ function showControls(persistent) {
                     }
                     initializeQualityControl(hls);
                     initializeSubtitleControl(hls, backendSubtitles);
+                    clearSourceFailure(url);
+                    recentFloodErrors = 0;
+                    recentFloodWindowStart = 0;
                     isLivePlaying = true;
                     if (shouldSnapToLiveEdge) {
                         syncToLiveEdge(video, hls);
@@ -1611,8 +1688,16 @@ function showControls(persistent) {
                     const isNetworkLoadIssue = data.type === 'networkError' || /fragLoadError|levelLoadError|manifestLoadError/i.test(details);
 
                     if (isNetworkLoadIssue && isRetryFloodCandidate) {
+                        markSourceFailure(url, statusCode, details || data.type);
                         const switched = await trySwitchToNextSource(`upstream_${statusCode}`);
                         if (switched) return;
+
+                        const floodCount = noteFloodError();
+                        const shouldBackoff = statusCode === 429 || floodCount >= 3;
+                        if (shouldBackoff) {
+                            scheduleBackoffRetry(statusCode);
+                            return;
+                        }
                     }
 
                     if (!data.fatal) return;
@@ -2331,6 +2416,7 @@ function showControls(persistent) {
         const A2HS_MAX_DISPLAYS = 2;
         
         window.addEventListener('beforeinstallprompt', (e) => {
+            if (!IS_IOS || IS_PWA) return;
             // Prevent the mini-infobar from appearing
             e.preventDefault();
             // Stash the event for later use
