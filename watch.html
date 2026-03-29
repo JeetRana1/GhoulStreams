@@ -1436,7 +1436,10 @@ function updateSeekUi() {
             const enterIcon = document.getElementById('enterFsIcon');
             const exitIcon = document.getElementById('exitFsIcon');
             const btn = document.getElementById('fullscreenBtn');
-            const isFs = Boolean(document.fullscreenElement);
+            // Check both standard fullscreen and iOS fullscreen states
+            const isFs = Boolean(document.fullscreenElement) || 
+                         document.documentElement.classList.contains('ios-pseudo-fs-active') || 
+                         _iosNativePlayerActive;
             if (btn) btn.setAttribute('aria-label', isFs ? 'Exit fullscreen' : 'Fullscreen');
             if (enterIcon) enterIcon.style.display = isFs ? 'none' : 'block';
             if (exitIcon) exitIcon.style.display = isFs ? 'block' : 'none';
@@ -1742,13 +1745,37 @@ function showControls(persistent) {
                 showControls(true);
             });
             document.getElementById('fullscreenBtn').addEventListener('click', async () => {
-                if (document.fullscreenElement) {
-                    await document.exitFullscreen();
-                    await unlockOrientationOnMobile();
+                // iOS handling
+                if (IS_IOS && IS_SAFARI) {
+                    const isCurrentlyFullscreen = document.documentElement.classList.contains('ios-pseudo-fs-active') || _iosNativePlayerActive;
+                    
+                    if (isCurrentlyFullscreen) {
+                        // Exit fullscreen
+                        if (_iosNativePlayerActive && videoEl.webkitExitFullscreen) {
+                            videoEl.webkitExitFullscreen();
+                        } else {
+                            exitIOSPseudoFullscreen();
+                        }
+                        await unlockOrientationOnMobile();
+                    } else {
+                        // Enter fullscreen - try native first, then pseudo
+                        if (videoEl && typeof videoEl.webkitEnterFullscreen === 'function') {
+                            videoEl.webkitEnterFullscreen();
+                        } else {
+                            enterIOSPseudoFullscreen();
+                        }
+                        await lockLandscapeOnMobile();
+                    }
                 } else {
-                    if (frame.requestFullscreen) await frame.requestFullscreen();
-                    else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-                    await lockLandscapeOnMobile();
+                    // Standard Fullscreen API for desktop/other browsers
+                    if (document.fullscreenElement) {
+                        await document.exitFullscreen();
+                        await unlockOrientationOnMobile();
+                    } else {
+                        if (frame.requestFullscreen) await frame.requestFullscreen();
+                        else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+                        await lockLandscapeOnMobile();
+                    }
                 }
                 showControls(true);
             });
@@ -1867,6 +1894,14 @@ function showControls(persistent) {
                 showControls(true);
                 if (!document.fullscreenElement) unlockOrientationOnMobile();
             });
+            
+            // Handle iOS pseudo fullscreen class changes
+            if (IS_IOS) {
+                const observer = new MutationObserver(() => {
+                    updateFullscreenButton();
+                });
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            }
             updatePlayButton();
             updateMuteButton();
             updateFullscreenButton();
