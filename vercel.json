@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/index.js": {
-      "includeFiles": "**/*.{html,md,svg,png}"
+      "includeFiles": "**/*.{html,md,svg,png,json,webmanifest,js,css,ico,jpg,jpeg,webp,txt}"
     }
   },
   "rewrites": [
