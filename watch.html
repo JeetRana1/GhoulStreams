@@ -907,12 +907,15 @@
             const options = [{ trackIndex: -1, label: 'Off' }];
             
             const hlsTracks = Array.isArray(hls && hls.subtitleTracks) ? hls.subtitleTracks : [];
+            console.log('🎬 Subtitle Tracks from HLS.js:', hlsTracks.length, hlsTracks);
+            
             hlsTracks.forEach((track, index) => {
                 const trackName = String(track && (track.name || track.lang || '')).trim();
                 options.push({ trackIndex: index, label: trackName || ('Track ' + (index + 1)) });
             });
             
             if (options.length === 1 && Array.isArray(backendSubtitles) && backendSubtitles.length > 0) {
+                console.log('📝 Adding backend subtitles:', backendSubtitles);
                 backendSubtitles.forEach((sub, index) => {
                     options.push({ 
                         trackIndex: -(index + 2), 
@@ -924,6 +927,8 @@
             }
 
             subtitleTrackOptions = options.length > 1 ? options : [];
+            console.log('✅ Subtitle options built:', subtitleTrackOptions);
+            
             const state = readPlayerState();
             const savedTrack = Number(state.subtitleTrack);
             selectedSubtitleTrack = Number.isFinite(savedTrack) ? savedTrack : -1;
@@ -932,9 +937,26 @@
             if (hls && subtitleTrackOptions.length) {
                 try { 
                     if (selectedSubtitleTrack >= 0) {
+                        console.log('🔤 Setting subtitle track to:', selectedSubtitleTrack);
                         hls.subtitleTrack = selectedSubtitleTrack;
+                        // Ensure the video textTrack is visible
+                        const video = getVideoElement();
+                        if (video.textTracks && video.textTracks[selectedSubtitleTrack]) {
+                            video.textTracks[selectedSubtitleTrack].mode = 'showing';
+                            console.log('✅ TextTrack mode set to showing', video.textTracks[selectedSubtitleTrack]);
+                        }
+                    } else {
+                        // Turn off all captions
+                        const video = getVideoElement();
+                        for (let i = 0; i < (video.textTracks?.length || 0); i++) {
+                            if (video.textTracks[i].kind === 'captions' || video.textTracks[i].kind === 'subtitles') {
+                                video.textTracks[i].mode = 'hidden';
+                            }
+                        }
                     }
-                } catch {}
+                } catch (e) {
+                    console.warn('Could not set subtitle track:', e);
+                }
             }
 
             updateSubtitleButton();
@@ -944,9 +966,30 @@
             const currentIndex = subtitleTrackOptions.findIndex((track) => track.trackIndex === selectedSubtitleTrack);
             const next = subtitleTrackOptions[(currentIndex + 1 + subtitleTrackOptions.length) % subtitleTrackOptions.length];
             selectedSubtitleTrack = next.trackIndex;
-            if (hlsInstance && selectedSubtitleTrack >= 0) {
-                try { hlsInstance.subtitleTrack = selectedSubtitleTrack; } catch {}
+            
+            if (hlsInstance) {
+                if (selectedSubtitleTrack >= 0) {
+                    console.log('🎬 Enabling subtitle track:', selectedSubtitleTrack);
+                    hlsInstance.subtitleTrack = selectedSubtitleTrack;
+                    // Ensure the video textTrack is visible
+                    const video = getVideoElement();
+                    if (video.textTracks && video.textTracks[selectedSubtitleTrack]) {
+                        video.textTracks[selectedSubtitleTrack].mode = 'showing';
+                        console.log('✅ TextTrack mode set to showing');
+                    }
+                } else {
+                    console.log('🚫 Disabling all subtitle tracks');
+                    hlsInstance.subtitleTrack = -1;
+                    // Hide all text tracks
+                    const video = getVideoElement();
+                    for (let i = 0; i < (video.textTracks?.length || 0); i++) {
+                        if (video.textTracks[i].kind === 'captions' || video.textTracks[i].kind === 'subtitles') {
+                            video.textTracks[i].mode = 'hidden';
+                        }
+                    }
+                }
             }
+            
             savePlayerState({ subtitleTrack: selectedSubtitleTrack });
             updateSubtitleButton();
         }
@@ -1253,6 +1296,11 @@ function showControls(persistent) {
                 hls.loadSource(url);
                 hls.attachMedia(video);
                 hls.on(Hls.Events.MANIFEST_PARSED, async () => {
+                    console.log('📡 MANIFEST_PARSED - Video textTracks:', video.textTracks?.length);
+                    for (let i = 0; i < (video.textTracks?.length || 0); i++) {
+                        const track = video.textTracks[i];
+                        console.log(`  Track ${i}: kind=${track.kind}, label=${track.label}, language=${track.language}`);
+                    }
                     initializeQualityControl(hls);
                     initializeSubtitleControl(hls, backendSubtitles);
                     isLivePlaying = true;

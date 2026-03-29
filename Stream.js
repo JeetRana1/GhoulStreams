@@ -368,48 +368,26 @@ class BuffStreams extends Provider {
             const attrs = this.parseM3uAttributeList(line.slice('#EXT-X-MEDIA:'.length));
             const type = String(attrs.TYPE || '').toUpperCase();
             
-            // Handle subtitle files (TYPE=SUBTITLES with URI)
-            if (type === 'SUBTITLES') {
-                const trackUrl = this.toAbsoluteUrl(attrs.URI, manifestUrl);
-                if (!trackUrl || seen.has(trackUrl)) continue;
+            // Only handle actual subtitle files (TYPE=SUBTITLES with URI)
+            // Closed captions (TYPE=CLOSED-CAPTIONS) are handled natively by HLS.js
+            if (type !== 'SUBTITLES') continue;
 
-                const lang = String(attrs.LANGUAGE || '').trim();
-                const name = String(attrs.NAME || '').trim();
-                const label = name || lang || 'Subtitles';
-                const format = /\.vtt($|\?)/i.test(trackUrl) ? 'vtt' : 'm3u8';
+            const trackUrl = this.toAbsoluteUrl(attrs.URI, manifestUrl);
+            if (!trackUrl || seen.has(trackUrl)) continue;
 
-                seen.add(trackUrl);
-                subtitles.push({
-                    url: trackUrl,
-                    lang,
-                    label,
-                    format,
-                    headers: refererHeaders
-                });
-            }
-            // Handle closed captions (TYPE=CLOSED-CAPTIONS with INSTREAM-ID)
-            // These are typically embedded in the video stream and HLS.js will expose them
-            // We create placeholder entries so the frontend knows they're available
-            else if (type === 'CLOSED-CAPTIONS') {
-                const instreamId = String(attrs['INSTREAM-ID'] || '').trim();
-                if (instreamId) {
-                    const lang = String(attrs.LANGUAGE || '').trim();
-                    const name = String(attrs.NAME || '').trim();
-                    const label = name || lang || instreamId;
-                    
-                    if (!seen.has(instreamId)) {
-                        seen.add(instreamId);
-                        subtitles.push({
-                            url: instreamId,
-                            lang,
-                            label,
-                            format: 'closed-caption',
-                            isBuiltIn: true,
-                            headers: refererHeaders
-                        });
-                    }
-                }
-            }
+            const lang = String(attrs.LANGUAGE || '').trim();
+            const name = String(attrs.NAME || '').trim();
+            const label = name || lang || 'Subtitles';
+            const format = /\.vtt($|\?)/i.test(trackUrl) ? 'vtt' : 'm3u8';
+
+            seen.add(trackUrl);
+            subtitles.push({
+                url: trackUrl,
+                lang,
+                label,
+                format,
+                headers: refererHeaders
+            });
         }
 
         return subtitles;
