@@ -304,6 +304,138 @@ class BuffStreams extends Provider {
         return null;
     }
 
+    parseM3uAttributeList(value) {
+        const attributes = {};
+        const source = String(value || '');
+        const regex = /([A-Z0-9-]+)=(("[^"]*")|[^,]*)/gi;
+        let match;
+        while ((match = regex.exec(source)) !== null) {
+            const key = String(match[1] || '').toUpperCase();
+            let raw = String(match[2] || '').trim();
+            if (raw.startsWith('"') && raw.endsWith('"')) raw = raw.slice(1, -1);
+            attributes[key] = raw;
+        }
+        return attributes;
+    }
+
+    parseHlsVariantSources(manifestText, manifestUrl, refererHeaders) {
+        const lines = String(manifestText || '').split(/\r?\n/);
+        const variants = [];
+        const seen = new Set();
+
+        for (let i = 0; i < lines.length; i += 1) {
+            const line = String(lines[i] || '').trim();
+            if (!line.startsWith('#EXT-X-STREAM-INF:')) continue;
+
+            const info = line.slice('#EXT-X-STREAM-INF:'.length);
+            let streamUrl = '';
+            for (let j = i + 1; j < lines.length; j += 1) {
+                const candidate = String(lines[j] || '').trim();
+                if (!candidate) continue;
+                if (candidate.startsWith('#')) continue;
+                streamUrl = this.toAbsoluteUrl(candidate, manifestUrl) || '';
+                break;
+            }
+            if (!streamUrl || seen.has(streamUrl)) continue;
+
+            const resolution = info.match(/RESOLUTION=\s*(\d+)x(\d+)/i);
+            const bandwidth = info.match(/(?:AVERAGE-BANDWIDTH|BANDWIDTH)=\s*(\d+)/i);
+            const qualityLabel = resolution?.[2]
+                ? `${resolution[2]}p`
+                : (bandwidth?.[1] ? `${Math.round(Number(bandwidth[1]) / 1000)}k` : 'auto');
+
+            seen.add(streamUrl);
+            variants.push({
+                url: streamUrl,
+                quality: qualityLabel,
+                isM3U8: true,
+                isDirect: true,
+                headers: refererHeaders
+            });
+        }
+
+        return variants;
+    }
+
+    parseHlsSubtitleSources(manifestText, manifestUrl, refererHeaders) {
+        const subtitles = [];
+        const seen = new Set();
+        const lines = String(manifestText || '').split(/\r?\n/);
+
+        for (const rawLine of lines) {
+            const line = String(rawLine || '').trim();
+            if (!line.startsWith('#EXT-X-MEDIA:')) continue;
+            const attrs = this.parseM3uAttributeList(line.slice('#EXT-X-MEDIA:'.length));
+            const type = String(attrs.TYPE || '').toUpperCase();
+            
+            // Handle subtitle files (TYPE=SUBTITLES with URI)
+            if (type === 'SUBTITLES') {
+                const trackUrl = this.toAbsoluteUrl(attrs.URI, manifestUrl);
+                if (!trackUrl || seen.has(trackUrl)) continue;
+
+                const lang = String(attrs.LANGUAGE || '').trim();
+                const name = String(attrs.NAME || '').trim();
+                const label = name || lang || 'Subtitles';
+                const format = /\.vtt($|\?)/i.test(trackUrl) ? 'vtt' : 'm3u8';
+
+                seen.add(trackUrl);
+                subtitles.push({
+                    url: trackUrl,
+                    lang,
+                    label,
+                    format,
+                    headers: refererHeaders
+                });
+            }
+            // Handle closed captions (TYPE=CLOSED-CAPTIONS with INSTREAM-ID)
+            // These are typically embedded in the video stream and HLS.js will expose them
+            // We create placeholder entries so the frontend knows they're available
+            else if (type === 'CLOSED-CAPTIONS') {
+                const instreamId = String(attrs['INSTREAM-ID'] || '').trim();
+                if (instreamId) {
+                    const lang = String(attrs.LANGUAGE || '').trim();
+                    const name = String(attrs.NAME || '').trim();
+                    const label = name || lang || instreamId;
+                    
+                    if (!seen.has(instreamId)) {
+                        seen.add(instreamId);
+                        subtitles.push({
+                            url: instreamId,
+                            lang,
+                            label,
+                            format: 'closed-caption',
+                            isBuiltIn: true,
+                            headers: refererHeaders
+                        });
+                    }
+                }
+            }
+        }
+
+        return subtitles;
+    }
+
+    async extractManifestMedia(hlsUrl, refererHeaders) {
+        try {
+            const response = await fetch(hlsUrl, { headers: refererHeaders });
+            if (!response.ok) return { variants: [], subtitles: [] };
+            const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+            const manifestText = await response.text();
+            if (!/mpegurl|m3u8/.test(contentType) && !/^#EXTM3U/i.test(manifestText.trim())) {
+                return { variants: [], subtitles: [] };
+            }
+
+            const variants = /#EXT-X-STREAM-INF:/i.test(manifestText)
+                ? this.parseHlsVariantSources(manifestText, hlsUrl, refererHeaders)
+                : [];
+            const subtitles = this.parseHlsSubtitleSources(manifestText, hlsUrl, refererHeaders);
+
+            return { variants, subtitles };
+        } catch {
+            return { variants: [], subtitles: [] };
+        }
+    }
+
     async fetchInfo(id) {
         try {
             const url = this.toAbsoluteUrl(id, this.baseUrl);
@@ -355,10 +487,21 @@ class BuffStreams extends Provider {
             const embedHtml = await embedResponse.text();
             const hlsUrl = this.extractHlsFromEmbed(embedHtml);
             if (!hlsUrl) throw new Error('No direct HLS URL found in embed');
+
+            const sourceHeaders = { 'Referer': embedUrl, 'Origin': new URL(embedUrl).origin, 'User-Agent': this.userAgent };
+            const manifestMedia = await this.extractManifestMedia(hlsUrl, sourceHeaders);
+            const variantSources = Array.isArray(manifestMedia.variants) ? manifestMedia.variants : [];
+            const subtitleSources = Array.isArray(manifestMedia.subtitles) ? manifestMedia.subtitles : [];
+            const baseSource = { url: hlsUrl, quality: 'auto', isM3U8: true, isDirect: true, headers: sourceHeaders };
+
+            const allSources = variantSources.length
+                ? [baseSource, ...variantSources]
+                : [baseSource];
+
             return {
-                sources: [{ url: hlsUrl, quality: 'auto', isM3U8: true, isDirect: true, headers: { 'Referer': embedUrl, 'Origin': new URL(embedUrl).origin, 'User-Agent': this.userAgent } }],
-                subtitles: [],
-                headers: { 'Referer': embedUrl, 'Origin': new URL(embedUrl).origin, 'User-Agent': this.userAgent },
+                sources: allSources,
+                subtitles: subtitleSources,
+                headers: sourceHeaders,
                 embedUrl
             };
         } catch (error) {

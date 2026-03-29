@@ -341,6 +341,7 @@
         .time-sep { color: rgba(255,255,255,0.4); }
         .actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
         .icon-btn, .live-btn { min-width: 40px; height: 40px; padding: 0 12px; border-radius: var(--r-md); font-weight: 700; font-size: 0.8rem; }
+        .fit-icon { width: 18px; height: 18px; display: block; }
         .live-btn.active { border-color: rgba(255,98,120,0.34); background: rgba(255,98,120,0.16); color: #ffd4da; }
         .player-frame.is-paused .player-gradient,
         .player-frame.is-paused .video-hud,
@@ -581,6 +582,15 @@
                                             </svg>
                                             <span class="sr-only">Mute</span>
                                         </button>
+                                        <button class="icon-btn" id="fitModeBtn" type="button" aria-label="Video size mode: Fill" title="Video size mode: Fill">
+                                            <svg class="fit-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                                                <rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7"/>
+                                                <path d="M7 7H17V17H7V7Z" fill="currentColor"/>
+                                            </svg>
+                                            <span class="sr-only">Video size mode: Fill</span>
+                                        </button>
+                                        <button class="icon-btn" id="qualityBtn" type="button" aria-label="Quality: Auto" title="Quality: Auto" style="display:none">Auto</button>
+                                        <button class="icon-btn" id="subtitleBtn" type="button" aria-label="Captions: Off" title="Captions: Off" style="display:none">CC</button>
                                         <button class="icon-btn" id="fullscreenBtn" type="button" aria-label="Fullscreen">
                                             <svg id="enterFsIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
                                                 <path d="M9 4H4v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -640,7 +650,34 @@
         let currentSessionLabel = '';
         let controlsHideTimer = null;
         let isDraggingSeek = false;
+        let qualityCycleOptions = [];
+        let selectedQualityLevel = -1;
+        let qualitySourceOptions = [];
+        let selectedQualitySourceUrl = '';
+        let subtitleTrackOptions = [];
+        let selectedSubtitleTrack = -1;
+        let currentSubtitleCandidates = [];
         const PLAYER_STATE_KEY = 'watch_player_state';
+        const VIDEO_FIT_MODES = [
+            {
+                key: 'stretch',
+                label: 'Stretch',
+                objectFit: 'fill',
+                icon: '<svg class="fit-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 8L4 4M16 8L20 4M8 16L4 20M16 16L20 20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+            },
+            {
+                key: 'fill',
+                label: 'Fill',
+                objectFit: 'cover',
+                icon: '<svg class="fit-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7"/><path d="M7 7H17V17H7V7Z" fill="currentColor"/></svg>'
+            },
+            {
+                key: 'contain',
+                label: 'Contain',
+                objectFit: 'contain',
+                icon: '<svg class="fit-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none"><rect x="3.5" y="3.5" width="17" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="7" y="8" width="10" height="8" rx="1.4" stroke="currentColor" stroke-width="1.7"/></svg>'
+            }
+        ];
         const params = new URLSearchParams(window.location.search);
         let streamId = params.get('id') || '';
         let streamTitle = params.get('title') || 'Live Event';
@@ -705,6 +742,213 @@
             if (Number.isFinite(v) && v >= 0 && v <= 1) {
                 try { video.volume = v; } catch {}
             }
+            applyVideoFitMode(typeof state.fitMode === 'string' ? state.fitMode : 'fill', false);
+        }
+        function applyVideoFitMode(modeKey, persist) {
+            const video = getVideoElement();
+            const button = document.getElementById('fitModeBtn');
+            const selected = VIDEO_FIT_MODES.find((mode) => mode.key === modeKey) || VIDEO_FIT_MODES[1];
+            video.style.objectFit = selected.objectFit;
+            if (button) {
+                button.innerHTML = selected.icon + '<span class="sr-only">Video size mode: ' + selected.label + '</span>';
+                button.setAttribute('aria-label', 'Video size mode: ' + selected.label);
+                button.setAttribute('title', 'Video size mode: ' + selected.label);
+                button.dataset.mode = selected.key;
+            }
+            if (persist !== false) savePlayerState({ fitMode: selected.key });
+        }
+        function cycleVideoFitMode() {
+            const button = document.getElementById('fitModeBtn');
+            const currentMode = button && button.dataset.mode ? button.dataset.mode : 'fill';
+            const currentIndex = VIDEO_FIT_MODES.findIndex((mode) => mode.key === currentMode);
+            const nextMode = VIDEO_FIT_MODES[(currentIndex + 1 + VIDEO_FIT_MODES.length) % VIDEO_FIT_MODES.length];
+            applyVideoFitMode(nextMode.key, true);
+        }
+        function formatLevelLabel(level, index) {
+            const height = Number(level && level.height);
+            const bitrate = Number(level && level.bitrate);
+            if (Number.isFinite(height) && height > 0) return height + 'p';
+            if (Number.isFinite(bitrate) && bitrate > 0) return Math.round(bitrate / 1000) + 'k';
+            return 'Level ' + (index + 1);
+        }
+        function updateQualityButton() {
+            const qualityBtn = document.getElementById('qualityBtn');
+            if (!qualityBtn) return;
+            if (qualityCycleOptions.length) {
+                const active = qualityCycleOptions.find((opt) => opt.levelIndex === selectedQualityLevel) || qualityCycleOptions[0];
+                const label = active && active.label ? active.label : 'Auto';
+                qualityBtn.style.display = 'inline-flex';
+                qualityBtn.textContent = label;
+                qualityBtn.setAttribute('aria-label', 'Quality: ' + label);
+                qualityBtn.setAttribute('title', 'Quality: ' + label);
+                qualityBtn.dataset.levelIndex = String(active.levelIndex);
+                qualityBtn.dataset.sourceUrl = '';
+                return;
+            }
+
+            if (!qualitySourceOptions.length) {
+                qualityBtn.style.display = 'none';
+                return;
+            }
+
+            const active = qualitySourceOptions.find((opt) => opt.url === selectedQualitySourceUrl) || qualitySourceOptions[0];
+            const label = active && active.label ? active.label : 'Auto';
+            qualityBtn.style.display = 'inline-flex';
+            qualityBtn.textContent = label;
+            qualityBtn.setAttribute('aria-label', 'Quality: ' + label);
+            qualityBtn.setAttribute('title', 'Quality: ' + label);
+            qualityBtn.dataset.levelIndex = '';
+            qualityBtn.dataset.sourceUrl = active && active.url ? active.url : '';
+        }
+        function normalizeSourceQualityOptions(preparedSources) {
+            const raw = Array.isArray(preparedSources) ? preparedSources : [];
+            const filtered = raw.filter((source) => source && source.isM3U8 && source.playUrl);
+            if (!filtered.length) {
+                qualitySourceOptions = [];
+                selectedQualitySourceUrl = '';
+                updateQualityButton();
+                return;
+            }
+
+            const usedLabels = new Set();
+            const options = filtered.map((source, index) => {
+                const baseLabel = String(source.quality || '').trim() || (index === 0 ? 'Auto' : `Q${index + 1}`);
+                let label = baseLabel;
+                if (usedLabels.has(label)) label = `${baseLabel} ${index + 1}`;
+                usedLabels.add(label);
+                return { label, url: source.playUrl, isM3U8: Boolean(source.isM3U8) };
+            });
+
+            if (options.length > 1) {
+                qualitySourceOptions = options;
+                if (!selectedQualitySourceUrl || !qualitySourceOptions.some((opt) => opt.url === selectedQualitySourceUrl)) {
+                    selectedQualitySourceUrl = qualitySourceOptions[0].url;
+                }
+            } else {
+                qualitySourceOptions = [];
+                selectedQualitySourceUrl = '';
+            }
+            updateQualityButton();
+        }
+        function applyQualityLevel(levelIndex, persist) {
+            if (!hlsInstance) return;
+            selectedQualityLevel = Number.isFinite(levelIndex) ? levelIndex : -1;
+            try {
+                if (selectedQualityLevel === -1) {
+                    hlsInstance.currentLevel = -1;
+                    hlsInstance.nextLevel = -1;
+                } else {
+                    hlsInstance.currentLevel = selectedQualityLevel;
+                    hlsInstance.nextLevel = selectedQualityLevel;
+                }
+            } catch {}
+            if (persist !== false) savePlayerState({ qualityLevel: selectedQualityLevel });
+            updateQualityButton();
+        }
+        function initializeQualityControl(hls) {
+            const qualityBtn = document.getElementById('qualityBtn');
+            if (!qualityBtn) return;
+            const levels = Array.isArray(hls && hls.levels) ? hls.levels : [];
+            if (levels.length <= 1) {
+                qualityCycleOptions = [];
+                selectedQualityLevel = -1;
+                updateQualityButton();
+                return;
+            }
+            const mappedLevels = levels.map((level, index) => ({
+                levelIndex: index,
+                label: formatLevelLabel(level, index),
+                rank: Number(level && level.height) || Number(level && level.bitrate) || 0
+            }));
+            mappedLevels.sort((a, b) => b.rank - a.rank);
+            qualityCycleOptions = [{ levelIndex: -1, label: 'Auto' }, ...mappedLevels];
+
+            const state = readPlayerState();
+            const savedLevel = Number(state.qualityLevel);
+            const isSavedValid = Number.isFinite(savedLevel) && qualityCycleOptions.some((opt) => opt.levelIndex === savedLevel);
+            selectedQualityLevel = isSavedValid ? savedLevel : -1;
+            applyQualityLevel(selectedQualityLevel, false);
+        }
+        function cycleQualityLevel() {
+            if (hlsInstance && qualityCycleOptions.length >= 2) {
+                const currentIndex = qualityCycleOptions.findIndex((opt) => opt.levelIndex === selectedQualityLevel);
+                const next = qualityCycleOptions[(currentIndex + 1 + qualityCycleOptions.length) % qualityCycleOptions.length];
+                applyQualityLevel(next.levelIndex, true);
+                return;
+            }
+
+            if (qualitySourceOptions.length >= 2) {
+                const currentIndex = qualitySourceOptions.findIndex((opt) => opt.url === selectedQualitySourceUrl);
+                const next = qualitySourceOptions[(currentIndex + 1 + qualitySourceOptions.length) % qualitySourceOptions.length];
+                selectedQualitySourceUrl = next.url;
+                savePlayerState({ preferredQualityUrl: selectedQualitySourceUrl });
+                playSource(next.url, Boolean(next.isM3U8), {
+                    preserveSourceQualityOptions: true,
+                    subtitleCandidates: currentSubtitleCandidates
+                });
+                updateQualityButton();
+            }
+        }
+        function updateSubtitleButton() {
+            const btn = document.getElementById('subtitleBtn');
+            if (!btn) return;
+            if (!subtitleTrackOptions.length) {
+                btn.style.display = 'none';
+                return;
+            }
+            const active = subtitleTrackOptions.find((track) => track.trackIndex === selectedSubtitleTrack) || subtitleTrackOptions[0];
+            const label = active && active.label ? active.label : 'Off';
+            btn.style.display = 'inline-flex';
+            btn.textContent = label === 'Off' ? 'CC' : label;
+            btn.setAttribute('aria-label', 'Captions: ' + label);
+            btn.setAttribute('title', 'Captions: ' + label);
+        }
+        function initializeSubtitleControl(hls, backendSubtitles = []) {
+            const options = [{ trackIndex: -1, label: 'Off' }];
+            
+            const hlsTracks = Array.isArray(hls && hls.subtitleTracks) ? hls.subtitleTracks : [];
+            hlsTracks.forEach((track, index) => {
+                const trackName = String(track && (track.name || track.lang || '')).trim();
+                options.push({ trackIndex: index, label: trackName || ('Track ' + (index + 1)) });
+            });
+            
+            if (options.length === 1 && Array.isArray(backendSubtitles) && backendSubtitles.length > 0) {
+                backendSubtitles.forEach((sub, index) => {
+                    options.push({ 
+                        trackIndex: -(index + 2), 
+                        label: sub.label || sub.name || `Subtitle ${index + 1}`,
+                        url: sub.url,
+                        isBackend: true
+                    });
+                });
+            }
+
+            subtitleTrackOptions = options.length > 1 ? options : [];
+            const state = readPlayerState();
+            const savedTrack = Number(state.subtitleTrack);
+            selectedSubtitleTrack = Number.isFinite(savedTrack) ? savedTrack : -1;
+            if (!subtitleTrackOptions.some((track) => track.trackIndex === selectedSubtitleTrack)) selectedSubtitleTrack = -1;
+
+            if (hls && subtitleTrackOptions.length) {
+                try { 
+                    if (selectedSubtitleTrack >= 0) {
+                        hls.subtitleTrack = selectedSubtitleTrack;
+                    }
+                } catch {}
+            }
+
+            updateSubtitleButton();
+        }
+        function cycleSubtitleTrack() {
+            if (!subtitleTrackOptions.length) return;
+            const currentIndex = subtitleTrackOptions.findIndex((track) => track.trackIndex === selectedSubtitleTrack);
+            const next = subtitleTrackOptions[(currentIndex + 1 + subtitleTrackOptions.length) % subtitleTrackOptions.length];
+            selectedSubtitleTrack = next.trackIndex;
+            if (hlsInstance && selectedSubtitleTrack >= 0) {
+                try { hlsInstance.subtitleTrack = selectedSubtitleTrack; } catch {}
+            }
+            savePlayerState({ subtitleTrack: selectedSubtitleTrack });
+            updateSubtitleButton();
         }
         function updateLiveButton() {
             const btn = document.getElementById('goLiveBtn');
@@ -979,10 +1223,24 @@ function showControls(persistent) {
             updateDvrMode();
             showControls(true);
         }
-        async function playSource(url, isM3U8) {
+        async function playSource(url, isM3U8, options = {}) {
+            const preserveSourceQualityOptions = Boolean(options.preserveSourceQualityOptions);
+            const backendSubtitles = Array.isArray(options.subtitleCandidates) ? options.subtitleCandidates : [];
             const video = getVideoElement();
             shouldSnapToLiveEdge = true;
             savePlayerState({ lastUrl: url, isM3U8: Boolean(isM3U8) });
+            qualityCycleOptions = [];
+            selectedQualityLevel = -1;
+            subtitleTrackOptions = [];
+            selectedSubtitleTrack = -1;
+            if (!preserveSourceQualityOptions) {
+                qualitySourceOptions = [];
+                selectedQualitySourceUrl = '';
+            } else {
+                selectedQualitySourceUrl = url;
+            }
+            updateQualityButton();
+            updateSubtitleButton();
             if (hlsInstance) {
                 hlsInstance.destroy();
                 hlsInstance = null;
@@ -995,6 +1253,8 @@ function showControls(persistent) {
                 hls.loadSource(url);
                 hls.attachMedia(video);
                 hls.on(Hls.Events.MANIFEST_PARSED, async () => {
+                    initializeQualityControl(hls);
+                    initializeSubtitleControl(hls, backendSubtitles);
                     isLivePlaying = true;
                     if (shouldSnapToLiveEdge) {
                         syncToLiveEdge(video, hls);
@@ -1018,6 +1278,9 @@ function showControls(persistent) {
                     }
                     await reportStreamStatus(true, 'playing');
                 });
+                hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => {
+                    initializeSubtitleControl(hls, backendSubtitles);
+                });
                 hls.on(Hls.Events.ERROR, async (_event, data) => {
                     if (!data || !data.fatal) return;
                     isLivePlaying = false;
@@ -1029,6 +1292,12 @@ function showControls(persistent) {
                 });
                 return;
             }
+            qualityCycleOptions = [];
+            selectedQualityLevel = -1;
+            subtitleTrackOptions = [];
+            selectedSubtitleTrack = -1;
+            updateQualityButton();
+            updateSubtitleButton();
             video.src = url;
             video.addEventListener('playing', () => {
                 isLivePlaying = true;
@@ -1136,6 +1405,21 @@ function showControls(persistent) {
                 toggleVolumePopover();
                 syncVolumeSlider();
                 updateMuteButton();
+                showControls(true);
+            });
+            document.getElementById('fitModeBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                cycleVideoFitMode();
+                showControls(true);
+            });
+            document.getElementById('qualityBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                cycleQualityLevel();
+                showControls(true);
+            });
+            document.getElementById('subtitleBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                cycleSubtitleTrack();
                 showControls(true);
             });
             document.getElementById('fullscreenBtn').addEventListener('click', async () => {
@@ -1257,7 +1541,7 @@ function showControls(persistent) {
                 if (!button) return;
                 const url = button.getAttribute('data-url') || '';
                 const isHls = button.getAttribute('data-hls') === '1';
-                playSource(url, isHls);
+                playSource(url, isHls, { subtitleCandidates: currentSubtitleCandidates });
             });
             document.addEventListener('fullscreenchange', () => {
                 updateFullscreenButton();
@@ -1270,6 +1554,8 @@ function showControls(persistent) {
             syncVolumeSlider();
             updateSeekUi();
             updateLiveButton();
+            updateQualityButton();
+            updateSubtitleButton();
             showControls(true);
         }
         async function loadWatchPage() {
@@ -1310,9 +1596,20 @@ function showControls(persistent) {
                 if (!sourcesResult.success) throw new Error(sourcesResult.error || 'Failed to load sources');
                 const prepared = preparePlayableSources(sourcesResult.data.sources || []);
                 displaySources(prepared);
+                normalizeSourceQualityOptions(prepared);
+                currentSubtitleCandidates = Array.isArray(sourcesResult.data.subtitles) ? sourcesResult.data.subtitles : [];
+
+                const state = readPlayerState();
+                const preferredQualityUrl = String(state.preferredQualityUrl || '').trim();
+                const preferredQuality = preferredQualityUrl && prepared.find((source) => source.playUrl === preferredQualityUrl);
                 if (prepared[0]) {
                     await reportStreamStatus(true, 'source_available');
-                    await playSource(prepared[0].playUrl, prepared[0].isM3U8);
+                    const initialSource = preferredQuality || prepared[0];
+                    if (preferredQuality) selectedQualitySourceUrl = preferredQuality.playUrl;
+                    await playSource(initialSource.playUrl, initialSource.isM3U8, {
+                        preserveSourceQualityOptions: true,
+                        subtitleCandidates: currentSubtitleCandidates
+                    });
                 } else {
                     isLivePlaying = false;
                     await reportStreamStatus(false, 'no_sources');
