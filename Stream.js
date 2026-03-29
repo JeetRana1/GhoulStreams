@@ -414,6 +414,179 @@ class BuffStreams extends Provider {
         }
     }
 
+    extractEventCards(html) {
+        const cards = { mainCard: [], prelims: [] };
+        
+        try {
+            // Split by Main Card and Prelims sections
+            const mainCardStartIdx = html.toUpperCase().indexOf('MAIN CARD');
+            const prelimsStartIdx = html.toUpperCase().indexOf('PRELIM');
+            
+            if (mainCardStartIdx === -1 && prelimsStartIdx === -1) {
+                // Generic fallback for sports without explicit Main Card / Prelims headers.
+                const listMatches = this.extractCardMatches(html);
+                if (listMatches && listMatches.length > 0) {
+                    cards.mainCard = listMatches;
+                }
+                
+                // Limit to reasonable number
+                cards.mainCard = cards.mainCard.slice(0, 12);
+                return cards;
+            }
+            
+            // Extract Main Card section
+            let mainCardHtml = '';
+            if (mainCardStartIdx !== -1) {
+                const endIdx = prelimsStartIdx !== -1 ? prelimsStartIdx : html.length;
+                mainCardHtml = html.substring(mainCardStartIdx, endIdx);
+            }
+            
+            // Extract Prelims section
+            let prelimsHtml = '';
+            if (prelimsStartIdx !== -1) {
+                prelimsHtml = html.substring(prelimsStartIdx);
+            }
+            
+            // Parse Main Card matches
+            cards.mainCard = this.extractCardMatches(mainCardHtml);
+            
+            // Parse Prelims matches
+            cards.prelims = this.extractCardMatches(prelimsHtml);
+            
+        } catch (e) {
+            console.warn('Error extracting event cards:', e);
+        }
+        
+        return cards;
+    }
+    
+    extractCardMatches(sectionHtml) {
+        const matches = [];
+        if (!sectionHtml) return matches;
+        
+        // List of common non-competitor terms to filter out
+        const invalidTerms = [
+            'streameast', 'watch', 'click', 'play', 'link', 'stream', 'source',
+            'live', 'start', 'join', 'channel', 'check', 'action', 'select',
+            'open', 'view', 'coverage', 'broadcast', 'reddit', 'official',
+            '1stream', 'thetvapp', 'sportsurge', 'crackstreams', 'methstreams',
+            'footybite', 'buffstream', 'nbastreams', 'nflstreams', 'soccer',
+            'app', 'link', 'button', 'option', 'go', 'go to', 'open in',
+            'reddit', 'thread', 'discussion', 'hd', 'sd', 'popup', 'ads'
+        ];
+        
+        const isInvalidCompetitor = (name) => {
+            const lower = name.toLowerCase();
+            return invalidTerms.some(term => lower === term || lower.includes(term)) ||
+                   name.length < 3 || /^watch|^click|^select|^go|^open/i.test(name);
+        };
+        
+        // Try list-based format first (under-card-events)
+        const listItems = sectionHtml.match(/<li[^>]*>[\s\S]*?<\/li>/gi) || [];
+        if (listItems.length > 0) {
+            listItems.forEach(item => {
+                try {
+                    const imageMatches = [...item.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi)];
+                    const imageCandidates = imageMatches
+                        .map((entry) => this.toAbsoluteUrl(entry?.[1], this.baseUrl))
+                        .filter((value) => value && !value.startsWith('data:'));
+                    const image1 = imageCandidates[0] || '';
+                    const image2 = imageCandidates[1] || '';
+
+                    // Extract text content from the list item
+                    const textContent = this.cleanText(item.replace(/<[^>]+>/g, ' '));
+                    
+                    // Generic parsing for any sport - look for two competitors/teams separated by vs patterns
+                    const parts = textContent.split(/\s+vs\s+|\s+vs\.?\s+|match\s+\d+|(?:^|\s)\d+\s+vs\s+\d+|@|-\s+(?!.*\d+-\d+)/i);
+                    
+                    if (parts.length >= 2) {
+                        let competitor1 = parts[0].trim();
+                        let competitor2 = parts.slice(1).join(' ').trim();
+                        
+                        // Remove date patterns
+                        competitor1 = competitor1.replace(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d+|^\d+\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i, '').trim();
+                        competitor2 = competitor2.replace(/\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d+\s*$|\s+\d+\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*$/i, '').trim();
+                        
+                        // Extract record/stats if present
+                        const record1Match = competitor1.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
+                        const record2Match = competitor2.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
+                        
+                        // Remove records/stats from names
+                        const competitor1Clean = competitor1.replace(/\s*\d+\s*-\s*\d+(?:\s*-\s*\d+)?\s*(.*)$/, '').trim();
+                        const competitor2Clean = competitor2.replace(/\s*\d+\s*-\s*\d+(?:\s*-\s*\d+)?\s*(.*)$/, '').trim();
+                        
+                        const record1 = record1Match ? `${record1Match[1]}-${record1Match[2]}` : '';
+                        const record2 = record2Match ? `${record2Match[1]}-${record2Match[2]}` : '';
+                        
+                        // Validate: both competitors must be non-empty, reasonably sized, and not invalid terms
+                        if (competitor1Clean && competitor2Clean &&
+                            competitor1Clean.length > 2 && competitor2Clean.length > 2 &&
+                            !isInvalidCompetitor(competitor1Clean) && !isInvalidCompetitor(competitor2Clean)) {
+                            
+                            matches.push({
+                                fighter1: competitor1Clean.substring(0, 100),
+                                fighter2: competitor2Clean.substring(0, 100),
+                                record1,
+                                record2,
+                                image1,
+                                image2
+                            });
+                        }
+                    }
+                } catch {}
+            });
+            
+            if (matches.length > 0) return matches;
+        }
+        
+        // Fallback to table-based format
+        const rows = sectionHtml.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
+        
+        rows.forEach(row => {
+            const cells = row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
+            if (cells.length >= 2) {
+                try {
+                    const cell1Img = cells[0].match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i)?.[1] || '';
+                    const cellLastImg = cells[cells.length - 1].match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i)?.[1] || '';
+                    const image1 = this.toAbsoluteUrl(cell1Img, this.baseUrl) || '';
+                    const image2 = this.toAbsoluteUrl(cellLastImg, this.baseUrl) || '';
+
+                    // Extract competitor names - usually in first and last cells
+                    const cell1 = this.cleanText(cells[0].replace(/<[^>]+>/g, ' '));
+                    const cellLast = this.cleanText(cells[cells.length - 1].replace(/<[^>]+>/g, ' '));
+                    
+                    // Split by records if present
+                    const competitor1Parts = cell1.trim().split(/\s*\(|\s*\d+\s*-\s*\d+/);
+                    const competitor2Parts = cellLast.trim().split(/\s*\(|\s*\d+\s*-\s*\d+/);
+                    
+                    const competitor1 = (competitor1Parts[0] || '').trim();
+                    const competitor2 = (competitor2Parts[0] || '').trim();
+                    
+                    // Extract records if present
+                    const record1Match = cell1.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
+                    const record2Match = cellLast.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
+                    
+                    const record1 = record1Match ? `${record1Match[1]}-${record1Match[2]}` : '';
+                    const record2 = record2Match ? `${record2Match[1]}-${record2Match[2]}` : '';
+                    
+                    if (competitor1 && competitor2 && competitor1.length > 2 && competitor2.length > 2 &&
+                        !isInvalidCompetitor(competitor1) && !isInvalidCompetitor(competitor2)) {
+                        
+                        matches.push({
+                            fighter1: competitor1.substring(0, 100),
+                            fighter2: competitor2.substring(0, 100),
+                            record1,
+                            record2,
+                            image1,
+                            image2
+                        });
+                    }
+                } catch {}
+            }
+        });
+        
+        return matches;
+    }
     async fetchInfo(id) {
         try {
             const url = this.toAbsoluteUrl(id, this.baseUrl);
@@ -424,6 +597,7 @@ class BuffStreams extends Provider {
             const embedUrl = this.extractEmbedUrl(html, url);
             const details = this.extractEventDetails(html, url);
             const sessions = this.extractSessionCards(html);
+            const eventCards = this.extractEventCards(html);
             const activeSession = (() => {
                 if (!sessions.length) return null;
                 const liveMatch = sessions.find((s) => /live|in progress|started/i.test(s.status));
@@ -443,7 +617,8 @@ class BuffStreams extends Provider {
                 teams: details.teams,
                 scores: details.scores,
                 sessions,
-                activeSession
+                activeSession,
+                cards: eventCards
             };
         } catch (error) {
             console.error('Error in BuffStreams fetchInfo:', error);

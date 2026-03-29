@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#05070c">
+    <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GhoulStreams">
+    <link rel="apple-touch-icon" href="/Logo.svg?v=1">
+    <link rel="manifest" href="/manifest.json">
+    <!-- PWA Support -->
     <meta name="mobile-web-app-capable" content="yes">
     <title>Watch | GhoulStreams</title>
     <link rel="icon" type="image/svg+xml" href="/Logo.svg?v=1">
@@ -28,6 +33,166 @@
             --r-lg: 16px;
             --r-md: 12px;
             --r-pill: 999px;
+            /* ── iOS Safe Area Insets ── */
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+        }
+
+        /* ── iOS Pseudo Fullscreen ── */
+        html.ios-pseudo-fs-active,
+        html.ios-pseudo-fs-active body {
+            overflow: hidden !important;
+            overscroll-behavior: none;
+            position: fixed;
+            width: 100%;
+            background: #000 !important;
+        }
+        
+        html.ios-pseudo-fs-active .video-container {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100dvh !important;
+            z-index: 99999 !important;
+            background: #000 !important;
+            overscroll-behavior: none !important;
+        }
+        
+        html.ios-pseudo-fs-active .controls {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 100100 !important;
+            pointer-events: auto !important;
+        }
+        
+        html.ios-pseudo-fs-active .controls button,
+        html.ios-pseudo-fs-active .controls input,
+        html.ios-pseudo-fs-active .controls [role="button"] {
+            pointer-events: auto !important;
+        }
+        
+        html.ios-pseudo-fs-active .controls:not(.visible) {
+            pointer-events: none !important;
+        }
+
+        /* ── iOS Rotation Hint ── */
+        #ios-rotate-hint {
+            position: fixed;
+            bottom: 14%;
+            left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            background: rgba(0,0,0,.72);
+            color: #fff;
+            font-size: 13px;
+            padding: 7px 18px;
+            border-radius: 999px;
+            pointer-events: none;
+            z-index: 100300;
+            opacity: 0;
+            transition: opacity .25s ease, transform .25s ease;
+            white-space: nowrap;
+        }
+        
+        #ios-rotate-hint.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── iOS Add to Home Screen Banner ── */
+        #ios-a2hs-banner {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            width: min(94vw, 420px);
+            z-index: 200000;
+            transition: transform .35s cubic-bezier(.4,0,.2,1);
+            filter: drop-shadow(0 -4px 24px rgba(0,0,0,.55));
+        }
+        
+        #ios-a2hs-banner.visible {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .a2hs-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(18,18,22,.96);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 20px 20px 0 0;
+            padding: 14px 16px 20px;
+            backdrop-filter: blur(16px);
+        }
+        
+        .a2hs-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            flex-shrink: 0;
+            object-fit: cover;
+        }
+        
+        .a2hs-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .a2hs-text strong {
+            font-size: 14px;
+            color: #fff;
+            font-family: inherit;
+        }
+        
+        .a2hs-text span {
+            font-size: 12px;
+            color: rgba(255,255,255,.65);
+            line-height: 1.4;
+        }
+        
+        .a2hs-share-icon {
+            display: inline-block;
+            background: #007AFF;
+            color: #fff;
+            font-size: 11px;
+            padding: 1px 5px;
+            border-radius: 5px;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+        
+        .a2hs-text em {
+            color: #fff;
+            font-style: normal;
+            font-weight: 600;
+        }
+        
+        .a2hs-close {
+            background: rgba(255,255,255,.1);
+            border: none;
+            color: rgba(255,255,255,.6);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 13px;
+            cursor: pointer;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .a2hs-arrow {
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 10px solid rgba(18,18,22,.96);
+            margin: 0 auto;
         }
 
         /* ── Reset ── */
@@ -350,6 +515,7 @@
 
         /* ── Side Card ── */
         .side-card { padding: 16px 18px; }
+        .related-events-card { margin-top: -250px; }
         .side-card h3 { margin-bottom: 10px; font-size: 0.96rem; font-weight: 700; }
         .side-card p { color: var(--muted); font-size: 0.86rem; line-height: 1.55; }
         .sources { margin-top: 14px; }
@@ -359,6 +525,27 @@
         .source-btn:hover { border-color: rgba(25,200,157,0.42); }
         .loading, .empty { color: var(--muted); text-align: center; padding: 24px 12px; font-size: 0.88rem; }
 
+        /* Related Events Grid */
+        .related-events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 14px; }
+        .event-card { position: relative; overflow: hidden; border-radius: var(--r-lg); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: all 0.2s ease; color: inherit; display: flex; flex-direction: column; }
+        .event-card:hover { background: rgba(255,255,255,0.12); border-color: rgba(77,159,255,0.3); transform: translateY(-2px); }
+        .event-card-image { width: 100%; aspect-ratio: 16 / 9; background: rgba(25,200,157,0.08); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--muted); overflow: hidden; position: relative; }
+        .event-card-image img { width: 100%; height: 100%; object-fit: contain; }
+        .event-card-body { padding: 10px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
+        .event-card-title { font-size: 0.8rem; font-weight: 700; line-height: 1.2; color: var(--text); }
+        .event-card-meta { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: var(--muted); }
+        .event-card-channel { font-size: 0.65rem; color: var(--accent2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .event-card-badge { display: inline-flex; padding: 2px 6px; border-radius: 4px; background: rgba(255,102,120,0.15); color: #ff6678; font-size: 0.65rem; font-weight: 700; }
+        .event-card.live .event-card-badge { background: rgba(255,102,120,0.25); }
+
+        /* Match Cards */
+        .match-card { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--r-md); gap: 12px; }
+        .match-fighter { flex: 1; text-align: center; }
+        .match-fighter-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin: 0 auto 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); }
+        .match-fighter-name { font-size: 0.75rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+        .match-fighter-record { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+        .match-vs { font-size: 0.7rem; color: var(--muted); font-weight: 700; min-width: 24px; }
+
         /* ══════════════════════════════════════
            RESPONSIVE
         ══════════════════════════════════════ */
@@ -366,11 +553,13 @@
         /* Collapse sidebar below 1180px */
         @media (max-width: 1180px) {
             .layout { grid-template-columns: 1fr; }
+            .related-events-card { margin-top: 0; }
         }
 
         /* Tablet portrait */
         @media (max-width: 768px) {
             :root { --pad: 14px; --r-xl: 18px; --r-lg: 14px; }
+            .related-events-card { margin-top: 0; }
             .topbar { padding: 10px 14px; gap: 10px; }
             .top-title h1 { font-size: clamp(0.88rem, 3.5vw, 1.2rem); }
             .live-badge { display: none; }
@@ -455,6 +644,7 @@
         /* Very small phones */
         @media (max-width: 360px) {
             .player-frame {
+            .related-events-card { margin-top: 0; }
                 aspect-ratio: unset !important;
                 height: clamp(210px, 41dvh, 320px);
                 min-height: 210px;
@@ -514,7 +704,7 @@
                 </div>
                 <div class="player-shell">
                     <div class="player-frame is-paused" id="playerFrame">
-                        <video id="videoPlayer" autoplay playsinline></video>
+                        <video id="videoPlayer" autoplay playsinline webkit-playsinline></video>
                         <div class="player-gradient" id="playerGradient"></div>
                         <div class="video-hud" id="videoHud">
                             <div class="overlay-row">
@@ -633,6 +823,29 @@
                 <p>The player opens here on its own page and stays focused on live playback. Additional direct sources are listed below when available.</p>
                 <div class="sources" id="sourcesList">
                     <div class="loading">Loading sources...</div>
+                </div>
+            </div>
+
+            <div class="card side-card">
+                <h3>Event Card</h3>
+                <div id="eventCardContainer" style="display:none">
+                    <div id="mainCardSection">
+                        <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--accent);">Main Card</h4>
+                        <div id="mainCardMatches" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    </div>
+                    <div id="prelimsSection" style="margin-top: 16px; display:none">
+                        <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--muted);">Prelims</h4>
+                        <div id="prelimMatches" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    </div>
+                </div>
+                <div id="noCardMessage" class="empty" style="padding: 24px 12px; text-align: center; color: var(--muted); font-size: 0.88rem;">No card information available</div>
+            </div>
+
+            <div class="card side-card related-events-card">
+                <h3>Related Events</h3>
+                <p>More live events in this category for you.</p>
+                <div class="related-events-grid" id="relatedEventsList">
+                    <div class="loading">Loading related events...</div>
                 </div>
             </div>
         </div>
@@ -1159,6 +1372,18 @@
                 return { ...source, playUrl: '/api/media-proxy?' + q.toString() };
             });
         }
+        function proxyCardImageUrl(rawUrl) {
+            const sourceUrl = String(rawUrl || '').trim();
+            if (!sourceUrl) return '';
+            if (!/^https?:\/\//i.test(sourceUrl)) return sourceUrl;
+
+            const q = new URLSearchParams({ url: sourceUrl });
+            if (streamId && /^https?:\/\//i.test(streamId)) {
+                q.set('referer', streamId);
+                q.set('root_referer', streamId);
+            }
+            return '/api/media-proxy?' + q.toString();
+        }
         function displaySources(sources) {
             const el = document.getElementById('sourcesList');
             if (!sources.length) {
@@ -1291,10 +1516,44 @@ function showControls(persistent) {
             video.removeAttribute('src');
             video.load();
             if (isM3U8 && Hls.isSupported()) {
-                const hls = new Hls({ liveDurationInfinity: false, lowLatencyMode: false, startPosition: -1, liveSyncDurationCount: 3, liveMaxLatencyDurationCount: 60, maxLiveSyncPlaybackRate: 1, backBufferLength: 90 });
+                const hls = new Hls({
+                    liveDurationInfinity: false,
+                    lowLatencyMode: false,
+                    startPosition: -1,
+                    liveSyncDurationCount: 3,
+                    liveMaxLatencyDurationCount: 60,
+                    maxLiveSyncPlaybackRate: 1,
+                    backBufferLength: 90,
+                    manifestLoadingMaxRetry: 1,
+                    levelLoadingMaxRetry: 1,
+                    fragLoadingMaxRetry: 1,
+                    manifestLoadingRetryDelay: 500,
+                    levelLoadingRetryDelay: 500,
+                    fragLoadingRetryDelay: 500
+                });
                 hlsInstance = hls;
                 hls.loadSource(url);
                 hls.attachMedia(video);
+
+                const trySwitchToNextSource = async (reason) => {
+                    if (!qualitySourceOptions.length) return false;
+                    const currentIndex = qualitySourceOptions.findIndex((opt) => opt.url === url || opt.url === selectedQualitySourceUrl);
+                    if (currentIndex < 0 || qualitySourceOptions.length < 2) return false;
+                    const next = qualitySourceOptions[(currentIndex + 1) % qualitySourceOptions.length];
+                    if (!next || !next.url || next.url === url) return false;
+
+                    selectedQualitySourceUrl = next.url;
+                    savePlayerState({ preferredQualityUrl: selectedQualitySourceUrl });
+                    document.getElementById('liveStatus').textContent = 'Switching source';
+                    document.getElementById('liveLatency').textContent = reason || 'Recovering stream';
+                    await reportStreamStatus(false, reason || 'source_switch');
+                    await playSource(next.url, Boolean(next.isM3U8), {
+                        preserveSourceQualityOptions: true,
+                        subtitleCandidates: currentSubtitleCandidates
+                    });
+                    updateQualityButton();
+                    return true;
+                };
                 hls.on(Hls.Events.MANIFEST_PARSED, async () => {
                     console.log('📡 MANIFEST_PARSED - Video textTracks:', video.textTracks?.length);
                     for (let i = 0; i < (video.textTracks?.length || 0); i++) {
@@ -1330,12 +1589,24 @@ function showControls(persistent) {
                     initializeSubtitleControl(hls, backendSubtitles);
                 });
                 hls.on(Hls.Events.ERROR, async (_event, data) => {
-                    if (!data || !data.fatal) return;
+                    if (!data) return;
+
+                    const statusCode = Number(data?.response?.code || data?.response?.status || 0);
+                    const details = String(data.details || '');
+                    const isRetryFloodCandidate = statusCode === 429 || statusCode === 404 || statusCode === 410;
+                    const isNetworkLoadIssue = data.type === 'networkError' || /fragLoadError|levelLoadError|manifestLoadError/i.test(details);
+
+                    if (isNetworkLoadIssue && isRetryFloodCandidate) {
+                        const switched = await trySwitchToNextSource(`upstream_${statusCode}`);
+                        if (switched) return;
+                    }
+
+                    if (!data.fatal) return;
                     isLivePlaying = false;
                     shouldSnapToLiveEdge = true;
                     document.getElementById('liveStatus').textContent = 'Live signal interrupted';
-                    document.getElementById('liveLatency').textContent = 'Source unavailable';
-                    await reportStreamStatus(false, data.details || data.type || 'signal_interrupted');
+                    document.getElementById('liveLatency').textContent = statusCode ? `Source unavailable (${statusCode})` : 'Source unavailable';
+                    await reportStreamStatus(false, details || data.type || 'signal_interrupted');
                     showControls(true);
                 });
                 return;
@@ -1606,6 +1877,176 @@ function showControls(persistent) {
             updateSubtitleButton();
             showControls(true);
         }
+        function displayEventCard(cardData) {
+            const container = document.getElementById('eventCardContainer');
+            const noCardMsg = document.getElementById('noCardMessage');
+            const mainCardMatches = document.getElementById('mainCardMatches');
+            const prelimMatches = document.getElementById('prelimMatches');
+            const prelimsSection = document.getElementById('prelimsSection');
+            
+            if (!cardData || (!cardData.mainCard?.length && !cardData.prelims?.length)) {
+                container.style.display = 'none';
+                noCardMsg.style.display = 'block';
+                return;
+            }
+            
+            noCardMsg.style.display = 'none';
+            container.style.display = 'block';
+            
+            // Render main card matches
+            mainCardMatches.innerHTML = '';
+            if (cardData.mainCard && cardData.mainCard.length > 0) {
+                cardData.mainCard.forEach(match => {
+                    const image1Url = proxyCardImageUrl(match.image1);
+                    const image2Url = proxyCardImageUrl(match.image2);
+                    const matchEl = document.createElement('div');
+                    matchEl.className = 'match-card';
+                    matchEl.innerHTML = `
+                        <div class="match-fighter">
+                            ${image1Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image1Url)}" alt="${escapeHtml(match.fighter1 || 'Competitor 1')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
+                            <div class="match-fighter-name">${escapeHtml(match.fighter1 || 'Fighter 1')}</div>
+                            ${match.record1 ? `<div class="match-fighter-record">${escapeHtml(match.record1)}</div>` : ''}
+                        </div>
+                        <div class="match-vs">VS</div>
+                        <div class="match-fighter">
+                            ${image2Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image2Url)}" alt="${escapeHtml(match.fighter2 || 'Competitor 2')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
+                            <div class="match-fighter-name">${escapeHtml(match.fighter2 || 'Fighter 2')}</div>
+                            ${match.record2 ? `<div class="match-fighter-record">${escapeHtml(match.record2)}</div>` : ''}
+                        </div>
+                    `;
+                    mainCardMatches.appendChild(matchEl);
+                });
+            }
+            
+            // Render prelims matches
+            if (cardData.prelims && cardData.prelims.length > 0) {
+                prelimsSection.style.display = 'block';
+                prelimMatches.innerHTML = '';
+                cardData.prelims.forEach(match => {
+                    const image1Url = proxyCardImageUrl(match.image1);
+                    const image2Url = proxyCardImageUrl(match.image2);
+                    const matchEl = document.createElement('div');
+                    matchEl.className = 'match-card';
+                    matchEl.innerHTML = `
+                        <div class="match-fighter">
+                            ${image1Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image1Url)}" alt="${escapeHtml(match.fighter1 || 'Competitor 1')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
+                            <div class="match-fighter-name">${escapeHtml(match.fighter1 || 'Fighter 1')}</div>
+                            ${match.record1 ? `<div class="match-fighter-record">${escapeHtml(match.record1)}</div>` : ''}
+                        </div>
+                        <div class="match-vs">VS</div>
+                        <div class="match-fighter">
+                            ${image2Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image2Url)}" alt="${escapeHtml(match.fighter2 || 'Competitor 2')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
+                            <div class="match-fighter-name">${escapeHtml(match.fighter2 || 'Fighter 2')}</div>
+                            ${match.record2 ? `<div class="match-fighter-record">${escapeHtml(match.record2)}</div>` : ''}
+                        </div>
+                    `;
+                    prelimMatches.appendChild(matchEl);
+                });
+            } else {
+                prelimsSection.style.display = 'none';
+            }
+        }
+
+        async function loadRelatedEvents(currentEventInfo) {
+            try {
+                const relatedContainer = document.getElementById('relatedEventsList');
+                if (!relatedContainer) return;
+                
+                // Infer category from title
+                const title = String(currentEventInfo.title || '').toLowerCase();
+                let category = 'all';
+                
+                if (title.includes('nba') || title.includes('basketball')) category = 'nba';
+                else if (title.includes('nfl') || title.includes('football') && title.includes('american')) category = 'nfl';
+                else if (title.includes('soccer') || title.includes('football') && !title.includes('american')) category = 'soccer';
+                else if (title.includes('nhl') || title.includes('hockey')) category = 'nhl';
+                else if (title.includes('mlb') || title.includes('baseball')) category = 'mlb';
+                else if (title.includes('boxing')) category = 'boxing';
+                else if (title.includes('ufc') || title.includes('mma')) category = 'mma';
+                else if (title.includes('f1') || title.includes('formula') || title.includes('nascar')) category = 'f1';
+                else if (title.includes('ncaa') || title.includes('college')) category = 'ncaa';
+                
+                // Fetch related events from this category
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: category })
+                });
+                
+                const result = await response.json();
+                if (!result.success || !Array.isArray(result.data)) {
+                    relatedContainer.innerHTML = '<div class="empty">No related events found</div>';
+                    return;
+                }
+                
+                // Filter out current event and take first 6
+                const events = result.data
+                    .filter(e => e && (e.id || e.url) !== (currentEventInfo.id || currentEventInfo.url))
+                    .slice(0, 6);
+                
+                if (events.length === 0) {
+                    relatedContainer.innerHTML = '<div class="empty">No related events available</div>';
+                    return;
+                }
+                
+                // Render event cards
+                const html = events.map(event => {
+                    const eventId = event.id || event.url || '';
+                    const eventTitle = String(event.title || event.name || 'Event').substring(0, 50);
+                    const isLive = String(event.status || '').toLowerCase().includes('live') || 
+                                  String(event.status || '').toLowerCase().includes('in progress');
+                    const relatedImageRaw = String(event.image || event.logo || '').trim();
+                    const relatedImageUrl = /^https?:\/\//i.test(relatedImageRaw) ? relatedImageRaw : '/Logo.svg?v=1';
+                    
+                    // Get category logo
+                    const logoClass = (() => {
+                        const t = (event.title || '').toLowerCase();
+                        if (t.includes('nba')) return 'nba';
+                        if (t.includes('nfl')) return 'nfl';
+                        if (t.includes('soccer')) return 'soccer';
+                        if (t.includes('ufc') || t.includes('mma')) return 'mma';
+                        if (t.includes('boxing')) return 'boxing';
+                        if (t.includes('f1')) return 'f1';
+                        if (t.includes('nhl')) return 'nhl';
+                        if (t.includes('mlb')) return 'mlb';
+                        if (t.includes('ncaa')) return 'ncaa';
+                        return 'sports';
+                    })();
+                    
+                    const handleClick = `
+                        try {
+                            sessionStorage.setItem('selected_watch_event', JSON.stringify({ 
+                                id: '${escapeHtml(eventId)}', 
+                                title: '${escapeHtml(eventTitle)}', 
+                                savedAt: Date.now() 
+                            }));
+                        } catch {}
+                        window.location.href = '/watch.html';
+                    `;
+                    
+                    return `
+                        <div class="event-card ${isLive ? 'live' : ''}" onclick="${handleClick}" style="cursor: pointer;">
+                            <div class="event-card-image">
+                                <img src="${escapeHtml(relatedImageUrl)}" alt="${escapeHtml(eventTitle)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='/Logo.svg?v=1';" style="width: 100%; height: 100%; object-fit: contain; background: rgba(77,159,255,0.1); padding: 8px;">
+                            </div>
+                            <div class="event-card-body">
+                                <div class="event-card-title">${escapeHtml(eventTitle)}</div>
+                                <div class="event-card-meta">
+                                    ${isLive ? '<span class="event-card-badge">LIVE</span>' : ''}
+                                </div>
+                                <div class="event-card-channel" style="font-size: 0.65rem; color: var(--muted); margin-top: 4px;">${logoClass.toUpperCase()}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                relatedContainer.innerHTML = html;
+            } catch (e) {
+                console.warn('Error loading related events:', e);
+                document.getElementById('relatedEventsList').innerHTML = '<div class="empty">Could not load related events</div>';
+            }
+        }
+
         async function loadWatchPage() {
             if (!streamId) {
                 setMeta('No stream selected', 'Missing event id', 'Unavailable', 'Return to events');
@@ -1623,6 +2064,7 @@ function showControls(persistent) {
                 if (!infoResult.success) throw new Error(infoResult.error || 'Failed to load stream info');
                 const info = infoResult.data || {};
                 renderScoreboard(info);
+                displayEventCard(info.cards || { mainCard: [], prelims: [] });
                 const baseTitle = getMainTitle(info.title || streamTitle);
                 const activeSession = info.activeSession || null;
                 const sessionLabel = activeSession?.name ? `${activeSession.name}` : detectSessionLabelFromText(info.title, info.status, streamTitle);
@@ -1663,11 +2105,15 @@ function showControls(persistent) {
                     await reportStreamStatus(false, 'no_sources');
                     setMeta(document.getElementById('pageTitle').textContent || streamTitle, 'No playable source returned', 'Live source missing', 'Unavailable');
                 }
+                
+                // Load related events
+                loadRelatedEvents(info);
             } catch (error) {
                 isLivePlaying = false;
                 await reportStreamStatus(false, error.message || 'load_failed');
                 setMeta(document.getElementById('pageTitle').textContent || streamTitle, 'Playback request failed', 'Connection error', 'Retry required');
                 document.getElementById('sourcesList').innerHTML = '<div class="empty">' + escapeHtml(error.message) + '</div>';
+                document.getElementById('relatedEventsList').innerHTML = '<div class="empty">Could not load related events</div>';
             }
         }
         applySavedPlayerState();
@@ -1676,6 +2122,343 @@ function showControls(persistent) {
         setInterval(updateLiveClock, 1000);
         window.addEventListener('beforeunload', () => { if (scoreRefreshTimer) clearInterval(scoreRefreshTimer); });
         window.addEventListener('load', loadWatchPage);
+    </script>
+    
+    <!-- iOS Rotation Hint -->
+    <div id="ios-rotate-hint">⟳ Rotate for best experience</div>
+    
+    <!-- iOS Add to Home Screen Banner -->
+    <div id="ios-a2hs-banner" style="display:none;">
+        <div class="a2hs-inner">
+            <img src="/Logo.svg" class="a2hs-icon" alt="GhoulStreams">
+            <div class="a2hs-text">
+                <strong>Get full screen experience</strong>
+                <span>Tap <span class="a2hs-share-icon">⬆</span> then <em>"Add to Home Screen"</em> for immersive viewing</span>
+            </div>
+            <button class="a2hs-close" id="a2hs-close-btn" aria-label="Dismiss">✕</button>
+        </div>
+        <div class="a2hs-arrow"></div>
+    </div>
+    
+    <!-- iOS JavaScript Support -->
+    <script>
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS NATIVE PLAYER SUPPORT & PWA FEATURES
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const IS_PWA = (IS_IOS && navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+        const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        
+        // Track iOS native player state
+        let _iosNativePlayerActive = false;
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS PSEUDO-FULLSCREEN (for browsers that don't support fullscreen API)
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        function enterIOSPseudoFullscreen() {
+            if (!IS_IOS) return;
+            const html = document.documentElement;
+            html.classList.add('ios-pseudo-fs-active');
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.height = '100vh';
+            document.body.style.height = '100dvh';
+        }
+        
+        function exitIOSPseudoFullscreen() {
+            const html = document.documentElement;
+            html.classList.remove('ios-pseudo-fs-active');
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.height = '';
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS NATIVE FULLSCREEN DETECTION
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        const videoEl = document.getElementById('videoPlayer');
+        
+        // Detect iOS native fullscreen entry
+        if (videoEl && typeof videoEl.addEventListener === 'function') {
+            videoEl.addEventListener('webkitbeginfullscreen', function() {
+                console.log('[iOS] Native fullscreen entered');
+                _iosNativePlayerActive = true;
+                document.documentElement.classList.add('ios-native-fullscreen');
+                
+                // Enable native subtitle tracks
+                const tracks = videoEl.querySelectorAll('track');
+                tracks.forEach(track => {
+                    if (track.kind === 'captions' || track.kind === 'subtitles') {
+                        track.track.mode = 'showing';
+                    }
+                });
+            }, false);
+            
+            videoEl.addEventListener('webkitendfullscreen', function() {
+                console.log('[iOS] Native fullscreen exited');
+                _iosNativePlayerActive = false;
+                document.documentElement.classList.remove('ios-native-fullscreen');
+                
+                // Disable native subtitle tracks, restore custom overlay
+                const tracks = videoEl.querySelectorAll('track');
+                tracks.forEach(track => {
+                    if (track.kind === 'captions' || track.kind === 'subtitles') {
+                        track.track.mode = 'hidden';
+                    }
+                });
+            }, false);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS FULLSCREEN BUTTON INTEGRATION
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        // Intercept fullscreen requests to use iOS native player
+        if (videoEl && IS_IOS && IS_SAFARI) {
+            // Override fullscreen button or create iOS-aware fullscreen handler
+            const originalRequestFullscreen = videoEl.requestFullscreen;
+            if (originalRequestFullscreen) {
+                videoEl.requestFullscreen = function() {
+                    // Try native iOS fullscreen first
+                    if (typeof this.webkitEnterFullscreen === 'function') {
+                        this.webkitEnterFullscreen();
+                        return Promise.resolve();
+                    }
+                    // Fallback to pseudo-fullscreen
+                    enterIOSPseudoFullscreen();
+                    return Promise.resolve();
+                };
+            }
+            
+            // Also handle webkitEnterFullscreen if it exists
+            if (typeof videoEl.webkitEnterFullscreen === 'function') {
+                window.iosEnterNativeFullscreen = function() {
+                    videoEl.webkitEnterFullscreen();
+                };
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS PLAYSINLINE ENFORCEMENT
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        if (videoEl) {
+            videoEl.setAttribute('playsinline', '');
+            videoEl.setAttribute('webkit-playsinline', 'true');
+            if (typeof videoEl.playsInline !== 'undefined') {
+                videoEl.playsInline = true;
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS ORIENTATION HINT
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        function showIOSRotationHint() {
+            if (!IS_IOS || !IS_MOBILE) return;
+            const hint = document.getElementById('ios-rotate-hint');
+            if (!hint) return;
+            
+            hint.classList.add('show');
+            setTimeout(() => {
+                hint.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Show hint when entering fullscreen
+        window.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) showIOSRotationHint();
+        });
+        
+        // Also show on orientation change
+        window.addEventListener('orientationchange', () => {
+            if (IS_IOS && videoEl && !videoEl.paused) {
+                showIOSRotationHint();
+            }
+        });
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS PWA: ADD-TO-HOME-SCREEN BANNER
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        let deferredPrompt = null;
+        let a2hsShownCount = 0;
+        const A2HS_MAX_DISPLAYS = 2;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing
+            e.preventDefault();
+            // Stash the event for later use
+            deferredPrompt = e;
+            
+            // Show our custom A2HS banner
+            showA2HSBanner();
+        });
+        
+        function showA2HSBanner() {
+            if (!IS_IOS || IS_PWA) return; // Don't show if already installed or not on iOS
+            if (a2hsShownCount >= A2HS_MAX_DISPLAYS) return;
+            
+            const banner = document.getElementById('ios-a2hs-banner');
+            if (!banner) return;
+            
+            a2hsShownCount++;
+            banner.style.display = 'block';
+            setTimeout(() => {
+                banner.classList.add('visible');
+            }, 100);
+        }
+        
+        // Handle A2HS close button
+        const a2hsCloseBtn = document.getElementById('a2hs-close-btn');
+        if (a2hsCloseBtn) {
+            a2hsCloseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const banner = document.getElementById('ios-a2hs-banner');
+                if (banner) {
+                    banner.classList.remove('visible');
+                    setTimeout(() => {
+                        banner.style.display = 'none';
+                    }, 350);
+                }
+            });
+        }
+        
+        // Show A2HS banner after successful video play
+        if (videoEl) {
+            videoEl.addEventListener('play', () => {
+                if (!IS_PWA && a2hsShownCount === 0) {
+                    setTimeout(showA2HSBanner, 3000);
+                }
+            }, { once: true });
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS AUDIO TRACK SWITCHING ENHANCEMENT
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        // Force native audio track selection on iOS Safari
+        function applyPreferredAudioOnIOS() {
+            if (!IS_IOS || !videoEl) return;
+            
+            const audioTracks = videoEl.audioTracks;
+            if (!audioTracks || audioTracks.length === 0) return;
+            
+            // Try to select first available audio track and force it to playing
+            for (let i = 0; i < audioTracks.length; i++) {
+                const track = audioTracks[i];
+                if (i === 0) {
+                    track.enabled = true;
+                    // Trigger a tiny seek to apply audio track on iOS
+                    if (videoEl.readyState >= 1 && videoEl.currentTime > 0) {
+                        const currentTime = videoEl.currentTime;
+                        videoEl.currentTime = currentTime + 0.0001;
+                    }
+                } else {
+                    track.enabled = false;
+                }
+            }
+        }
+        
+        if (videoEl) {
+            videoEl.addEventListener('loadedmetadata', applyPreferredAudioOnIOS);
+            videoEl.addEventListener('audiotrack', applyPreferredAudioOnIOS);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS SAFE AREA PADDING
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        function updateIOSSafeAreaPadding() {
+            if (!IS_IOS) return;
+            const root = document.documentElement;
+            const insetTop = getComputedStyle(root).getPropertyValue('--safe-top').trim();
+            const insetBottom = getComputedStyle(root).getPropertyValue('--safe-bottom').trim();
+            
+            // Apply padding to topbar and bottom controls if needed
+            const topbar = document.querySelector('.topbar');
+            const controlBottom = document.getElementById('controlBottom');
+            
+            if (topbar && insetTop) {
+                topbar.style.marginTop = `max(12px, ${insetTop})`;
+            }
+            
+            if (controlBottom && insetBottom) {
+                controlBottom.style.paddingBottom = `max(12px, ${insetBottom})`;
+            }
+        }
+        
+        window.addEventListener('load', updateIOSSafeAreaPadding);
+        window.addEventListener('orientationchange', updateIOSSafeAreaPadding);
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS SYSTEM GESTURE HANDLING
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        // Prevent unwanted swipe-to-dismiss in pseudo-fullscreen
+        document.addEventListener('gesturestart', (e) => {
+            if (_iosNativePlayerActive || document.documentElement.classList.contains('ios-pseudo-fs-active')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Prevent pull-to-refresh in fullscreen
+        let lastY = 0;
+        document.addEventListener('touchstart', (e) => {
+            lastY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (!(_iosNativePlayerActive || document.documentElement.classList.contains('ios-pseudo-fs-active'))) return;
+            
+            const currentY = e.touches[0].clientY;
+            const diff = currentY - lastY;
+            
+            // Prevent pull-to-refresh pull
+            if (diff > 10 && window.scrollY === 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS PWA MANIFEST & SERVICE WORKER
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        // Register PWA manifest if not already present
+        function ensurePWAManifest() {
+            if (document.querySelector('link[rel="manifest"]')) return;
+            
+            const manifest = document.createElement('link');
+            manifest.rel = 'manifest';
+            manifest.href = '/manifest.json';
+            document.head.appendChild(manifest);
+        }
+        
+        // Register service worker for offline support
+        if ('serviceWorker' in navigator && IS_PWA) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {
+                    // Service worker registration failed, continue anyway
+                });
+            });
+        }
+        
+        ensurePWAManifest();
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS VIDEO FULLSCREEN STYLES
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        // Force fill on iOS to maximize screen real estate
+        if (IS_IOS && videoEl) {
+            // This ensures video fills the screen properly when fullscreen
+            videoEl.style.objectFit = 'contain';
+            videoEl.style.objectPosition = 'center';
+        }
     </script>
 </body>
 </html>

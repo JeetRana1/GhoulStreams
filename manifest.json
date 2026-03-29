@@ -1,0 +1,78 @@
+{
+  "name": "GhoulStreams - Live Sports Streaming",
+  "short_name": "GhoulStreams",
+  "description": "Watch live sports, events, and streams from multiple sources with adaptive quality",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#05070c",
+  "background_color": "#05070c",
+  "icons": [
+    {
+      "src": "/Logo.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/Logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["entertainment", "sports"],
+  "screenshots": [
+    {
+      "src": "/Logo.svg",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/Logo.svg",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Watch Live",
+      "short_name": "Watch",
+      "description": "Start watching live streams",
+      "url": "/?action=watch",
+      "icons": [
+        {
+          "src": "/Logo.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Browse Events",
+      "short_name": "Browse",
+      "description": "Browse available events",
+      "url": "/?action=browse",
+      "icons": [
+        {
+          "src": "/Logo.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
