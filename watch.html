@@ -909,6 +909,17 @@
             window.history.replaceState({}, document.title, '/watch.html');
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // iOS & Browser Detection - Define early for use throughout the script
+        // ═══════════════════════════════════════════════════════════════════════════════
+        const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+        const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const IS_PWA = (IS_IOS && navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+        const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        
+        // Track iOS native player state
+        let _iosNativePlayerActive = false;
+
         function getVideoElement() { return document.getElementById('videoPlayer'); }
         function formatTime(seconds) {
             if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -1748,19 +1759,20 @@ function showControls(persistent) {
                 // iOS handling
                 if (IS_IOS && IS_SAFARI) {
                     const isCurrentlyFullscreen = document.documentElement.classList.contains('ios-pseudo-fs-active') || _iosNativePlayerActive;
+                    const video = getVideoElement();
                     
                     if (isCurrentlyFullscreen) {
                         // Exit fullscreen
-                        if (_iosNativePlayerActive && videoEl.webkitExitFullscreen) {
-                            videoEl.webkitExitFullscreen();
+                        if (_iosNativePlayerActive && video.webkitExitFullscreen) {
+                            video.webkitExitFullscreen();
                         } else {
                             exitIOSPseudoFullscreen();
                         }
                         await unlockOrientationOnMobile();
                     } else {
                         // Enter fullscreen - try native first, then pseudo
-                        if (videoEl && typeof videoEl.webkitEnterFullscreen === 'function') {
-                            videoEl.webkitEnterFullscreen();
+                        if (video && typeof video.webkitEnterFullscreen === 'function') {
+                            video.webkitEnterFullscreen();
                         } else {
                             enterIOSPseudoFullscreen();
                         }
@@ -2181,13 +2193,7 @@ function showControls(persistent) {
         // iOS NATIVE PLAYER SUPPORT & PWA FEATURES
         // ═══════════════════════════════════════════════════════════════════════════════
         
-        const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        const IS_PWA = (IS_IOS && navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
-        const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-        
-        // Track iOS native player state
-        let _iosNativePlayerActive = false;
+        // iOS detection constants are defined earlier in the script
         
         // ═══════════════════════════════════════════════════════════════════════════════
         // iOS PSEUDO-FULLSCREEN (for browsers that don't support fullscreen API)
