@@ -6,8 +6,11 @@
     <meta name="theme-color" content="#06080d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GhoulStreams">
     <meta name="mobile-web-app-capable" content="yes">
     <title>GhouldStreams</title>
+    <link rel="apple-touch-icon" href="/Logo.svg?v=1">
+    <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="/Logo.svg?v=1">
     <style>
         :root {
@@ -241,17 +244,17 @@
         .logo-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 14px;
             overflow-x: auto;
-            padding-top: 20px;
+            padding-top: 24px;
             padding-bottom: 2px;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
         .logo-row::-webkit-scrollbar { display: none; }
         .logo-badge {
-            width: 42px;
-            height: 42px;
+            width: 78px;
+            height: 78px;
             padding: 8px;
             border-radius: var(--r-md);
             border: 1px solid rgba(255,255,255,0.08);
@@ -266,49 +269,60 @@
             border-color: rgba(30,167,253,0.3);
             background: rgba(30,167,253,0.08);
         }
+        .logo-badge.active {
+            border-color: rgba(30,167,253,0.55);
+            background: rgba(30,167,253,0.16);
+            box-shadow: 0 0 14px rgba(30,167,253,0.22);
+        }
         .logo-badge img { width: 100%; height: 100%; object-fit: contain; }
 
         /* Hero side chips — vertical strip on desktop */
         .hero-side {
             display: flex;
             flex-direction: column;
-            gap: 0;
-            border-left: 1px solid rgba(255,255,255,0.06);
-            width: 240px;
+            gap: 10px;
+            width: 320px;
             flex-shrink: 0;
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(10, 16, 30, 0.45), rgba(8, 13, 24, 0.25));
+            border-left: 1px solid rgba(255,255,255,0.06);
         }
         .hero-chip {
-            padding: 20px 18px;
+            padding: 18px 16px;
             flex: 1;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.02);
-            transition: background 0.2s;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            transition: background 0.2s, border-color 0.2s;
         }
-        .hero-chip:last-child { border-bottom: none; }
-        .hero-chip:hover { background: rgba(255,255,255,0.04); }
+        .hero-chip:hover {
+            background: linear-gradient(180deg, rgba(30,167,253,0.14), rgba(255,255,255,0.03));
+            border-color: rgba(30,167,253,0.35);
+        }
         .hero-chip-icon {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 8px;
             background: rgba(30,167,253,0.15);
             border: 1px solid rgba(30,167,253,0.25);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 10px;
-            font-size: 14px;
+            margin-bottom: 12px;
+            font-size: 15px;
         }
         .hero-chip strong {
             display: block;
-            font-size: 0.82rem;
-            font-weight: 700;
-            margin-bottom: 5px;
+            font-size: 0.9rem;
+            font-weight: 750;
+            margin-bottom: 8px;
             color: var(--text);
+            letter-spacing: 0.01em;
         }
         .hero-chip span {
             color: var(--muted);
-            font-size: 0.76rem;
-            line-height: 1.55;
+            font-size: 0.79rem;
+            line-height: 1.65;
         }
 
         /* ── Content Grid ── */
@@ -710,17 +724,49 @@
                 width: 100%;
                 border-left: none;
                 border-top: 1px solid rgba(255,255,255,0.06);
+                padding: 12px;
+                gap: 10px;
+                background: rgba(255,255,255,0.01);
             }
             .hero-chip {
                 flex: 1;
-                border-bottom: none;
-                border-right: 1px solid rgba(255,255,255,0.06);
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+                border-right: 1px solid rgba(255,255,255,0.08);
             }
             .hero-chip:last-child { border-right: none; }
         }
 
         /* Laptop/Desktop full-bleed footer */
-        @media (min-width: 1024px) {
+        @media (min-width: 900px) {
+            .hero {
+                grid-template-columns: minmax(0, 1fr) 300px;
+            }
+            .hero-side {
+                width: 300px;
+            }
+            .hero-copy {
+                padding: 34px 34px 28px;
+            }
+            .hero-copy h1 {
+                font-size: clamp(2.5rem, 4.1vw, 3.6rem);
+            }
+            .hero-copy p {
+                max-width: 760px;
+                font-size: 1.04rem;
+                line-height: 1.7;
+            }
+            .logo-row {
+                gap: 16px;
+                padding-top: 26px;
+                flex-wrap: wrap;
+                overflow: visible;
+            }
+            .logo-badge {
+                width: 116px;
+                height: 116px;
+                padding: 10px;
+                border-radius: 18px;
+            }
             .site-footer {
                 margin-left: calc(50% - 50vw);
                 margin-right: calc(50% - 50vw);
@@ -748,8 +794,8 @@
             .nav-link { padding: 7px 12px; font-size: 0.8rem; }
             .hero-copy { padding: 20px 18px 18px; }
             .hero-copy h1 { font-size: clamp(1.5rem, 5.5vw, 2.2rem); }
-            .hero-side { flex-direction: column; border-top: 1px solid rgba(255,255,255,0.06); }
-            .hero-chip { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+            .hero-side { flex-direction: column; border-top: 1px solid rgba(255,255,255,0.06); gap: 8px; padding: 10px; }
+            .hero-chip { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
             .hero-chip:last-child { border-bottom: none; }
             .event-row {
                 grid-template-columns: minmax(0,1fr) auto;
@@ -1075,9 +1121,14 @@
 
         function renderLogos(types) {
             const row = document.getElementById('logoRow');
+            const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+            const badgeSize = vw >= 900 ? 108 : (vw >= 540 ? 74 : 38);
+            const logoScale = vw >= 900 ? 0.8 : (vw >= 540 ? 0.76 : 1);
             row.innerHTML = types.map((type) => {
                 const meta = getSportMeta(type);
-                return `<span class="logo-badge glass"><img src="${meta.icon}" alt="${escapeHtml(meta.label)}"></span>`;
+                const filter = type === 'sports' ? '' : type;
+                const isActive = Boolean(activeFilter) && filter === activeFilter;
+                return `<span class="logo-badge glass${isActive ? ' active' : ''}" data-filter="${escapeHtml(filter)}" role="button" tabindex="0" aria-label="Show ${escapeHtml(meta.label)} streams" title="${escapeHtml(meta.label)}" style="width:${badgeSize}px;height:${badgeSize}px;"><img src="${meta.icon}" alt="${escapeHtml(meta.label)}" style="width:${Math.round(logoScale * 100)}%;height:${Math.round(logoScale * 100)}%;"></span>`;
             }).join('');
         }
 
@@ -1391,7 +1442,25 @@
             }
         });
 
+        let logoResizeTimer = null;
+        window.addEventListener('resize', () => {
+            if (!allStreams.length) return;
+            if (logoResizeTimer) clearTimeout(logoResizeTimer);
+            logoResizeTimer = setTimeout(() => {
+                renderStreams();
+            }, 120);
+        });
+
         window.addEventListener('keydown', (event) => {
+            const logoFilter = event.target && event.target.closest ? event.target.closest('.logo-badge[data-filter]') : null;
+            if (logoFilter && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                activeFilter = logoFilter.dataset.filter || null;
+                setActiveNav();
+                renderStreams();
+                return;
+            }
+
             if (event.key === 'Escape' && privacyPolicyModal.classList.contains('open')) {
                 closePrivacyPolicyModal();
             }

@@ -255,12 +255,27 @@ app.get('/api/media-proxy', async (req, res) => {
     }
 });
 
-const PORT = 3000;
-if (!process.env.VERCEL) {
-    app.listen(PORT, () => {
-        console.log(`BuffStreams Test Server running on http://localhost:${PORT}`);
+const DEFAULT_PORT = Number(process.env.PORT) || 3000;
+
+function startServer(port, retries = 10) {
+    const server = app.listen(port, () => {
+        console.log(`BuffStreams Test Server running on http://localhost:${port}`);
         console.log('Check browser console (F12) for debug logs when playing streams');
     });
+
+    server.on('error', (error) => {
+        if (error && error.code === 'EADDRINUSE' && retries > 0) {
+            const nextPort = port + 1;
+            console.warn(`Port ${port} is in use, retrying on ${nextPort}...`);
+            startServer(nextPort, retries - 1);
+            return;
+        }
+        throw error;
+    });
+}
+
+if (!process.env.VERCEL) {
+    startServer(DEFAULT_PORT);
 }
 
 export default app;

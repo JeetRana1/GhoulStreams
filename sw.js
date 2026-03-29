@@ -3,7 +3,7 @@
  * Provides offline support, caching, and PWA functionality
  */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `ghoulstreams-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '/',
@@ -57,6 +57,31 @@ self.addEventListener('fetch', (event) => {
   // Skip streaming/media requests - these should go directly to network
   if (url.pathname.includes('/api/') || url.pathname.includes('.m3u8') || url.pathname.includes('.ts')) {
     event.respondWith(fetch(request));
+    return;
+  }
+
+  // Always prefer network for document navigations/HTML to avoid stale UI.
+  const acceptsHtml = request.headers.get('accept')?.includes('text/html');
+  if (request.mode === 'navigate' || acceptsHtml || url.pathname.endsWith('.html') || url.pathname === '/') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then((cachedResponse) => {
+            return cachedResponse || new Response('Offline - page unavailable', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: new Headers({ 'Content-Type': 'text/plain' })
+            });
+          });
+        })
+    );
     return;
   }
 
@@ -122,7 +147,7 @@ self.addEventListener('message', (event) => {
 function shouldCacheStatic(pathname) {
   const staticPatterns = [
     /\.(css|js|svg|png|jpg|jpeg|gif|woff|woff2|ttf|eot)$/i,
-    /^\/(?:index|watch|Logo)\.(?:html|svg)$/i
+    /^\/Logo\.(?:svg)$/i
   ];
   return staticPatterns.some((pattern) => pattern.test(pathname));
 }
