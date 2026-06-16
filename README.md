@@ -1,4 +1,4 @@
-# GhoulStreams 👻⚽
+# GhoulStreams 👻⚽ 
 
 GhoulStreams is a live sports web app where users can browse events and watch games in a dedicated viewing experience.
 
