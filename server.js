@@ -8,10 +8,39 @@ const app = express();
 const provider = new BuffStreams();
 const streamAvailability = new Map();
 
-app.use(express.static(__dirname));
+const ONE_YEAR_SECONDS = 31536000;
+const STATIC_ASSET_PATTERN = /\.(?:css|js|mjs|json|webmanifest|svg|png|jpg|jpeg|webp|gif|ico|woff2?|ttf|otf|txt)$/i;
+const NO_STORE_HEADERS = {
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+};
+
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        res.set(NO_STORE_HEADERS);
+    }
+    next();
+});
+
+app.use(express.static(__dirname, {
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+        if (STATIC_ASSET_PATTERN.test(filePath)) {
+            res.setHeader('Cache-Control', `public, max-age=${ONE_YEAR_SECONDS}, immutable`);
+            return;
+        }
+        if (/\.(?:html|md)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+        }
+    }
+}));
 app.use(express.json());
 
 app.get('/', (_req, res) => {
+    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
@@ -173,7 +202,9 @@ app.post('/api/fetchSources', async (req, res) => {
         const target = eventUrl || embedUrl;
         const isBackground = Boolean(background);
         console.log('Fetching sources for:', target);
-        const sources = await provider.fetchSources(target);
+        const sources = isBackground
+            ? await provider.verifyEventSources(target)
+            : await provider.fetchSources(target);
         console.log('Got sources:', sources.sources.length);
         if (sources.sources.length > 0) {
             setStreamAvailability(target, true, 'source_available');

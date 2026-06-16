@@ -970,7 +970,14 @@
         let availability = {};
         let availabilityEndpointEnabled = true;
         let verificationInFlight = false;
+        let refreshTimer = null;
+        let refreshBackoffStep = 0;
         const verifiedEvents = new Set();
+        const verificationCooldowns = new Map();
+        const VERIFY_BATCH_SIZE = 3;
+        const VERIFY_COOLDOWN_MS = 20 * 60 * 1000;
+        const ACTIVE_REFRESH_MS = 120000;
+        const HIDDEN_REFRESH_MS = 10 * 60 * 1000;
         let privacyPolicyLoaded = false;
         let termsLoaded = false;
 
@@ -1237,12 +1244,28 @@
         }
 
         function shouldVerifyStream(stream) {
-            if (verifiedEvents.has(stream.id)) return false;
+            const lastChecked = verificationCooldowns.get(stream.id) || 0;
+            if (Date.now() - lastChecked < VERIFY_COOLDOWN_MS) return false;
             if (isActuallyLive(stream)) return true;
             const scheduleInfo = extractScheduleInfo(stream);
             if (!scheduleInfo.eventDate) return false;
             const diffMinutes = Math.round((scheduleInfo.eventDate.getTime() - Date.now()) / 60000);
-            return diffMinutes <= 30 && diffMinutes >= -240;
+            return diffMinutes <= 15 && diffMinutes >= -120;
+        }
+
+        function getVerificationCandidates() {
+            const decorated = allStreams
+                .map((stream, index) => {
+                    const displayType = detectSportType(stream);
+                    const scheduleInfo = extractScheduleInfo(stream);
+                    const startsAt = scheduleInfo.eventDate ? scheduleInfo.eventDate.getTime() : Number.MAX_SAFE_INTEGER;
+                    const visibleBoost = !activeFilter || displayType === activeFilter ? 0 : 1;
+                    const liveBoost = isActuallyLive(stream) ? 0 : 1;
+                    return { stream, index, startsAt, score: visibleBoost * 1000000000000 + liveBoost * 1000000000 + Math.abs(startsAt - Date.now()) };
+                })
+                .filter(({ stream }) => shouldVerifyStream(stream))
+                .sort((a, b) => a.score - b.score || a.index - b.index);
+            return decorated.slice(0, VERIFY_BATCH_SIZE).map(({ stream }) => stream);
         }
 
         function renderStreams() {
@@ -1353,21 +1376,21 @@
         }
 
         async function verifyLikelyLiveStreams() {
-            if (verificationInFlight) return;
-            const candidates = allStreams.filter((stream) => shouldVerifyStream(stream)).slice(0, 10);
+            if (verificationInFlight || document.hidden) return;
+            const candidates = getVerificationCandidates();
             if (!candidates.length) return;
             verificationInFlight = true;
             try {
-                for (const stream of candidates) {
+                await Promise.allSettled(candidates.map((stream) => {
+                    verificationCooldowns.set(stream.id, Date.now());
                     verifiedEvents.add(stream.id);
-                    try {
-                        await fetch('/api/fetchSources', {
+                    return fetch('/api/fetchSources', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ eventUrl: stream.id, background: true })
-                        });
-                    } catch {}
-                }
+                            body: JSON.stringify({ eventUrl: stream.id, background: true }),
+                            cache: 'no-store'
+                    });
+                }));
                 await loadAvailability();
                 renderStreams();
             } finally {
@@ -1381,7 +1404,22 @@
                 await loadAvailability();
                 renderStreams();
                 await verifyLikelyLiveStreams();
-            } catch {}
+                refreshBackoffStep = 0;
+            } catch {
+                refreshBackoffStep = Math.min(refreshBackoffStep + 1, 4);
+            } finally {
+                scheduleNextRefresh();
+            }
+        }
+
+        function getRefreshDelay() {
+            const baseDelay = document.hidden ? HIDDEN_REFRESH_MS : ACTIVE_REFRESH_MS;
+            return baseDelay * Math.pow(2, refreshBackoffStep);
+        }
+
+        function scheduleNextRefresh(delay = getRefreshDelay()) {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(refreshHomepageData, delay);
         }
 
         document.addEventListener('click', (event) => {
@@ -1436,10 +1474,20 @@
                 setActiveNav();
                 renderStreams();
                 await verifyLikelyLiveStreams();
-                setInterval(refreshHomepageData, 60000);
+                scheduleNextRefresh();
             } catch {
                 document.getElementById('streamsContainer').innerHTML = '<div class="glass empty">Error loading streams.</div>';
+                scheduleNextRefresh(HIDDEN_REFRESH_MS);
             }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                scheduleNextRefresh(HIDDEN_REFRESH_MS);
+                return;
+            }
+            refreshBackoffStep = 0;
+            scheduleNextRefresh(1000);
         });
 
         let logoResizeTimer = null;

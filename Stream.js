@@ -39,6 +39,67 @@ class BuffStreams extends Provider {
         return { 'User-Agent': this.userAgent, 'Referer': referer, 'Origin': origin };
     }
 
+    async supportsHead(url, referer = this.homeUrl) {
+        try {
+            const response = await fetch(url, { method: 'HEAD', headers: this.buildHeaders(referer) });
+            return response.ok || response.status === 405 || response.status === 403 ? response : null;
+        } catch {
+            return null;
+        }
+    }
+
+    stripUnneededHtml(value) {
+        return String(value || '')
+            .replace(/<svg\b[\s\S]*?<\/svg>/gi, '')
+            .replace(/<script\b[\s\S]*?<\/script>/gi, '')
+            .replace(/<style\b[\s\S]*?<\/style>/gi, '')
+            .replace(/<footer\b[\s\S]*?<\/footer>/gi, '')
+            .replace(/<noscript\b[\s\S]*?<\/noscript>/gi, '');
+    }
+
+    async readTextLean(response, {
+        maxBytes = 512 * 1024,
+        stopWhen = null,
+        strip = true
+    } = {}) {
+        if (!response.body || typeof response.body.getReader !== 'function') {
+            const text = await response.text();
+            return strip ? this.stripUnneededHtml(text.slice(0, maxBytes)) : text.slice(0, maxBytes);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let received = 0;
+        let output = '';
+
+        try {
+            while (received < maxBytes) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                received += value.byteLength;
+                output += decoder.decode(value, { stream: true });
+                if (strip) output = this.stripUnneededHtml(output);
+                if (typeof stopWhen === 'function' && stopWhen(output)) break;
+            }
+            output += decoder.decode();
+        } finally {
+            try { await reader.cancel(); } catch {}
+        }
+
+        return strip ? this.stripUnneededHtml(output) : output;
+    }
+
+    async fetchLeanHtml(url, referer = this.homeUrl, options = {}) {
+        const headers = {
+            ...this.buildHeaders(referer),
+            'Accept': 'text/html,application/xhtml+xml',
+            'Range': `bytes=0-${Math.max(0, (options.maxBytes || 512 * 1024) - 1)}`
+        };
+        const response = await fetch(url, { headers });
+        if (!response.ok && response.status !== 206) throw new Error(`HTTP error! status: ${response.status}`);
+        return this.readTextLean(response, options);
+    }
+
     toAbsoluteUrl(value, fallbackBase = this.baseUrl) {
         const raw = String(value || '').trim();
         if (!raw) return null;
@@ -192,7 +253,10 @@ class BuffStreams extends Provider {
     async fetchCategoryStreams(url) {
         const response = await fetch(url, { headers: this.buildHeaders(url) });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const html = await response.text();
+        const html = await this.readTextLean(response, {
+            maxBytes: 900 * 1024,
+            stopWhen: (text) => /<\/html>/i.test(text)
+        });
         return this.parseStreamsFromHTML(html);
     }
 
@@ -591,9 +655,10 @@ class BuffStreams extends Provider {
         try {
             const url = this.toAbsoluteUrl(id, this.baseUrl);
             if (!url) throw new Error(`Invalid stream URL: ${id}`);
-            const response = await fetch(url, { headers: this.buildHeaders(this.homeUrl) });
-            if (!response.ok) throw new Error(`Could not fetch stream info for ${id}`);
-            const html = await response.text();
+            const html = await this.fetchLeanHtml(url, this.homeUrl, {
+                maxBytes: 700 * 1024,
+                stopWhen: (text) => /<\/html>/i.test(text)
+            });
             const embedUrl = this.extractEmbedUrl(html, url);
             const details = this.extractEventDetails(html, url);
             const sessions = this.extractSessionCards(html);
@@ -630,14 +695,17 @@ class BuffStreams extends Provider {
         try {
             const normalizedEventUrl = this.toAbsoluteUrl(eventUrl, this.baseUrl);
             if (!normalizedEventUrl) throw new Error(`Invalid event URL: ${eventUrl}`);
-            const eventResponse = await fetch(normalizedEventUrl, { headers: this.buildHeaders(this.homeUrl) });
-            if (!eventResponse.ok) throw new Error(`Failed to fetch event page: ${eventResponse.status}`);
-            const eventHtml = await eventResponse.text();
+            const eventHtml = await this.fetchLeanHtml(normalizedEventUrl, this.homeUrl, {
+                maxBytes: 700 * 1024,
+                stopWhen: (text) => /<iframe[^>]+(?:id=["']cx-iframe["'][^>]+)?src=["'][^"']+["']/i.test(text)
+            });
             const embedUrl = this.extractEmbedUrl(eventHtml, normalizedEventUrl);
             if (!embedUrl) throw new Error('No stream iframe found on the event page');
-            const embedResponse = await fetch(embedUrl, { headers: this.buildHeaders(normalizedEventUrl) });
-            if (!embedResponse.ok) throw new Error(`Failed to fetch embed page: ${embedResponse.status}`);
-            const embedHtml = await embedResponse.text();
+            const embedHtml = await this.fetchLeanHtml(embedUrl, normalizedEventUrl, {
+                maxBytes: 500 * 1024,
+                strip: false,
+                stopWhen: (text) => /(?:window\.atob|source\s*:|\.m3u8|load-playlist|\/playlist\/)/i.test(text)
+            });
             const hlsUrl = this.extractHlsFromEmbed(embedHtml);
             if (!hlsUrl) throw new Error('No direct HLS URL found in embed');
 
@@ -660,6 +728,49 @@ class BuffStreams extends Provider {
         } catch (error) {
             console.error('Error in BuffStreams fetchSources:', error);
             return { sources: [], subtitles: [], headers: {}, error: error.message };
+        }
+    }
+
+    async verifyEventSources(eventUrl) {
+        try {
+            const normalizedEventUrl = this.toAbsoluteUrl(eventUrl, this.baseUrl);
+            if (!normalizedEventUrl) throw new Error(`Invalid event URL: ${eventUrl}`);
+
+            const headResponse = await this.supportsHead(normalizedEventUrl, this.homeUrl);
+            if (headResponse && headResponse.status >= 400 && headResponse.status !== 403 && headResponse.status !== 405) {
+                throw new Error(`Event page unavailable: ${headResponse.status}`);
+            }
+
+            const eventHtml = await this.fetchLeanHtml(normalizedEventUrl, this.homeUrl, {
+                maxBytes: 384 * 1024,
+                stopWhen: (text) => /<iframe[^>]+(?:id=["']cx-iframe["'][^>]+)?src=["'][^"']+["']/i.test(text)
+            });
+            const embedUrl = this.extractEmbedUrl(eventHtml, normalizedEventUrl);
+            if (!embedUrl) throw new Error('No stream iframe found on the event page');
+
+            const embedHead = await this.supportsHead(embedUrl, normalizedEventUrl);
+            if (embedHead && embedHead.status >= 400 && embedHead.status !== 403 && embedHead.status !== 405) {
+                throw new Error(`Embed page unavailable: ${embedHead.status}`);
+            }
+
+            const embedHtml = await this.fetchLeanHtml(embedUrl, normalizedEventUrl, {
+                maxBytes: 384 * 1024,
+                strip: false,
+                stopWhen: (text) => /(?:window\.atob|source\s*:|\.m3u8|load-playlist|\/playlist\/)/i.test(text)
+            });
+            const hlsUrl = this.extractHlsFromEmbed(embedHtml);
+            if (!hlsUrl) throw new Error('No direct HLS URL found in embed');
+
+            return {
+                sources: [{ url: hlsUrl, quality: 'auto', isM3U8: true, isDirect: true }],
+                subtitles: [],
+                headers: {},
+                embedUrl,
+                verifiedOnly: true
+            };
+        } catch (error) {
+            console.error('Error in BuffStreams verifyEventSources:', error);
+            return { sources: [], subtitles: [], headers: {}, error: error.message, verifiedOnly: true };
         }
     }
 }
