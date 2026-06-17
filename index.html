@@ -1309,10 +1309,12 @@
                     const statusCell = (stream.liveNow || autoLiveNow)
                         ? `<div class="event-status-live">${escapeHtml(centerText)}</div>`
                         : `<div class="event-time">${escapeHtml(centerText)}</div>`;
-                    const liveBadge = (stream.liveNow || autoLiveNow) ? `<span class="live-indicator">Live</span>` : '';
-                    const buttonClass = (stream.liveNow || autoLiveNow) ? 'btn watch-btn' : 'btn watch-btn locked';
-                    const buttonLabel = (stream.liveNow || autoLiveNow) ? 'Watch Live Stream' : '<span class="lock-icon"></span><span>Not Live</span>';
-                    const disabledAttr = (stream.liveNow || autoLiveNow) ? '' : 'disabled aria-disabled="true"';
+                    const liveBadge = (stream.liveNow || autoLiveNow)
+                        ? `<span class="live-indicator">Live</span>`
+                        : (scheduleInfo.countdownText ? `<span class="team-meta-badge">${escapeHtml(scheduleInfo.countdownText)}</span>` : '');
+                    const buttonClass = 'btn watch-btn';
+                    const buttonLabel = (stream.liveNow || autoLiveNow) ? 'Watch' : 'Details';
+                    const disabledAttr = '';
                     const primaryTitle = (stream.liveNow || autoLiveNow) && teams.away ? teams.away : getMainTitle(stream.title);
                     const secondaryTitle = (stream.liveNow || autoLiveNow) ? teams.home : '';
 

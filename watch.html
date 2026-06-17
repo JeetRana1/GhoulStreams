@@ -692,11 +692,11 @@
                 </div>
                 <div class="top-badges">
                     <span class="status-badge" id="topStatusBadge">Loading</span>
-                    <span class="stream-badge" id="topStreamBadge">Live Stream</span>
+                    <span class="stream-badge" id="topStreamBadge" style="display:none"></span>
                 </div>
                 <p id="pageSubtitle" class="sr-only">Resolving direct live source</p>
             </div>
-            <div class="live-badge" id="topLiveBadge">Live Feed</div>
+            <div class="live-badge" id="topLiveBadge" style="display:none">Live</div>
         </div>
 
         <div class="layout">
@@ -707,7 +707,7 @@
                         <h2 id="playerTitle"><span id="playerTitleText">Now Playing</span> <span class="live-badge" id="playerSessionBadge" style="display:none;">Sprint</span></h2>
                         <p id="playerSubtitle">Direct live playback</p>
                     </div>
-                    <div class="live-badge">On Air</div>
+                    <div class="live-badge" id="playerLiveBadge" style="display:none">Live</div>
                 </div>
                 <div class="player-shell">
                     <div class="player-frame is-paused" id="playerFrame">
@@ -715,7 +715,7 @@
                         <div class="player-gradient" id="playerGradient"></div>
                         <div class="video-hud" id="videoHud">
                             <div class="overlay-row">
-                                <div class="chip live">Live</div>
+                                <div class="chip live" id="hudLiveChip" style="display:none">Live</div>
                                 <div class="chip time" id="liveClock">--:--:--</div>
                             </div>
                             <div class="overlay-row">
@@ -1409,8 +1409,9 @@
         function setMeta(title, subtitle, status, latency, sessionLabel) {
             if (sessionLabel) currentSessionLabel = sessionLabel;
             const effectiveSessionLabel = sessionLabel || currentSessionLabel;
+            const isLiveStatus = /(live|on air|in progress|playing|source_available)/i.test(status || '') && !/starts in|not started|starting soon/i.test(status || '');
 
-            // Keep a clean title and show the session label in the top bar near the Live Feed badge.
+            // Keep a clean title and show the session label beside the player title.
             document.getElementById('pageTitleText').textContent = title;
             document.getElementById('playerTitleText').textContent = title;
 
@@ -1427,6 +1428,12 @@
             document.getElementById('playerSubtitle').textContent = subtitle;
             document.getElementById('liveStatus').textContent = status;
             document.getElementById('liveLatency').textContent = latency;
+            const topLiveBadge = document.getElementById('topLiveBadge');
+            const playerLiveBadge = document.getElementById('playerLiveBadge');
+            const hudLiveChip = document.getElementById('hudLiveChip');
+            if (topLiveBadge) topLiveBadge.style.display = isLiveStatus ? 'inline-flex' : 'none';
+            if (playerLiveBadge) playerLiveBadge.style.display = isLiveStatus ? 'inline-flex' : 'none';
+            if (hudLiveChip) hudLiveChip.style.display = isLiveStatus ? 'inline-flex' : 'none';
             // Centered top badge prefers match status/subtitle.
             updateTopStatusBadge(status || subtitle);
 
@@ -1452,14 +1459,18 @@
             const rightLogo = right.logo ? '<img class="score-team-logo" src="' + escapeHtml(right.logo) + '" alt="' + escapeHtml(right.name || '') + '">' : '';
             const eventStartUtc = buildEventStartUtc(info, streamTitle);
             const eventTimeText = formatLocalDateTime(eventStartUtc) || info.eventDate || '';
+            const countdownText = formatCountdownFromTimestamp(eventStartUtc);
+            const scoreboardStatus = countdownText ? 'Starts in ' + countdownText : (info.status || (isLivePlaying ? 'Live' : 'Upcoming'));
             el.style.display = 'grid';
-            el.innerHTML = '<div class="score-team">' + leftLogo + '<div><div class="score-team-name">' + escapeHtml(left.name || 'Team 1') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div></div>' + '<div class="score-meta"><div class="score-status">' + escapeHtml(info.status || 'Live') + '</div><div class="score-pills"><span class="score-pill">' + escapeHtml(leftScore) + '</span><span class="score-pill">' + escapeHtml(rightScore) + '</span></div><div class="score-sub">' + escapeHtml(eventTimeText) + '</div></div>' + '<div class="score-team right"><div><div class="score-team-name">' + escapeHtml(right.name || 'Team 2') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div>' + rightLogo + '</div>';
+            el.innerHTML = '<div class="score-team">' + leftLogo + '<div><div class="score-team-name">' + escapeHtml(left.name || 'Team 1') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div></div>' + '<div class="score-meta"><div class="score-status">' + escapeHtml(scoreboardStatus) + '</div><div class="score-pills"><span class="score-pill">' + escapeHtml(leftScore) + '</span><span class="score-pill">' + escapeHtml(rightScore) + '</span></div><div class="score-sub">' + escapeHtml(eventTimeText) + '</div></div>' + '<div class="score-team right"><div><div class="score-team-name">' + escapeHtml(right.name || 'Team 2') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div>' + rightLogo + '</div>';
         }
 
         function displayEventSessions(sessions) {
             const container = document.getElementById('eventSessionsContainer');
             const list = document.getElementById('eventSessionsList');
-            const items = Array.isArray(sessions) ? sessions.filter((session) => session && session.name) : [];
+            const items = Array.isArray(sessions)
+                ? sessions.filter((session) => session && session.name && !/^live streams?$/i.test(String(session.name).trim()))
+                : [];
             if (!container || !list) return false;
             if (!items.length) {
                 container.style.display = 'none';
