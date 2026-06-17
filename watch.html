@@ -704,7 +704,7 @@
                 <div class="scoreboard" id="scoreboard" style="display:none"></div>
                 <div class="player-head">
                     <div>
-                        <h2 id="playerTitle"><span id="playerTitleText">Now Playing</span> <span class="live-badge" id="playerSessionBadge" style="display:none;">Sprint</span></h2>
+                        <h2 id="playerTitle"><span id="playerTitleText">Now Playing</span> <span class="live-badge" id="playerSessionBadge" style="display:none;"></span></h2>
                         <p id="playerSubtitle">Direct live playback</p>
                     </div>
                     <div class="live-badge" id="playerLiveBadge" style="display:none">Live</div>
@@ -886,6 +886,7 @@
         const SOURCE_SWITCH_MIN_INTERVAL_MS = 1500;
         const HLS_BACKOFF_429_MS = 20000;
         const HLS_BACKOFF_OTHER_MS = 30000;
+        const ENABLE_VERCEL_STREAM_FALLBACK = false;
         const sourceFailureMap = new Map();
         let hlsBackoffTimer = null;
         const PLAYER_STATE_KEY = 'watch_player_state';
@@ -1080,7 +1081,7 @@
                 let label = baseLabel;
                 if (usedLabels.has(label)) label = `${baseLabel} ${index + 1}`;
                 usedLabels.add(label);
-                return { label, url: source.playUrl, isM3U8: Boolean(source.isM3U8) };
+                return { label, url: source.playUrl, fallbackUrl: source.fallbackPlayUrl || '', isM3U8: Boolean(source.isM3U8) };
             });
 
             if (options.length > 1) {
@@ -1148,7 +1149,8 @@
                 savePlayerState({ preferredQualityUrl: selectedQualitySourceUrl });
                 playSource(next.url, Boolean(next.isM3U8), {
                     preserveSourceQualityOptions: true,
-                    subtitleCandidates: currentSubtitleCandidates
+                    subtitleCandidates: currentSubtitleCandidates,
+                    fallbackUrl: next.fallbackUrl || ''
                 });
                 updateQualityButton();
             }
@@ -1411,8 +1413,9 @@
         }
 
         function setMeta(title, subtitle, status, latency, sessionLabel) {
-            if (sessionLabel) currentSessionLabel = sessionLabel;
-            const effectiveSessionLabel = sessionLabel || currentSessionLabel;
+            const cleanSessionLabel = /^live streams?$/i.test(String(sessionLabel || '').trim()) ? '' : sessionLabel;
+            if (cleanSessionLabel) currentSessionLabel = cleanSessionLabel;
+            const effectiveSessionLabel = cleanSessionLabel || currentSessionLabel;
             const isLiveStatus = /(live|on air|in progress|playing|source_available)/i.test(status || '') && !/starts in|not started|starting soon/i.test(status || '');
 
             // Keep a clean title and show the session label beside the player title.
@@ -1520,20 +1523,17 @@
                     q.set('referer', referer);
                     q.set('root_referer', referer);
                 }
-                return { ...source, playUrl: '/api/media-proxy?' + q.toString() };
+                return {
+                    ...source,
+                    playUrl: source.url,
+                    fallbackPlayUrl: ENABLE_VERCEL_STREAM_FALLBACK ? '/api/media-proxy?' + q.toString() : ''
+                };
             });
         }
         function proxyCardImageUrl(rawUrl) {
             const sourceUrl = String(rawUrl || '').trim();
             if (!sourceUrl) return '';
-            if (!/^https?:\/\//i.test(sourceUrl)) return sourceUrl;
-
-            const q = new URLSearchParams({ url: sourceUrl });
-            if (streamId && /^https?:\/\//i.test(streamId)) {
-                q.set('referer', streamId);
-                q.set('root_referer', streamId);
-            }
-            return '/api/media-proxy?' + q.toString();
+            return sourceUrl;
         }
         function displaySources(sources) {
             const el = document.getElementById('sourcesList');
@@ -1541,7 +1541,7 @@
                 el.innerHTML = '<div class="empty">No sources available</div>';
                 return;
             }
-            el.innerHTML = sources.map((source, index) => '<div class="source-item"><div><strong>Source ' + (index + 1) + '</strong></div><div class="source-quality">' + escapeHtml(source.quality) + ' ' + (source.isM3U8 ? '(HLS)' : '(MP4)') + '</div><button class="source-btn" data-url="' + escapeHtml(source.playUrl || source.url) + '" data-hls="' + (source.isM3U8 ? '1' : '0') + '">Play Source</button></div>').join('');
+            el.innerHTML = sources.map((source, index) => '<div class="source-item"><div><strong>Source ' + (index + 1) + '</strong></div><div class="source-quality">' + escapeHtml(source.quality) + ' ' + (source.isM3U8 ? '(HLS)' : '(MP4)') + '</div><button class="source-btn" data-url="' + escapeHtml(source.playUrl || source.url) + '" data-fallback-url="' + escapeHtml(source.fallbackPlayUrl || '') + '" data-hls="' + (source.isM3U8 ? '1' : '0') + '">Play Source</button></div>').join('');
         }
         function updatePlayButton() {
             const video = getVideoElement();
@@ -1648,6 +1648,7 @@ function showControls(persistent) {
         async function playSource(url, isM3U8, options = {}) {
             const preserveSourceQualityOptions = Boolean(options.preserveSourceQualityOptions);
             const backendSubtitles = Array.isArray(options.subtitleCandidates) ? options.subtitleCandidates : [];
+            const fallbackUrl = String(options.fallbackUrl || '').trim();
             const video = getVideoElement();
             if (hlsBackoffTimer) {
                 clearTimeout(hlsBackoffTimer);
@@ -1745,7 +1746,8 @@ function showControls(persistent) {
                     try {
                         await playSource(next.url, Boolean(next.isM3U8), {
                             preserveSourceQualityOptions: true,
-                            subtitleCandidates: currentSubtitleCandidates
+                            subtitleCandidates: currentSubtitleCandidates,
+                            fallbackUrl: next.fallbackUrl || ''
                         });
                         lastSwitchAt = Date.now();
                         updateQualityButton();
@@ -1813,6 +1815,15 @@ function showControls(persistent) {
                     }
 
                     if (!data.fatal) return;
+                    if (fallbackUrl && fallbackUrl !== url) {
+                        document.getElementById('liveStatus').textContent = 'Retrying source';
+                        document.getElementById('liveLatency').textContent = 'Using compatibility fallback';
+                        await playSource(fallbackUrl, isM3U8, {
+                            preserveSourceQualityOptions: true,
+                            subtitleCandidates: backendSubtitles
+                        });
+                        return;
+                    }
                     isLivePlaying = false;
                     shouldSnapToLiveEdge = true;
                     document.getElementById('liveStatus').textContent = 'Live signal interrupted';
@@ -1835,6 +1846,13 @@ function showControls(persistent) {
                 reportStreamStatus(true, 'playing');
             }, { once: true });
             video.addEventListener('error', () => {
+                if (fallbackUrl && fallbackUrl !== url) {
+                    playSource(fallbackUrl, isM3U8, {
+                        preserveSourceQualityOptions: true,
+                        subtitleCandidates: backendSubtitles
+                    });
+                    return;
+                }
                 isLivePlaying = false;
                 reportStreamStatus(false, 'video_error');
             }, { once: true });
@@ -2104,8 +2122,9 @@ function showControls(persistent) {
                 const button = event.target.closest('.source-btn');
                 if (!button) return;
                 const url = button.getAttribute('data-url') || '';
+                const fallbackUrl = button.getAttribute('data-fallback-url') || '';
                 const isHls = button.getAttribute('data-hls') === '1';
-                playSource(url, isHls, { subtitleCandidates: currentSubtitleCandidates });
+                playSource(url, isHls, { subtitleCandidates: currentSubtitleCandidates, fallbackUrl });
             });
             document.addEventListener('fullscreenchange', () => {
                 updateFullscreenButton();
@@ -2372,7 +2391,8 @@ function showControls(persistent) {
                     if (preferredQuality) selectedQualitySourceUrl = preferredQuality.playUrl;
                     await playSource(initialSource.playUrl, initialSource.isM3U8, {
                         preserveSourceQualityOptions: true,
-                        subtitleCandidates: currentSubtitleCandidates
+                        subtitleCandidates: currentSubtitleCandidates,
+                        fallbackUrl: initialSource.fallbackPlayUrl || ''
                     });
                 } else {
                     isLivePlaying = false;
