@@ -1,7 +1,14 @@
 {
   "functions": {
     "api/index.js": {
-      "includeFiles": "{index,watch}.html,Logo.svg,GhoulStream-Logo.svg,manifest.json,sw.js"
+      "includeFiles": [
+        "index.html",
+        "watch.html",
+        "Logo.svg",
+        "GhoulStream-Logo.svg",
+        "manifest.json",
+        "sw.js"
+      ]
     }
   },
   "headers": [

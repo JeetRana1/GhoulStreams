@@ -887,6 +887,13 @@
         const HLS_BACKOFF_429_MS = 20000;
         const HLS_BACKOFF_OTHER_MS = 30000;
         const ENABLE_VERCEL_STREAM_FALLBACK = false;
+        const EXTERNAL_MEDIA_PROXY_BASE = (() => {
+            try {
+                return String(localStorage.getItem('ghoulstreams_media_proxy_base') || '').replace(/\/+$/, '');
+            } catch {
+                return '';
+            }
+        })();
         const sourceFailureMap = new Map();
         let hlsBackoffTimer = null;
         const PLAYER_STATE_KEY = 'watch_player_state';
@@ -1518,17 +1525,25 @@
         function preparePlayableSources(sources) {
             return (sources || []).map((source) => {
                 const referer = source.headers && (source.headers.Referer || source.headers.referer) || '';
-                const q = new URLSearchParams({ url: source.url });
-                if (referer) {
-                    q.set('referer', referer);
-                    q.set('root_referer', referer);
-                }
+                const fallbackPlayUrl = buildMediaProxyUrl(source.url, referer);
                 return {
                     ...source,
                     playUrl: source.url,
-                    fallbackPlayUrl: ENABLE_VERCEL_STREAM_FALLBACK ? '/api/media-proxy?' + q.toString() : ''
+                    fallbackPlayUrl
                 };
             });
+        }
+
+        function buildMediaProxyUrl(sourceUrl, referer = '') {
+            if (!sourceUrl) return '';
+            if (!ENABLE_VERCEL_STREAM_FALLBACK && !EXTERNAL_MEDIA_PROXY_BASE) return '';
+            const q = new URLSearchParams({ url: sourceUrl });
+            if (referer) {
+                q.set('referer', referer);
+                q.set('root_referer', referer);
+            }
+            const base = EXTERNAL_MEDIA_PROXY_BASE || '';
+            return `${base}/api/media-proxy?${q.toString()}`;
         }
         function proxyCardImageUrl(rawUrl) {
             const sourceUrl = String(rawUrl || '').trim();
