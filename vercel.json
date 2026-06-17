@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{index,watch}.html"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)\\.(js|mjs|css|json|webmanifest|svg|png|jpg|jpeg|webp|gif|ico|woff|woff2|ttf|otf|txt)",
