@@ -545,6 +545,13 @@
         .match-fighter-name { font-size: 0.75rem; font-weight: 700; color: var(--text); line-height: 1.2; }
         .match-fighter-record { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
         .match-vs { font-size: 0.7rem; color: var(--muted); font-weight: 700; min-width: 24px; }
+        .match-sequence { font-size: 0.64rem; color: var(--accent2); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; text-align: center; }
+        .session-list { display: flex; flex-direction: column; gap: 9px; }
+        .session-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: var(--r-md); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+        .session-name { font-size: 0.82rem; font-weight: 800; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .session-time { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+        .session-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: var(--r-pill); border: 1px solid rgba(77,159,255,0.22); background: rgba(77,159,255,0.1); color: #a6cbff; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+        .session-status.live { border-color: rgba(255,98,120,0.3); background: rgba(255,98,120,0.14); color: #ffb5bf; }
 
         /* ══════════════════════════════════════
            RESPONSIVE
@@ -828,6 +835,10 @@
 
             <div class="card side-card">
                 <h3>Event Card</h3>
+                <div id="eventSessionsContainer" style="display:none; margin-bottom: 16px;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--accent);">Sessions</h4>
+                    <div class="session-list" id="eventSessionsList"></div>
+                </div>
                 <div id="eventCardContainer" style="display:none">
                     <div id="mainCardSection">
                         <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--accent);">Main Card</h4>
@@ -1380,12 +1391,42 @@
             }
             const left = teams[0] || {};
             const right = teams[1] || {};
-            const leftScore = left.score || (info.scores || [])[0] || '-';
-            const rightScore = right.score || (info.scores || [])[1] || '-';
+            const hasAwayScore = Number.isInteger(info?.awayScore);
+            const hasHomeScore = Number.isInteger(info?.homeScore);
+            const leftScore = hasAwayScore ? String(info.awayScore) : (left.score || (info.scores || [])[0] || '-');
+            const rightScore = hasHomeScore ? String(info.homeScore) : (right.score || (info.scores || [])[1] || '-');
             const leftLogo = left.logo ? '<img class="score-team-logo" src="' + escapeHtml(left.logo) + '" alt="' + escapeHtml(left.name || '') + '">' : '';
             const rightLogo = right.logo ? '<img class="score-team-logo" src="' + escapeHtml(right.logo) + '" alt="' + escapeHtml(right.name || '') + '">' : '';
             el.style.display = 'grid';
             el.innerHTML = '<div class="score-team">' + leftLogo + '<div><div class="score-team-name">' + escapeHtml(left.name || 'Team 1') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div></div>' + '<div class="score-meta"><div class="score-status">' + escapeHtml(info.status || 'Live') + '</div><div class="score-pills"><span class="score-pill">' + escapeHtml(leftScore) + '</span><span class="score-pill">' + escapeHtml(rightScore) + '</span></div><div class="score-sub">' + escapeHtml(info.eventDate || '') + '</div></div>' + '<div class="score-team right"><div><div class="score-team-name">' + escapeHtml(right.name || 'Team 2') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div>' + rightLogo + '</div>';
+        }
+
+        function displayEventSessions(sessions) {
+            const container = document.getElementById('eventSessionsContainer');
+            const list = document.getElementById('eventSessionsList');
+            const items = Array.isArray(sessions) ? sessions.filter((session) => session && session.name) : [];
+            if (!container || !list) return false;
+            if (!items.length) {
+                container.style.display = 'none';
+                list.innerHTML = '';
+                return false;
+            }
+            container.style.display = 'block';
+            list.innerHTML = items.map((session) => {
+                const status = normalizeStatus(session.status || '', session.startsAt || session.when || '');
+                const statusClass = /live|progress/i.test(status) ? ' live' : '';
+                const time = session.startsAt || session.when || '';
+                return `
+                    <div class="session-row">
+                        <div>
+                            <div class="session-name">${escapeHtml(session.name)}</div>
+                            ${time ? `<div class="session-time">${escapeHtml(time)}</div>` : ''}
+                        </div>
+                        ${status ? `<div class="session-status${statusClass}">${escapeHtml(status)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            return true;
         }
         async function reportStreamStatus(isLive, reason) {
             if (!streamId) return;
@@ -1744,6 +1785,11 @@ function showControls(persistent) {
                 if (!infoResult.success) return;
                 const info = infoResult.data || {};
                 renderScoreboard(info);
+                displayEventSessions(info.eventSessions || []);
+                displayEventCard({
+                    mainCard: (info.fightCard && info.fightCard.length) ? info.fightCard : (info.cards?.mainCard || []),
+                    prelims: info.cards?.prelims || []
+                });
                 const baseTitle = getMainTitle(info.title || document.getElementById('pageTitle').textContent || streamTitle);
                 const activeSession = info.activeSession || null;
                 const sessionLabel = activeSession?.name ? `${activeSession.name}` : detectSessionLabelFromText(info.title, info.status, streamTitle);
@@ -2015,10 +2061,11 @@ function showControls(persistent) {
             const mainCardMatches = document.getElementById('mainCardMatches');
             const prelimMatches = document.getElementById('prelimMatches');
             const prelimsSection = document.getElementById('prelimsSection');
+            const hasSessions = document.getElementById('eventSessionsContainer')?.style.display === 'block';
             
             if (!cardData || (!cardData.mainCard?.length && !cardData.prelims?.length)) {
                 container.style.display = 'none';
-                noCardMsg.style.display = 'block';
+                noCardMsg.style.display = hasSessions ? 'none' : 'block';
                 return;
             }
             
@@ -2035,6 +2082,7 @@ function showControls(persistent) {
                     matchEl.className = 'match-card';
                     matchEl.innerHTML = `
                         <div class="match-fighter">
+                            ${match.sequenceLabel ? `<div class="match-sequence">${escapeHtml(match.sequenceLabel)}</div>` : ''}
                             ${image1Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image1Url)}" alt="${escapeHtml(match.fighter1 || 'Competitor 1')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
                             <div class="match-fighter-name">${escapeHtml(match.fighter1 || 'Fighter 1')}</div>
                             ${match.record1 ? `<div class="match-fighter-record">${escapeHtml(match.record1)}</div>` : ''}
@@ -2061,6 +2109,7 @@ function showControls(persistent) {
                     matchEl.className = 'match-card';
                     matchEl.innerHTML = `
                         <div class="match-fighter">
+                            ${match.sequenceLabel ? `<div class="match-sequence">${escapeHtml(match.sequenceLabel)}</div>` : ''}
                             ${image1Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image1Url)}" alt="${escapeHtml(match.fighter1 || 'Competitor 1')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
                             <div class="match-fighter-name">${escapeHtml(match.fighter1 || 'Fighter 1')}</div>
                             ${match.record1 ? `<div class="match-fighter-record">${escapeHtml(match.record1)}</div>` : ''}
@@ -2125,8 +2174,10 @@ function showControls(persistent) {
                 const html = events.map(event => {
                     const eventId = event.id || event.url || '';
                     const eventTitle = String(event.title || event.name || 'Event').substring(0, 50);
-                    const isLive = String(event.status || '').toLowerCase().includes('live') || 
-                                  String(event.status || '').toLowerCase().includes('in progress');
+                    const statusLabel = event.liveState?.periodText || event.liveState?.exactTime || event.statusText || event.status || '';
+                    const isLive = Boolean(event.liveState?.isLive) ||
+                                  String(statusLabel).toLowerCase().includes('live') ||
+                                  String(statusLabel).toLowerCase().includes('in progress');
                     const relatedImageRaw = String(event.image || event.logo || '').trim();
                     const relatedImageUrl = /^https?:\/\//i.test(relatedImageRaw) ? relatedImageRaw : '/Logo.svg?v=1';
                     
@@ -2164,7 +2215,7 @@ function showControls(persistent) {
                             <div class="event-card-body">
                                 <div class="event-card-title">${escapeHtml(eventTitle)}</div>
                                 <div class="event-card-meta">
-                                    ${isLive ? '<span class="event-card-badge">LIVE</span>' : ''}
+                                    ${isLive ? '<span class="event-card-badge">' + escapeHtml(statusLabel || 'LIVE') + '</span>' : (statusLabel ? '<span>' + escapeHtml(statusLabel) + '</span>' : '')}
                                 </div>
                                 <div class="event-card-channel" style="font-size: 0.65rem; color: var(--muted); margin-top: 4px;">${logoClass.toUpperCase()}</div>
                             </div>
@@ -2196,7 +2247,11 @@ function showControls(persistent) {
                 if (!infoResult.success) throw new Error(infoResult.error || 'Failed to load stream info');
                 const info = infoResult.data || {};
                 renderScoreboard(info);
-                displayEventCard(info.cards || { mainCard: [], prelims: [] });
+                displayEventSessions(info.eventSessions || []);
+                displayEventCard({
+                    mainCard: (info.fightCard && info.fightCard.length) ? info.fightCard : (info.cards?.mainCard || []),
+                    prelims: info.cards?.prelims || []
+                });
                 const baseTitle = getMainTitle(info.title || streamTitle);
                 const activeSession = info.activeSession || null;
                 const sessionLabel = activeSession?.name ? `${activeSession.name}` : detectSessionLabelFromText(info.title, info.status, streamTitle);

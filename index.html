@@ -1064,6 +1064,7 @@
         }
 
         function isActuallyLive(stream) {
+            if (stream.liveState?.isLive === true) return true;
             const override = availability[stream.id];
             if (override?.isLive === true) return true;
             
@@ -1158,10 +1159,12 @@
         }
 
         function extractScheduleInfo(stream) {
+            const liveState = stream.liveState || {};
             const cleanTitle = cleanDisplayTitle(stream.title || '');
-            const cleanStatus = cleanDisplayTitle(stream.statusText || '');
+            const cleanStatus = cleanDisplayTitle(liveState.periodText || stream.statusText || '');
+            const liveExactTime = cleanDisplayTitle(liveState.exactTime || '');
             const exactMatch = cleanTitle.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?ET)?\b/i) || cleanStatus.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?ET)?\b/i);
-            const exactTime = exactMatch ? exactMatch[0].replace(/\s+/g, ' ').trim() : '';
+            const exactTime = liveExactTime || (exactMatch ? exactMatch[0].replace(/\s+/g, ' ').trim() : '');
             const relativeText = /from now|tomorrow|today|tonight|later/i.test(cleanStatus) ? cleanStatus : '';
             const eventDate = buildEasternEventDate(exactTime, relativeText);
             const computedRelative = formatRelativeStart(eventDate);
@@ -1292,15 +1295,18 @@
                 const rows = streams.map((stream) => {
                     const teams = splitTeams(stream.title, stream.liveNow);
                     const sessionLabel = detectSessionLabel(stream);
-                    const providerStatus = cleanDisplayTitle(stream.statusText || '');
+                    const liveState = stream.liveState || {};
+                    const livePeriodText = cleanDisplayTitle(liveState.periodText || '');
+                    const liveExactTime = cleanDisplayTitle(liveState.exactTime || '');
+                    const providerStatus = cleanDisplayTitle(livePeriodText || stream.statusText || '');
                     const scheduleInfo = extractScheduleInfo(stream);
                     const localTimeLabel = convertEasternToLocalLabel(scheduleInfo.eventDate);
                     const autoLiveNow = !stream.liveNow && scheduleInfo.computedRelative === 'Started';
                     const statusOverride = availability[stream.id]?.reason || '';
                     const shouldShowOffline = Boolean(statusOverride) && !providerStatus && !scheduleInfo.exactTime;
                     const centerText = (stream.liveNow || autoLiveNow)
-                        ? (providerStatus || teams.time || 'LIVE')
-                        : (shouldShowOffline ? 'OFFLINE' : (scheduleInfo.exactTime || providerStatus || 'UPCOMING'));
+                        ? (livePeriodText || providerStatus || teams.time || 'LIVE')
+                        : (shouldShowOffline ? 'OFFLINE' : (liveExactTime || scheduleInfo.exactTime || providerStatus || 'UPCOMING'));
                     const statusCell = (stream.liveNow || autoLiveNow)
                         ? `<div class="event-status-live">${escapeHtml(centerText)}</div>`
                         : `<div class="event-time">${escapeHtml(centerText)}</div>`;
@@ -1308,12 +1314,15 @@
                     const buttonClass = (stream.liveNow || autoLiveNow) ? 'btn watch-btn' : 'btn watch-btn locked';
                     const buttonLabel = (stream.liveNow || autoLiveNow) ? 'Watch Live Stream' : '<span class="lock-icon"></span><span>Not Live</span>';
                     const disabledAttr = (stream.liveNow || autoLiveNow) ? '' : 'disabled aria-disabled="true"';
-                    const primaryTitle = getMainTitle(stream.title);
+                    const primaryTitle = (stream.liveNow || autoLiveNow) && teams.away ? teams.away : getMainTitle(stream.title);
                     const secondaryTitle = (stream.liveNow || autoLiveNow) ? teams.home : '';
 
                     const isLiveSession = stream.liveNow || autoLiveNow || /in progress|live|just now|started|ongoing/i.test(providerStatus);
                     const sessionBadge = isLiveSession && sessionLabel ? `<span class="team-meta-badge">${escapeHtml(sessionLabel)}</span>` : '';
-                    const scheduleText = [scheduleInfo.display, localTimeLabel].filter(Boolean).join(' ? ') || 'Upcoming';
+                    const scheduleText = [
+                        stream.liveNow && livePeriodText ? livePeriodText : scheduleInfo.display,
+                        localTimeLabel
+                    ].filter(Boolean).join(' ? ') || 'Upcoming';
                     const scheduleHtml = `<span class="team-meta-text">${escapeHtml(scheduleText)}</span>`;
                     const metaHtml = (sessionBadge || scheduleText)
                         ? `<div class="team-meta">${sessionBadge}${scheduleText ? scheduleHtml : ''}</div>`

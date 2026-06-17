@@ -5,6 +5,7 @@ class BuffStreams extends Provider {
         super();
         this.baseUrl = 'https://buffstreams.plus';
         this.homeUrl = `${this.baseUrl}/index7`;
+        this.directoryUrls = [this.homeUrl, `${this.baseUrl}/index18`];
         this.name = 'BuffStreams';
         this.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
         this.categoryLogos = {
@@ -121,6 +122,54 @@ class BuffStreams extends Provider {
             .trim();
     }
 
+    textToInt(value) {
+        const match = String(value || '').match(/-?\d+/);
+        return match ? Number.parseInt(match[0], 10) : null;
+    }
+
+    firstBlockAfterLabel(html, labels = [], maxLength = 160000) {
+        const source = String(html || '');
+        const lower = source.toLowerCase();
+        const indexes = labels
+            .map((label) => lower.indexOf(String(label || '').toLowerCase()))
+            .filter((index) => index >= 0);
+        if (!indexes.length) return source.slice(0, maxLength);
+        const start = Math.max(0, Math.min(...indexes) - 8000);
+        return source.slice(start, start + maxLength);
+    }
+
+    extractLiveState(title = '', statusText = '', rowHtml = '') {
+        try {
+            const rowText = this.cleanText(rowHtml);
+            const haystack = [statusText, title, rowText].filter(Boolean).join(' ');
+            const exactTimeMatch = haystack.match(/\b(?:[01]?\d|2[0-3]):[0-5]\d\s*(?:AM|PM)?(?:\s*[A-Z]{2,4})?\b/i);
+            const periodPatterns = [
+                /\bIN\s*PROGRESS\b/i,
+                /\b(?:1ST|2ND)\s*HALF\b/i,
+                /\bHALF\s*TIME\b|\bHALFTIME\b/i,
+                /\b(?:1ST|2ND|3RD|4TH)\s*QUARTER\b/i,
+                /\bQ[1-4]\b/i,
+                /\b(?:1ST|2ND|3RD)\s*PERIOD\b/i,
+                /\bOVERTIME\b|\bOT\b/i,
+                /\bTOP\s+\d+(?:ST|ND|RD|TH)?\b|\bBOTTOM\s+\d+(?:ST|ND|RD|TH)?\b/i,
+                /\bLIVE\b/i
+            ];
+            const periodMatch = periodPatterns.map((pattern) => haystack.match(pattern)).find(Boolean);
+            const styledPeriodMatch = rowHtml.match(/<(?:span|div|strong|b)[^>]*(?:color\s*:\s*(?:red|green|#(?:f00|ff|0f|00)|rgb\()|font-weight\s*:\s*(?:600|700|bold)|badge|status|period|live)[^>]*>([\s\S]{0,80}?)<\/(?:span|div|strong|b)>/i);
+            const styledText = this.cleanText(styledPeriodMatch?.[1] || '');
+            const styledIsPeriod = /\bIN\s*PROGRESS\b|\b(?:1ST|2ND)\s*HALF\b|\bHALFTIME\b|\bQUARTER\b|\bQ[1-4]\b|\bPERIOD\b|\bLIVE\b|\bOT\b/i.test(styledText);
+            const periodText = styledIsPeriod ? styledText.toUpperCase() : (periodMatch?.[0] || '').replace(/\s+/g, ' ').trim().toUpperCase();
+            const isLive = Boolean(periodText && !/\bNOT\s*STARTED\b|\bUPCOMING\b/i.test(periodText));
+            return {
+                isLive,
+                periodText,
+                exactTime: exactTimeMatch ? exactTimeMatch[0].replace(/\s+/g, ' ').trim() : ''
+            };
+        } catch {
+            return { isLive: false, periodText: '', exactTime: '' };
+        }
+    }
+
     inferType(url, sectionTitle = '') {
         const lower = `${url || ''} ${sectionTitle || ''}`.toLowerCase();
         if (lower.includes('/nba/') || lower.includes('nba')) return 'nba';
@@ -141,6 +190,9 @@ class BuffStreams extends Provider {
     }
 
     inferLiveState(title, statusText, sectionTitle) {
+        const liveState = this.extractLiveState(title, statusText);
+        if (liveState.isLive) return true;
+
         const statusHaystack = `${statusText || ''} ${title || ''}`.toLowerCase();
         if (/\bin progress\b|\blive\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\极\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\bwarm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(statusHaystack)) return true;
 
@@ -163,6 +215,7 @@ class BuffStreams extends Provider {
         const compactMeta = this.cleanText(anchorHtml.match(/<small[^>]*>([\s\S]*?)<\/small>/i)?.[1] || '');
 
         if (compactTitle) {
+            const liveState = this.extractLiveState(compactTitle, compactMeta, itemHtml);
             return {
                 id: url,
                 title: compactTitle,
@@ -171,7 +224,8 @@ class BuffStreams extends Provider {
                 image: fallbackImage || this.getCategoryLogo(type),
                 categoryImage: this.getCategoryLogo(type),
                 statusText: compactMeta,
-                isLive: this.inferLiveState(compactTitle, compactMeta, sectionTitle)
+                liveState,
+                isLive: liveState.isLive || this.inferLiveState(compactTitle, compactMeta, sectionTitle)
             };
         }
 
@@ -183,6 +237,7 @@ class BuffStreams extends Provider {
         const sideA = nameMatches[0] || '';
         const sideB = nameMatches[1] || '';
         const title = [sideA, status, sideB].filter(Boolean).join(' ').trim() || this.slugToTitle(url);
+        const liveState = this.extractLiveState(title, status, itemHtml);
 
         return {
             id: url,
@@ -192,7 +247,8 @@ class BuffStreams extends Provider {
             image: fallbackImage || this.getCategoryLogo(type),
             categoryImage: this.getCategoryLogo(type),
             statusText: status,
-            isLive: this.inferLiveState(title, status, sectionTitle)
+            liveState,
+            isLive: liveState.isLive || this.inferLiveState(title, status, sectionTitle)
         };
     }
 
@@ -261,7 +317,7 @@ class BuffStreams extends Provider {
     }
 
     async fetchAllStreams() {
-        const urls = [this.homeUrl, ...Object.values(this.categoryPages)];
+        const urls = [...this.directoryUrls, ...Object.values(this.categoryPages)];
         const results = await Promise.allSettled(urls.map((url) => this.fetchCategoryStreams(url)));
         const fulfilled = results.filter((result) => result.status === 'fulfilled').map((result) => result.value);
         return this.mergeStreams(fulfilled);
@@ -313,11 +369,119 @@ class BuffStreams extends Provider {
         return sessions;
     }
 
+    extractScoreboard(html) {
+        try {
+            const headerBlock = this.firstBlockAfterLabel(html, ['event-team', 'score', 'scoreboard', 'team'], 180000);
+            const scoreMatches = [...headerBlock.matchAll(/<span[^>]*class=["'][^"']*score[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi)]
+                .map((match) => this.textToInt(this.cleanText(match[1])))
+                .filter((value) => Number.isInteger(value));
+            if (scoreMatches.length >= 2) {
+                return { awayScore: scoreMatches[0], homeScore: scoreMatches[1], scores: scoreMatches.map(String) };
+            }
+
+            const classDigitMatches = [...headerBlock.matchAll(/<(?:div|span|strong|b)[^>]*class=["'][^"']*(?:score|points|result|total)[^"']*["'][^>]*>\s*(-?\d{1,3})\s*<\/(?:div|span|strong|b)>/gi)]
+                .map((match) => this.textToInt(match[1]))
+                .filter((value) => Number.isInteger(value));
+            if (classDigitMatches.length >= 2) {
+                return { awayScore: classDigitMatches[0], homeScore: classDigitMatches[1], scores: classDigitMatches.map(String) };
+            }
+        } catch {}
+        return { awayScore: null, homeScore: null, scores: [] };
+    }
+
+    normalizeSessionStatus(value) {
+        const text = this.cleanText(value).toUpperCase().replace(/\s+/g, '');
+        if (!text) return '';
+        if (/LIVE|INPROGRESS|STARTED/.test(text)) return 'LIVE';
+        if (/NOTSTARTED|UPCOMING|SCHEDULED/.test(text)) return 'NOTSTARTED';
+        if (/FINISHED|ENDED|COMPLETE/.test(text)) return 'FINISHED';
+        return this.cleanText(value).toUpperCase();
+    }
+
+    extractEventSessions(html) {
+        const sessions = [];
+        const seen = new Set();
+        try {
+            const block = this.firstBlockAfterLabel(html, ['live streams', 'cards', 'qualification', 'qualifying', 'race', 'practice', 'indycar', 'formula'], 180000);
+            const itemBlocks = block.match(/<(?:li|tr|article|div)[^>]*(?:class=["'][^"']*(?:session|event|card|row|stream|tab)[^"']*["'])?[^>]*>[\s\S]{0,5000}?<\/(?:li|tr|article|div)>/gi) || [];
+            for (const item of itemBlocks) {
+                try {
+                    const text = this.cleanText(item);
+                    if (!/\b(qualification|qualifying|race|practice|sprint|warm.?up|session|notstarted|live)\b/i.test(text)) continue;
+                    const nameMatch = text.match(/\b(Free Practice\s*\d*|Practice\s*\d*|Qualification|Qualifying|Sprint(?: Race)?|Warm.?up|Race|Session\s*\d*)\b/i);
+                    const dateMatch = text.match(/\b\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?Z?\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}?\s+\d{1,2}:\d{2}\s*(?:AM|PM)?\b/i);
+                    const statusMatch = text.match(/\b(NOT\s*STARTED|NOTSTARTED|LIVE|IN\s*PROGRESS|FINISHED|ENDED|UPCOMING|SCHEDULED)\b/i);
+                    const name = this.cleanText(nameMatch?.[1] || text.split(/\s{2,}| - | \| /)[0] || '');
+                    if (!name || name.length > 80) continue;
+                    const status = this.normalizeSessionStatus(statusMatch?.[1] || '');
+                    const key = `${name}|${dateMatch?.[0] || ''}|${status}`;
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    sessions.push({
+                        name,
+                        startsAt: dateMatch ? dateMatch[0].replace(/\s+/g, ' ').trim() : '',
+                        status
+                    });
+                } catch {}
+            }
+        } catch {}
+        return sessions.slice(0, 24);
+    }
+
+    extractFightCard(html) {
+        const fights = [];
+        const seen = new Set();
+        const invalid = /\b(?:watch|stream|live streams|click|select|reddit|official|broadcast|coverage)\b/i;
+        try {
+            const block = this.firstBlockAfterLabel(html, ['cards', 'main card', 'prelims', 'undercard', 'match 1'], 220000);
+            const rowBlocks = [
+                ...(block.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || []),
+                ...(block.match(/<li[^>]*>[\s\S]*?<\/li>/gi) || []),
+                ...(block.match(/<div[^>]*(?:class=["'][^"']*(?:fight|match|card|row|event)[^"']*["'])[^>]*>[\s\S]{0,6000}?<\/div>/gi) || [])
+            ];
+            rowBlocks.forEach((row, index) => {
+                try {
+                    const text = this.cleanText(row);
+                    if (!text || invalid.test(text) || !/\bvs\.?\b|\s@\s|\bMatch\s+\d+\b/i.test(text)) return;
+                    const sequenceLabel = text.match(/\bMatch\s+\d+\b/i)?.[0] || `Match ${index + 1}`;
+                    const stripped = text.replace(/\bMatch\s+\d+\b/ig, ' ').replace(/\s+/g, ' ').trim();
+                    const parts = stripped.split(/\s+vs\.?\s+|\s+@\s+/i).map((part) => part.trim()).filter(Boolean);
+                    if (parts.length < 2) return;
+
+                    const cleanSide = (value) => {
+                        const record = value.match(/\b\d{1,2}-\d{1,2}(?:-\d{1,2})?\b/)?.[0] || '';
+                        const name = value
+                            .replace(/\b\d{1,2}-\d{1,2}(?:-\d{1,2})?\b/g, '')
+                            .replace(/\b(?:live|notstarted|upcoming|finished)\b/ig, '')
+                            .trim();
+                        return { name: name.substring(0, 100), record };
+                    };
+
+                    const left = cleanSide(parts[0]);
+                    const right = cleanSide(parts.slice(1).join(' '));
+                    if (left.name.length < 3 || right.name.length < 3) return;
+                    const key = `${left.name}|${right.name}`;
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    fights.push({
+                        sequenceLabel,
+                        fighter1: left.name,
+                        fighter2: right.name,
+                        record1: left.record,
+                        record2: right.record
+                    });
+                } catch {}
+            });
+        } catch {}
+        return fights.slice(0, 40);
+    }
+
     extractEventDetails(html, pageUrl) {
         const leagueMatch = html.match(/<h2[^>]*class=["']title["'][^>]*>([\s\S]*?)<div>/i);
         const dateMatch = html.match(/fa-calendar[\s\S]*?<\/i>\s*([^<]+)</i);
         const statusMatch = html.match(/<div[^>]*class=["']event-status["'][^>]*>([\s\S]*?)<\/div>/i);
-        const scoreMatches = [...html.matchAll(/<span[^>]*class=["']score["'][^>]*>([\s\S]*?)<\/span>/gi)].map((match) => this.cleanText(match[1])).filter(Boolean);
+        const scoreboard = this.extractScoreboard(html);
+        const scoreMatches = scoreboard.scores;
         const teamMatches = [...html.matchAll(/<div[^>]*class=["']event-team["'][^>]*>[\s\S]*?<img[^>]+src=["']([^"']+)["'][^>]*alt=["']([^"']+)["'][\s\S]*?<h5>([\s\S]*?)<\/h5>[\s\S]*?<\/div>/gi)];
         const titleMatch = html.match(/<h1[^>]*class=["']title["'][^>]*>([\s\S]*?)<\/h1>/i);
         const teams = teamMatches.slice(0, 2).map((match, index) => ({
@@ -331,7 +495,9 @@ class BuffStreams extends Provider {
             date: this.cleanText(dateMatch?.[1] || ''),
             status: this.cleanText(statusMatch?.[1] || ''),
             teams,
-            scores: scoreMatches
+            scores: scoreMatches,
+            awayScore: scoreboard.awayScore,
+            homeScore: scoreboard.homeScore
         };
     }
 
@@ -588,6 +754,7 @@ class BuffStreams extends Provider {
                             !isInvalidCompetitor(competitor1Clean) && !isInvalidCompetitor(competitor2Clean)) {
                             
                             matches.push({
+                                sequenceLabel: `Match ${matches.length + 1}`,
                                 fighter1: competitor1Clean.substring(0, 100),
                                 fighter2: competitor2Clean.substring(0, 100),
                                 record1,
@@ -637,6 +804,7 @@ class BuffStreams extends Provider {
                         !isInvalidCompetitor(competitor1) && !isInvalidCompetitor(competitor2)) {
                         
                         matches.push({
+                            sequenceLabel: `Match ${matches.length + 1}`,
                             fighter1: competitor1.substring(0, 100),
                             fighter2: competitor2.substring(0, 100),
                             record1,
@@ -662,14 +830,17 @@ class BuffStreams extends Provider {
             const embedUrl = this.extractEmbedUrl(html, url);
             const details = this.extractEventDetails(html, url);
             const sessions = this.extractSessionCards(html);
+            const eventSessions = this.extractEventSessions(html);
+            const fightCard = this.extractFightCard(html);
             const eventCards = this.extractEventCards(html);
             const activeSession = (() => {
-                if (!sessions.length) return null;
-                const liveMatch = sessions.find((s) => /live|in progress|started/i.test(s.status));
+                const candidates = [...eventSessions, ...sessions];
+                if (!candidates.length) return null;
+                const liveMatch = candidates.find((s) => /live|in progress|started/i.test(s.status));
                 if (liveMatch) return liveMatch;
-                const nextMatch = sessions.find((s) => !/finished/i.test(s.status));
+                const nextMatch = candidates.find((s) => !/finished/i.test(s.status));
                 if (nextMatch) return nextMatch;
-                return sessions[sessions.length - 1];
+                return candidates[candidates.length - 1];
             })();
             return {
                 id: url,
@@ -681,8 +852,12 @@ class BuffStreams extends Provider {
                 status: details.status,
                 teams: details.teams,
                 scores: details.scores,
+                awayScore: details.awayScore,
+                homeScore: details.homeScore,
                 sessions,
+                eventSessions,
                 activeSession,
+                fightCard,
                 cards: eventCards
             };
         } catch (error) {
