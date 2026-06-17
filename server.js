@@ -54,6 +54,38 @@ app.get('/watch.html', (_req, res) => {
     res.sendFile(path.join(__dirname, 'watch.html'));
 });
 
+app.get('/manifest.json', (_req, res) => {
+    res.set({
+        'Cache-Control': `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
+        'Content-Type': 'application/manifest+json'
+    });
+    res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+
+app.get('/Logo.svg', (_req, res) => {
+    res.set({
+        'Cache-Control': `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
+        'Content-Type': 'image/svg+xml'
+    });
+    res.sendFile(path.join(__dirname, 'Logo.svg'));
+});
+
+app.get('/GhoulStream-Logo.svg', (_req, res) => {
+    res.set({
+        'Cache-Control': `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
+        'Content-Type': 'image/svg+xml'
+    });
+    res.sendFile(path.join(__dirname, 'GhoulStream-Logo.svg'));
+});
+
+app.get('/sw.js', (_req, res) => {
+    res.set({
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
+        'Content-Type': 'application/javascript'
+    });
+    res.sendFile(path.join(__dirname, 'sw.js'));
+});
+
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 const AVAILABILITY_TTL_MS = 1000 * 60 * 45;
 

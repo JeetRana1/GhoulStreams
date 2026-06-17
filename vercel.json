@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/index.js": {
-      "includeFiles": "{index,watch}.html"
+      "includeFiles": "{index,watch}.html,Logo.svg,GhoulStream-Logo.svg,manifest.json,sw.js"
     }
   },
   "headers": [
@@ -56,6 +56,22 @@
     },
     {
       "source": "/watch.html",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/manifest.json",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/Logo.svg",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/GhoulStream-Logo.svg",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/sw.js",
       "destination": "/api/index.js"
     },
     {
