@@ -44,6 +44,16 @@ app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+app.get('/index.html', (_req, res) => {
+    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/watch.html', (_req, res) => {
+    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+    res.sendFile(path.join(__dirname, 'watch.html'));
+});
+
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 const AVAILABILITY_TTL_MS = 1000 * 60 * 45;
 

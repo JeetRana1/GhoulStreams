@@ -42,6 +42,18 @@
   ],
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/watch.html",
+      "destination": "/api/index.js"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/index.js"
     }
