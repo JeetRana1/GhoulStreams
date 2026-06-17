@@ -140,8 +140,13 @@ class BuffStreams extends Provider {
 
     extractLiveState(title = '', statusText = '', rowHtml = '') {
         try {
-            const rowText = this.cleanText(rowHtml);
-            const haystack = [statusText, title, rowText].filter(Boolean).join(' ');
+            const normalizeStatusSource = (value) => this.cleanText(value)
+                .replace(/\blive streams?(?:\s+links)?\b/ig, ' ')
+                .replace(/\bwatch(?:\s+live)?\b/ig, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            const rowText = normalizeStatusSource(rowHtml);
+            const haystack = [statusText, title, rowText].map(normalizeStatusSource).filter(Boolean).join(' ');
             const exactTimeMatch = haystack.match(/\b(?:[01]?\d|2[0-3]):[0-5]\d\s*(?:AM|PM)?(?:\s*[A-Z]{2,4})?\b/i);
             const periodPatterns = [
                 /\bIN\s*PROGRESS\b/i,
@@ -156,7 +161,7 @@ class BuffStreams extends Provider {
             ];
             const periodMatch = periodPatterns.map((pattern) => haystack.match(pattern)).find(Boolean);
             const styledPeriodMatch = rowHtml.match(/<(?:span|div|strong|b)[^>]*(?:color\s*:\s*(?:red|green|#(?:f00|ff|0f|00)|rgb\()|font-weight\s*:\s*(?:600|700|bold)|badge|status|period|live)[^>]*>([\s\S]{0,80}?)<\/(?:span|div|strong|b)>/i);
-            const styledText = this.cleanText(styledPeriodMatch?.[1] || '');
+            const styledText = normalizeStatusSource(styledPeriodMatch?.[1] || '');
             const styledIsPeriod = /\bIN\s*PROGRESS\b|\b(?:1ST|2ND)\s*HALF\b|\bHALFTIME\b|\bQUARTER\b|\bQ[1-4]\b|\bPERIOD\b|\bLIVE\b|\bOT\b/i.test(styledText);
             const periodText = styledIsPeriod ? styledText.toUpperCase() : (periodMatch?.[0] || '').replace(/\s+/g, ' ').trim().toUpperCase();
             const isLive = Boolean(periodText && !/\bNOT\s*STARTED\b|\bUPCOMING\b/i.test(periodText));

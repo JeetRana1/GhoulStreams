@@ -1388,6 +1388,10 @@
             return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
+        function isUpcomingEventStart(timestamp) {
+            return Boolean(timestamp && timestamp > Date.now());
+        }
+
         function normalizeStatus(status, when) {
             const s = String(status || '').trim().toUpperCase();
             if (!s) return '';
@@ -2245,7 +2249,9 @@ function showControls(persistent) {
                 const html = events.map(event => {
                     const eventId = event.id || event.url || '';
                     const eventTitle = String(event.title || event.name || 'Event').substring(0, 50);
-                    const statusLabel = event.liveState?.periodText || event.liveState?.exactTime || event.statusText || event.status || '';
+                    const statusLabel = String(event.liveState?.periodText || event.liveState?.exactTime || event.statusText || event.status || '')
+                        .replace(/\blive streams?(?:\s+links)?\b/ig, '')
+                        .trim();
                     const isLive = Boolean(event.liveState?.isLive) ||
                                   String(statusLabel).toLowerCase().includes('live') ||
                                   String(statusLabel).toLowerCase().includes('in progress');
@@ -2339,6 +2345,12 @@ function showControls(persistent) {
                 setMeta(displayTitle, displaySubtitle, displayStatus, displayLatency, sessionLabel);
                 if (scoreRefreshTimer) clearInterval(scoreRefreshTimer);
                 scoreRefreshTimer = setInterval(refreshEventInfo, 15000);
+                if (isUpcomingEventStart(eventStartUtc)) {
+                    document.getElementById('sourcesList').innerHTML = '<div class="empty">Sources unlock near kickoff.</div>';
+                    await reportStreamStatus(false, 'upcoming');
+                    loadRelatedEvents(info);
+                    return;
+                }
                 const sourcesResponse = await fetch('/api/fetchSources', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

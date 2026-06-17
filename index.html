@@ -891,8 +891,8 @@
                 </div>
                 <div class="hero-chip">
                     <div class="hero-chip-icon">✓</div>
-                    <strong>Auto verification</strong>
-                    <span>Likely-live streams are checked in the background and downgraded if no source is available.</span>
+                    <strong>Countdown first</strong>
+                    <span>Upcoming events stay lightweight with local timers until the provider marks them live.</span>
                 </div>
             </div>
         </section>
@@ -1070,7 +1070,10 @@
             if (override?.isLive === true) return true;
             
             // Check if the stream has live keywords in title/status
-            const haystack = `${stream.title || ''} ${stream.statusText || ''} ${stream.sectionTitle || ''}`.toLowerCase();
+            const haystack = `${stream.title || ''} ${stream.statusText || ''}`
+                .replace(/\blive streams?(?:\s+links)?\b/ig, ' ')
+                .replace(/\bwatch(?:\s+live)?\b/ig, ' ')
+                .toLowerCase();
             
             // Enhanced live detection for F1 and other sports
             const matchesLiveKeywords = /\bin progress\b|\blive\b|\bon\s*air\b|\bjust now\b|\b\d+\s+(?:hour|hours|hr|hrs|minute|minutes|min|mins)\s+ago\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\b|\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\bwarm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(haystack);
@@ -1080,6 +1083,8 @@
             const isF1Session = /\bfp\d*\b|\bfree practice\b|\bqualifying\b|\bsprint\b|\bsprint shootout\b|\bwarm.?up\b/i.test(haystack);
             
             if (matchesLiveKeywords || (isF1Stream && isF1Session)) return true;
+            const scheduleInfo = extractScheduleInfo(stream);
+            if (scheduleInfo.eventDate && scheduleInfo.eventDate.getTime() > Date.now()) return false;
             if (typeof stream.isLive === 'boolean') return stream.isLive;
             if (override?.isLive === false) return false;
             return false;
@@ -1248,11 +1253,7 @@
         function shouldVerifyStream(stream) {
             const lastChecked = verificationCooldowns.get(stream.id) || 0;
             if (Date.now() - lastChecked < VERIFY_COOLDOWN_MS) return false;
-            if (isActuallyLive(stream)) return true;
-            const scheduleInfo = extractScheduleInfo(stream);
-            if (!scheduleInfo.eventDate) return false;
-            const diffMinutes = Math.round((scheduleInfo.eventDate.getTime() - Date.now()) / 60000);
-            return diffMinutes <= 15 && diffMinutes >= -120;
+            return isActuallyLive(stream);
         }
 
         function getVerificationCandidates() {
@@ -1312,9 +1313,9 @@
                     const liveBadge = (stream.liveNow || autoLiveNow)
                         ? `<span class="live-indicator">Live</span>`
                         : (scheduleInfo.countdownText ? `<span class="team-meta-badge">${escapeHtml(scheduleInfo.countdownText)}</span>` : '');
-                    const buttonClass = 'btn watch-btn';
-                    const buttonLabel = (stream.liveNow || autoLiveNow) ? 'Watch' : 'Details';
-                    const disabledAttr = '';
+                    const actionButton = (stream.liveNow || autoLiveNow)
+                        ? `<button class="btn watch-btn" data-stream-id="${encodeURIComponent(stream.id)}" data-stream-title="${encodeURIComponent(getMainTitle(stream.title))}">Watch</button>`
+                        : '';
                     const primaryTitle = (stream.liveNow || autoLiveNow) && teams.away ? teams.away : getMainTitle(stream.title);
                     const secondaryTitle = (stream.liveNow || autoLiveNow) ? teams.home : '';
 
@@ -1339,7 +1340,7 @@
                             <div class="team home">${escapeHtml(secondaryTitle)}</div>
                             <div class="row-actions">
                                 ${liveBadge}
-                                <button class="${buttonClass}" ${disabledAttr} data-stream-id="${encodeURIComponent(stream.id)}" data-stream-title="${encodeURIComponent(getMainTitle(stream.title))}">${buttonLabel}</button>
+                                ${actionButton}
                             </div>
                         </div>
                     `;
