@@ -971,6 +971,7 @@
         let availabilityEndpointEnabled = true;
         let verificationInFlight = false;
         let refreshTimer = null;
+        let countdownTimer = null;
         let refreshBackoffStep = 0;
         const verifiedEvents = new Set();
         const verificationCooldowns = new Map();
@@ -1163,44 +1164,26 @@
             const cleanTitle = cleanDisplayTitle(stream.title || '');
             const cleanStatus = cleanDisplayTitle(liveState.periodText || stream.statusText || '');
             const liveExactTime = cleanDisplayTitle(liveState.exactTime || '');
-            const exactMatch = cleanTitle.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?ET)?\b/i) || cleanStatus.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?ET)?\b/i);
+            const exactMatch = cleanTitle.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?[A-Z]{2,4})?\b/i) || cleanStatus.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?[A-Z]{2,4})?\b/i);
             const exactTime = liveExactTime || (exactMatch ? exactMatch[0].replace(/\s+/g, ' ').trim() : '');
             const relativeText = /from now|tomorrow|today|tonight|later/i.test(cleanStatus) ? cleanStatus : '';
-            const eventDate = buildEasternEventDate(exactTime, relativeText);
+            const eventDate = buildSourceUtcEventDate(exactTime, relativeText);
             const computedRelative = formatRelativeStart(eventDate);
-            const display = [exactTime, computedRelative && computedRelative !== 'Started' ? computedRelative : relativeText].filter(Boolean).join(' ? ');
+            const localTimeLabel = formatLocalDateTime(eventDate);
+            const countdownText = formatCountdown(eventDate);
+            const display = [localTimeLabel || exactTime, countdownText || (computedRelative && computedRelative !== 'Started' ? computedRelative : relativeText)].filter(Boolean).join(' ? ');
             return {
                 exactTime,
                 relativeText,
                 computedRelative,
                 eventDate,
+                localTimeLabel,
+                countdownText,
                 display: display || cleanStatus || exactTime || 'Upcoming'
             };
         }
 
-        function getEasternNowParts() {
-            const formatter = new Intl.DateTimeFormat('en-US', {
-                timeZone: 'America/New_York',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-            const parts = Object.fromEntries(formatter.formatToParts(new Date()).filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]));
-            return {
-                year: Number(parts.year),
-                month: Number(parts.month),
-                day: Number(parts.day),
-                hour: Number(parts.hour),
-                minute: Number(parts.minute),
-                second: Number(parts.second)
-            };
-        }
-
-        function buildEasternEventDate(exactTime, relativeText) {
+        function buildSourceUtcEventDate(exactTime, relativeText) {
             if (!exactTime) return null;
             const match = exactTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
             if (!match) return null;
@@ -1210,17 +1193,27 @@
             const meridiem = match[3].toUpperCase();
             if (meridiem === 'PM') hours += 12;
 
-            const easternNow = getEasternNowParts();
-            const easternNowUtc = Date.UTC(easternNow.year, easternNow.month - 1, easternNow.day, easternNow.hour + 4, easternNow.minute, easternNow.second);
-            let eventUtc = Date.UTC(easternNow.year, easternNow.month - 1, easternNow.day, hours + 4, minutes);
+            const now = new Date();
+            let eventUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hours, minutes);
 
             if (/tomorrow/i.test(relativeText || '')) {
                 eventUtc += 24 * 60 * 60 * 1000;
-            } else if (!/today/i.test(relativeText || '') && eventUtc < easternNowUtc - (6 * 60 * 60 * 1000)) {
+            } else if (!/today/i.test(relativeText || '') && eventUtc < Date.now() - (6 * 60 * 60 * 1000)) {
                 eventUtc += 24 * 60 * 60 * 1000;
             }
 
             return new Date(eventUtc);
+        }
+
+        function formatCountdown(eventDate) {
+            if (!eventDate) return '';
+            const diffMs = eventDate.getTime() - Date.now();
+            if (diffMs <= 0) return '';
+            const totalSeconds = Math.floor(diffMs / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
         function formatRelativeStart(eventDate) {
@@ -1237,13 +1230,19 @@
             return days === 1 ? '1 day to go' : (days + ' days to go');
         }
 
-        function convertEasternToLocalLabel(eventDate) {
+        function formatLocalDateTime(eventDate) {
             if (!eventDate) return '';
-            const timeText = new Intl.DateTimeFormat(undefined, {
+            return new Intl.DateTimeFormat(undefined, {
+                weekday: 'short',
                 hour: 'numeric',
-                minute: '2-digit'
+                minute: '2-digit',
+                timeZoneName: 'short'
             }).format(eventDate);
-            return 'Your time ' + timeText;
+        }
+
+        function convertSourceTimeToLocalLabel(eventDate) {
+            const localText = formatLocalDateTime(eventDate);
+            return localText ? 'Your time ' + localText : '';
         }
 
         function shouldVerifyStream(stream) {
@@ -1300,13 +1299,13 @@
                     const liveExactTime = cleanDisplayTitle(liveState.exactTime || '');
                     const providerStatus = cleanDisplayTitle(livePeriodText || stream.statusText || '');
                     const scheduleInfo = extractScheduleInfo(stream);
-                    const localTimeLabel = convertEasternToLocalLabel(scheduleInfo.eventDate);
+                    const localTimeLabel = convertSourceTimeToLocalLabel(scheduleInfo.eventDate);
                     const autoLiveNow = !stream.liveNow && scheduleInfo.computedRelative === 'Started';
                     const statusOverride = availability[stream.id]?.reason || '';
                     const shouldShowOffline = Boolean(statusOverride) && !providerStatus && !scheduleInfo.exactTime;
                     const centerText = (stream.liveNow || autoLiveNow)
                         ? (livePeriodText || providerStatus || teams.time || 'LIVE')
-                        : (shouldShowOffline ? 'OFFLINE' : (liveExactTime || scheduleInfo.exactTime || providerStatus || 'UPCOMING'));
+                        : (shouldShowOffline ? 'OFFLINE' : (scheduleInfo.countdownText || liveExactTime || scheduleInfo.exactTime || providerStatus || 'UPCOMING'));
                     const statusCell = (stream.liveNow || autoLiveNow)
                         ? `<div class="event-status-live">${escapeHtml(centerText)}</div>`
                         : `<div class="event-time">${escapeHtml(centerText)}</div>`;
@@ -1321,7 +1320,7 @@
                     const sessionBadge = isLiveSession && sessionLabel ? `<span class="team-meta-badge">${escapeHtml(sessionLabel)}</span>` : '';
                     const scheduleText = [
                         stream.liveNow && livePeriodText ? livePeriodText : scheduleInfo.display,
-                        localTimeLabel
+                        localTimeLabel && !scheduleInfo.display.includes(localTimeLabel.replace(/^Your time\s+/, '')) ? localTimeLabel : ''
                     ].filter(Boolean).join(' ? ') || 'Upcoming';
                     const scheduleHtml = `<span class="team-meta-text">${escapeHtml(scheduleText)}</span>`;
                     const metaHtml = (sessionBadge || scheduleText)
@@ -1431,6 +1430,14 @@
             refreshTimer = setTimeout(refreshHomepageData, delay);
         }
 
+        function startCountdownTimer() {
+            if (countdownTimer) return;
+            countdownTimer = setInterval(() => {
+                if (document.hidden || !allStreams.length) return;
+                renderStreams();
+            }, 1000);
+        }
+
         document.addEventListener('click', (event) => {
             const openPolicyButton = event.target.closest('[data-open-policy]');
             if (openPolicyButton) {
@@ -1482,6 +1489,7 @@
                 await loadAvailability();
                 setActiveNav();
                 renderStreams();
+                startCountdownTimer();
                 await verifyLikelyLiveStreams();
                 scheduleNextRefresh();
             } catch {
@@ -1496,6 +1504,7 @@
                 return;
             }
             refreshBackoffStep = 0;
+            startCountdownTimer();
             scheduleNextRefresh(1000);
         });
 

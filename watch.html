@@ -872,6 +872,7 @@
         let isLivePlaying = false;
         // Remember the last known session label to keep it visible while streaming
         let currentSessionLabel = '';
+        let currentEventStartUtc = null;
         let controlsHideTimer = null;
         let isDraggingSeek = false;
         let qualityCycleOptions = [];
@@ -1272,6 +1273,14 @@
         function updateLiveClock() {
             const now = new Date();
             document.getElementById('liveClock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (currentEventStartUtc && !isLivePlaying) {
+                const countdownText = formatCountdownFromTimestamp(currentEventStartUtc);
+                if (countdownText) {
+                    document.getElementById('liveStatus').textContent = 'Starts in ' + countdownText;
+                    document.getElementById('liveLatency').textContent = countdownText;
+                    updateTopStatusBadge('Starts in ' + countdownText);
+                }
+            }
         }
         function updateTopStatusBadge(text) {
             const badge = document.getElementById('topStatusBadge');
@@ -1295,19 +1304,14 @@
                 .replace(/\blive streams links\b/ig, '')
                 .replace(/\s+/g, ' ')
                 .trim();
-            return clean.replace(/\s*-\s*\d{1,2}:\d{2}\s*(AM|PM)(?:\s*ET)?$/i, '').trim();
+            return clean
+                .replace(/\s*-\s*\d{1,2}:\d{2}\s*(AM|PM)(?:\s*[A-Z]{2,4})?$/i, '')
+                .replace(/\s+\d{1,2}:\d{2}\s*(AM|PM)(?:\s*[A-Z]{2,4})?\s+/i, ' vs ')
+                .trim();
         }
 
         function getMainTitle(value) {
             return cleanDisplayTitle(value);
-        }
-
-        function parseUtcTimestamp(value) {
-            if (!value) return null;
-            const match = String(value).trim().match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
-            if (!match) return null;
-            const [, year, month, day, hour, minute] = match.map(Number);
-            return Date.UTC(year, month - 1, day, hour, minute);
         }
 
         function detectSessionLabelFromText(...values) {
@@ -1329,10 +1333,59 @@
 
         function parseUtcTimestamp(value) {
             if (!value) return null;
-            const match = String(value).trim().match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
-            if (!match) return null;
-            const [, year, month, day, hour, minute] = match.map(Number);
+            const source = String(value).trim();
+            const isoMatch = source.match(/(\d{4})-(\d{2})-(\d{2})[T\s]+(\d{2}):(\d{2})/);
+            if (isoMatch) {
+                const [, year, month, day, hour, minute] = isoMatch.map(Number);
+                return Date.UTC(year, month - 1, day, hour, minute);
+            }
+            const dateMatch = source.match(/(\d{4})-(\d{2})-(\d{2})/);
+            const timeMatch = source.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!dateMatch || !timeMatch) return null;
+            const [, year, month, day] = dateMatch.map(Number);
+            let hour = Number(timeMatch[1]) % 12;
+            const minute = Number(timeMatch[2]);
+            if (timeMatch[3].toUpperCase() === 'PM') hour += 12;
             return Date.UTC(year, month - 1, day, hour, minute);
+        }
+
+        function extractSourceTime(...values) {
+            const text = values.filter(Boolean).join(' ');
+            return text.match(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i)?.[0] || '';
+        }
+
+        function buildEventStartUtc(info, fallbackTitle) {
+            const activeSession = info?.activeSession || null;
+            const sessionTime = activeSession?.startsAt || activeSession?.when || '';
+            const parsedSession = parseUtcTimestamp(sessionTime);
+            if (parsedSession) return parsedSession;
+
+            const dateText = String(info?.eventDate || '').trim();
+            const timeText = extractSourceTime(info?.title, info?.status, fallbackTitle);
+            if (dateText && timeText) return parseUtcTimestamp(`${dateText} ${timeText}`);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return parseUtcTimestamp(`${dateText} 00:00`);
+            return null;
+        }
+
+        function formatLocalDateTime(timestamp) {
+            if (!timestamp) return '';
+            return new Intl.DateTimeFormat(undefined, {
+                weekday: 'short',
+                hour: 'numeric',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            }).format(new Date(timestamp));
+        }
+
+        function formatCountdownFromTimestamp(timestamp) {
+            if (!timestamp) return '';
+            const diffMs = timestamp - Date.now();
+            if (diffMs <= 0) return '';
+            const totalSeconds = Math.floor(diffMs / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
         function normalizeStatus(status, when) {
@@ -1397,8 +1450,10 @@
             const rightScore = hasHomeScore ? String(info.homeScore) : (right.score || (info.scores || [])[1] || '-');
             const leftLogo = left.logo ? '<img class="score-team-logo" src="' + escapeHtml(left.logo) + '" alt="' + escapeHtml(left.name || '') + '">' : '';
             const rightLogo = right.logo ? '<img class="score-team-logo" src="' + escapeHtml(right.logo) + '" alt="' + escapeHtml(right.name || '') + '">' : '';
+            const eventStartUtc = buildEventStartUtc(info, streamTitle);
+            const eventTimeText = formatLocalDateTime(eventStartUtc) || info.eventDate || '';
             el.style.display = 'grid';
-            el.innerHTML = '<div class="score-team">' + leftLogo + '<div><div class="score-team-name">' + escapeHtml(left.name || 'Team 1') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div></div>' + '<div class="score-meta"><div class="score-status">' + escapeHtml(info.status || 'Live') + '</div><div class="score-pills"><span class="score-pill">' + escapeHtml(leftScore) + '</span><span class="score-pill">' + escapeHtml(rightScore) + '</span></div><div class="score-sub">' + escapeHtml(info.eventDate || '') + '</div></div>' + '<div class="score-team right"><div><div class="score-team-name">' + escapeHtml(right.name || 'Team 2') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div>' + rightLogo + '</div>';
+            el.innerHTML = '<div class="score-team">' + leftLogo + '<div><div class="score-team-name">' + escapeHtml(left.name || 'Team 1') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div></div>' + '<div class="score-meta"><div class="score-status">' + escapeHtml(info.status || 'Live') + '</div><div class="score-pills"><span class="score-pill">' + escapeHtml(leftScore) + '</span><span class="score-pill">' + escapeHtml(rightScore) + '</span></div><div class="score-sub">' + escapeHtml(eventTimeText) + '</div></div>' + '<div class="score-team right"><div><div class="score-team-name">' + escapeHtml(right.name || 'Team 2') + '</div><div class="score-sub">' + escapeHtml(info.league || '') + '</div></div>' + rightLogo + '</div>';
         }
 
         function displayEventSessions(sessions) {
@@ -1415,7 +1470,8 @@
             list.innerHTML = items.map((session) => {
                 const status = normalizeStatus(session.status || '', session.startsAt || session.when || '');
                 const statusClass = /live|progress/i.test(status) ? ' live' : '';
-                const time = session.startsAt || session.when || '';
+                const parsedTime = parseUtcTimestamp(session.startsAt || session.when || '');
+                const time = formatLocalDateTime(parsedTime) || session.startsAt || session.when || '';
                 return `
                     <div class="session-row">
                         <div>
@@ -1793,12 +1849,16 @@ function showControls(persistent) {
                 const baseTitle = getMainTitle(info.title || document.getElementById('pageTitle').textContent || streamTitle);
                 const activeSession = info.activeSession || null;
                 const sessionLabel = activeSession?.name ? `${activeSession.name}` : detectSessionLabelFromText(info.title, info.status, streamTitle);
-                const sessionStatus = normalizeStatus(activeSession?.status || info.status, activeSession?.when || info.eventDate);
-                const sessionTime = activeSession?.when || info.eventDate;
+                const eventStartUtc = buildEventStartUtc(info, streamTitle);
+                currentEventStartUtc = eventStartUtc;
+                const countdownText = formatCountdownFromTimestamp(eventStartUtc);
+                const localEventTime = formatLocalDateTime(eventStartUtc);
+                const sessionStatus = countdownText ? 'Starts in ' + countdownText : normalizeStatus(activeSession?.status || info.status, activeSession?.startsAt || activeSession?.when || info.eventDate);
+                const sessionTime = localEventTime || activeSession?.startsAt || activeSession?.when || info.eventDate;
                 const displayTitle = baseTitle;
                 const displaySubtitle = sessionTime || info.status || document.getElementById('pageSubtitle').textContent || 'Dedicated live watch page';
                 const displayStatus = isLivePlaying ? 'Live' : (sessionStatus || document.getElementById('liveStatus').textContent || 'On air');
-                const displayLatency = sessionTime || document.getElementById('liveLatency').textContent || 'Live edge';
+                const displayLatency = countdownText || sessionTime || document.getElementById('liveLatency').textContent || 'Live edge';
                 setMeta(displayTitle, displaySubtitle, displayStatus, displayLatency, sessionLabel);
             } catch {}
         }
@@ -2255,12 +2315,16 @@ function showControls(persistent) {
                 const baseTitle = getMainTitle(info.title || streamTitle);
                 const activeSession = info.activeSession || null;
                 const sessionLabel = activeSession?.name ? `${activeSession.name}` : detectSessionLabelFromText(info.title, info.status, streamTitle);
-                const sessionStatus = normalizeStatus(activeSession?.status || info.status, activeSession?.when || info.eventDate);
-                const sessionTime = activeSession?.when || info.eventDate;
+                const eventStartUtc = buildEventStartUtc(info, streamTitle);
+                currentEventStartUtc = eventStartUtc;
+                const countdownText = formatCountdownFromTimestamp(eventStartUtc);
+                const localEventTime = formatLocalDateTime(eventStartUtc);
+                const sessionStatus = countdownText ? 'Starts in ' + countdownText : normalizeStatus(activeSession?.status || info.status, activeSession?.startsAt || activeSession?.when || info.eventDate);
+                const sessionTime = localEventTime || activeSession?.startsAt || activeSession?.when || info.eventDate;
                 const displayTitle = baseTitle;
                 const displaySubtitle = sessionTime || info.status || 'Dedicated live watch page';
                 const displayStatus = sessionStatus || 'Connecting to live feed';
-                const displayLatency = sessionTime || 'Syncing stream';
+                const displayLatency = countdownText || sessionTime || 'Syncing stream';
                 setMeta(displayTitle, displaySubtitle, displayStatus, displayLatency, sessionLabel);
                 if (scoreRefreshTimer) clearInterval(scoreRefreshTimer);
                 scoreRefreshTimer = setInterval(refreshEventInfo, 15000);
