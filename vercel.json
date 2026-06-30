@@ -1,9 +1,5 @@
 {
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "{index.html,watch.html,recaps.html,test-player.html,Logo.svg,GhoulStream-Logo.svg,manifest.json,sw.js}"
-    }
-  },
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)\\.(js|mjs|css|json|webmanifest|svg|png|jpg|jpeg|webp|gif|ico|woff|woff2|ttf|otf|txt)",
@@ -22,73 +18,60 @@
           "value": "public, max-age=300, stale-while-revalidate=3600"
         }
       ]
-    },
-    {
-      "source": "/api/:path*",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        },
-        {
-          "key": "Surrogate-Control",
-          "value": "no-store"
-        }
-      ]
     }
   ],
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/api/index.js"
+      "source": "/all",
+      "destination": "/index.html"
     },
     {
-      "source": "/index.html",
-      "destination": "/api/index.js"
+      "source": "/football",
+      "destination": "/index.html"
     },
     {
-      "source": "/watch.html",
-      "destination": "/api/index.js"
+      "source": "/nfl",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mma",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/boxing",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/formula-1",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/nba",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/wnba",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mlb",
+      "destination": "/index.html"
     },
     {
       "source": "/watch/:slug",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/Logo.svg",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/GhoulStream-Logo.svg",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/sw.js",
-      "destination": "/api/index.js"
+      "destination": "/watch.html"
     },
     {
       "source": "/recaps",
-      "destination": "/api/index.js"
+      "destination": "/recaps.html"
     },
     {
-      "source": "/formula-1/recaps",
-      "destination": "/api/index.js"
+      "source": "/:category/recaps",
+      "destination": "/recaps.html"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api/index.js"
+      "source": "/:category/recaps/test-player/:path*",
+      "destination": "/test-player.html"
     }
   ]
 }
