@@ -4,6 +4,8 @@
       "includeFiles": [
         "index.html",
         "watch.html",
+        "recaps.html",
+        "test-player.html",
         "Logo.svg",
         "GhoulStream-Logo.svg",
         "manifest.json",
@@ -66,6 +68,10 @@
       "destination": "/api/index.js"
     },
     {
+      "source": "/watch/:slug",
+      "destination": "/api/index.js"
+    },
+    {
       "source": "/manifest.json",
       "destination": "/api/index.js"
     },
@@ -79,6 +85,14 @@
     },
     {
       "source": "/sw.js",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/recaps",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/formula-1/recaps",
       "destination": "/api/index.js"
     },
     {

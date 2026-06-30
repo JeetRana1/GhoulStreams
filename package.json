@@ -1,7 +1,7 @@
 {
-  "name": "buffstreams-provider-test",
+  "name": "ghoulstreams-platform",
   "version": "1.0.0",
-  "description": "Test site for BuffStreams Consumet provider",
+  "description": "Live sports streaming platform",
   "type": "module",
   "main": "server.js",
   "scripts": {

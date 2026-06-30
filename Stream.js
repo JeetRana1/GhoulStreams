@@ -8,6 +8,7 @@ class BuffStreams extends Provider {
         this.directoryUrls = [this.homeUrl, `${this.baseUrl}/index18`];
         this.name = 'BuffStreams';
         this.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+        this.backendApiBase = (globalThis.process?.env?.CONSUMET_API_BASE || globalThis.process?.env?.SITE_API_BASE || 'http://localhost:3000').replace(/\/$/, '');
         this.categoryLogos = {
             soccer: '/images/soccer.webp?v3e32',
             f1: '/images/f1.webp?v3e32',
@@ -17,6 +18,8 @@ class BuffStreams extends Provider {
             mma: '/images/ufc.webp?v3e32',
             boxing: '/images/boxing.webp?v3e32',
             nba: '/images/nba.webp?v3e32',
+            wnba: '/images/wnba.webp?v3e32',
+            wwe: '/images/wwe.webp?v3e32',
             ncaa: '/images/ncaa.webp?v3e32',
             sports: '/images/mlb.webp?v3e32'
         };
@@ -84,7 +87,7 @@ class BuffStreams extends Provider {
             }
             output += decoder.decode();
         } finally {
-            try { await reader.cancel(); } catch {}
+            try { await reader.cancel(); } catch { }
         }
 
         return strip ? this.stripUnneededHtml(output) : output;
@@ -111,6 +114,58 @@ class BuffStreams extends Provider {
         return String(value || '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
+    normalizeSearchQuery(value) {
+        return String(value || '')
+            .replace(/\b(?:in progress|live|upcoming|finished|not started)\b/ig, ' ')
+            .replace(/\bvs\.?\b/ig, ' ')
+            .replace(/\bat\b/ig, ' ')
+            .replace(/\b@\b/g, ' ')
+            .replace(/[^a-z0-9]+/ig, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
+    }
+
+    async resolveEventUrl(value) {
+        const normalized = this.toAbsoluteUrl(value, this.baseUrl);
+        if (!normalized) return null;
+
+        try {
+            const parsed = new URL(normalized);
+            const slug = parsed.pathname.split('/').filter(Boolean).pop() || '';
+            const slugQuery = this.normalizeSearchQuery(this.slugToTitle(slug));
+            const rawQuery = this.normalizeSearchQuery(value);
+            const query = slugQuery || rawQuery;
+
+            if (!query) return normalized;
+
+            const queryTokens = query.split(' ').filter(Boolean);
+            const scoreResults = async (results) => {
+                if (!Array.isArray(results) || !results.length) return null;
+                let best = null;
+                let bestScore = 0;
+                for (const result of results) {
+                    const title = this.normalizeSearchQuery(result?.title || '');
+                    const urlText = this.normalizeSearchQuery(result?.url || '');
+                    const haystack = `${title} ${urlText}`;
+                    const score = queryTokens.reduce((count, token) => count + (haystack.includes(token) ? 1 : 0), 0);
+                    if (score > bestScore && result?.url) {
+                        best = result;
+                        bestScore = score;
+                    }
+                }
+                return best?.url || null;
+            };
+
+            const queryMatch = await scoreResults(await this.search(query));
+            if (queryMatch) return queryMatch;
+
+            const catalogMatch = await scoreResults(await this.search('all'));
+            return catalogMatch || normalized;
+        } catch {
+            return normalized;
+        }
+    }
     cleanText(value) {
         return String(value || '')
             .replace(/<[^>]+>/g, ' ')
@@ -177,6 +232,9 @@ class BuffStreams extends Provider {
 
     inferType(url, sectionTitle = '') {
         const lower = `${url || ''} ${sectionTitle || ''}`.toLowerCase();
+        if (lower.includes('/wnba/') || lower.includes('wnba')) return 'wnba';
+        if (lower.includes('/wwe/') || lower.includes('wwe')) return 'wwe';
+        if (lower.includes('/cfl/') || lower.includes('cfl')) return 'cfl';
         if (lower.includes('/nba/') || lower.includes('nba')) return 'nba';
         if (lower.includes('/nhl/') || lower.includes('nhl')) return 'nhl';
         if (lower.includes('/mlb/') || lower.includes('baseball') || lower.includes('mlb')) return 'mlb';
@@ -184,7 +242,7 @@ class BuffStreams extends Provider {
         if (lower.includes('/boxing/') || lower.includes('boxing')) return 'boxing';
         if (lower.includes('/mma/') || lower.includes('mma') || lower.includes('ufc')) return 'mma';
         if (lower.includes('/soccer') || lower.includes('/football') || lower.includes('soccer') || lower.includes('fa cup') || lower.includes('premier league') || lower.includes('laliga') || lower.includes('serie a')) return 'soccer';
-        if (lower.includes('/f1/') || lower.includes('formula 1') || lower.includes('f1') || lower.includes('nascar') || lower.includes('indycar') || lower.includes('wwe')) return 'f1';
+        if (lower.includes('/f1/') || lower.includes('formula 1') || lower.includes('f1') || lower.includes('nascar') || lower.includes('indycar')) return 'f1';
         if (lower.includes('/ncaa/') || lower.includes('/cfb') || lower.includes('ncaa')) return 'ncaa';
         return 'sports';
     }
@@ -203,6 +261,7 @@ class BuffStreams extends Provider {
 
         const scheduleHaystack = `${statusText || ''}`.toLowerCase();
         if (/from now|tomorrow|today at|am et|pm et|upcoming/.test(scheduleHaystack)) return false;
+        if (/\b\d+\s+(?:second|seconds|minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\s+ago\b/i.test(scheduleHaystack)) return false;
 
         const fullHaystack = `${title || ''} ${statusText || ''} ${sectionTitle || ''}`.toLowerCase();
         return /\bin progress\b|\blive\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\b|\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\b极warm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(fullHaystack);
@@ -270,13 +329,21 @@ class BuffStreams extends Provider {
     parseStreamsFromHTML(html) {
         const sections = [];
         const seen = new Set();
-        const tournamentRegex = /<div class="top-tournament[^"]*">([\s\S]*?)<ul class="competitions">([\s\S]*?)<\/ul>/gi;
-        let match;
-        while ((match = tournamentRegex.exec(html)) !== null) {
-            const headingBlock = match[1] || '';
-            const listBlock = match[2] || '';
+        const tournamentStartRegex = /<div\b[^>]*class=["'][^"']*top-tournament[^"']*["'][^>]*>/gi;
+        const starts = [...html.matchAll(tournamentStartRegex)].map((match) => match.index).filter((index) => Number.isFinite(index));
+
+        for (let i = 0; i < starts.length; i += 1) {
+            const block = html.slice(starts[i], starts[i + 1] || html.length);
+            const headingEnd = block.search(/<ul\b[^>]*class=["'][^"']*competitions[^"']*["'][^>]*>/i);
+            const headingBlock = headingEnd >= 0 ? block.slice(0, headingEnd) : block;
+            const listOpenMatch = block.match(/<ul\b[^>]*class=["'][^"']*competitions[^"']*["'][^>]*>/i);
+            if (!listOpenMatch) continue;
+            const listStart = (listOpenMatch.index || 0) + listOpenMatch[0].length;
+            const listEnd = block.indexOf('</ul>', listStart);
+            const listBlock = listEnd >= 0 ? block.slice(listStart, listEnd) : block.slice(listStart);
             const imageMatch = headingBlock.match(/<img[^>]+src=["']([^"']+)["']/i);
-            const titleMatch = headingBlock.match(/<h2[^>]*class="league-name[^>]*>([\s\S]*?)<\/h2>/i);
+            const titleMatch = headingBlock.match(/<h2[^>]*class=["'][^"']*league-name[^"']*["'][^>]*>([\s\S]*?)<\/h2>/i)
+                || headingBlock.match(/<h[1-4][^>]*>([\s\S]*?)<\/h[1-4]>/i);
             const sectionImage = this.toAbsoluteUrl(imageMatch?.[1], this.baseUrl);
             const sectionTitle = this.cleanText(titleMatch?.[1] || 'Live Streams');
             const entries = this.parseCompetitionBlock(listBlock, sectionImage, sectionTitle);
@@ -303,11 +370,210 @@ class BuffStreams extends Provider {
         return merged;
     }
 
+    _deepProbeCache = new Map();
+    _DEEP_PROBE_TTL_MS = 5 * 60 * 1000;
+    _DEEP_PROBE_CONCURRENCY = 4;
+    _probeInFlight = new Map();
+
+    _getDeepProbeCache(streamId) {
+        const cached = this._deepProbeCache.get(streamId);
+        if (!cached) return null;
+        if (Date.now() - cached.probedAt > this._DEEP_PROBE_TTL_MS) {
+            this._deepProbeCache.delete(streamId);
+            return null;
+        }
+        return cached;
+    }
+
+    _setDeepProbeCache(streamId, data) {
+        this._deepProbeCache.set(streamId, { ...data, probedAt: Date.now() });
+    }
+
+    async deepProbeStream(streamUrl) {
+        const probeId = String(streamUrl || '').trim();
+        if (!probeId) return null;
+        const cached = this._getDeepProbeCache(probeId);
+        if (cached) return cached;
+        if (this._probeInFlight.has(probeId)) return this._probeInFlight.get(probeId);
+        const promise = (async () => {
+            try {
+                const rawHtml = await this.fetchRawHtml(probeId, this.homeUrl, {
+                    maxBytes: 256 * 1024,
+                    stopWhen: (text) => /<\/html>/i.test(text)
+                });
+                const html = this.stripUnneededHtml(rawHtml);
+                const result = { canonicalEventDate: '', eventStartUtcMs: 0, countdownSeconds: -1, hasActiveStream: false, isLocked: false, lockReason: '' };
+                const dateText = html.match(/<img[^>]+>\s*<span[^>]*>(\d{4}-\d{2}-\d{2})<\/span>/i)
+                    || html.match(/<[^>]*class=["'][^"']*date[^"']*["'][^>]*>([^<]*\d{4}-\d{2}-\d{2}[^<]*)<\/[^>]*>/i)
+                    || html.match(/>\s*(?:<[^>]+>\s*)*(\d{4}-\d{2}-\d{2})\s*</i);
+                if (dateText?.[1]) result.canonicalEventDate = dateText[1].trim();
+                const epochMatch = rawHtml.match(/var\s+countDownDate\s*=\s*(\d{10,13})\s*\*\s*1000/i)
+                    || rawHtml.match(/(?:countDownDate|countdownTarget|eventStart|startAt|startTime|eventStartUtc)["']?\s*[:=]\s*["']?(\d{10,13})\b/i)
+                    || rawHtml.match(/(?:countDownDate|countdownTarget|eventStart|startAt|startTime|eventStartUtc)["']?\s*[:=]\s*["']?(\d{10,13})\s*\*\s*1000/i);
+                if (epochMatch) {
+                    const rawTs = parseInt(epochMatch[1], 10);
+                    const tsMs = rawTs < 1e12 ? rawTs * 1000 : rawTs;
+                    const nowMs = Date.now();
+                    const diffMs = tsMs - nowMs;
+                    if (diffMs > 0 && diffMs < 7 * 24 * 60 * 60 * 1000) {
+                        result.eventStartUtcMs = tsMs;
+                        const totalSecs = Math.floor(diffMs / 1000);
+                        result.countdownSeconds = totalSecs;
+                        result.isLocked = true;
+                        result.lockReason = 'countdown-timer';
+                    }
+                } else {
+                    let countdownMatch = null;
+                    const countdownEl = html.match(/(?:countdown|timer|clock|time-?left|time-?remaining)[^>]*>\s*(\d{2}):(\d{2}):(\d{2})\s*</i)
+                        || html.match(/data-(?:countdown|timer|seconds|time)[=:]["']?\s*(\d{2}):(\d{2}):(\d{2})/i)
+                        || html.match(/["']countdown["']\s*:\s*["'](\d{2}):(\d{2}):(\d{2})["']/i);
+                    if (countdownEl) {
+                        countdownMatch = countdownEl;
+                    }
+                    if (countdownMatch) {
+                        const h = parseInt(countdownMatch[1], 10);
+                        const m = parseInt(countdownMatch[2], 10);
+                        const s = parseInt(countdownMatch[3], 10);
+                        result.countdownSeconds = (h * 3600) + (m * 60) + s;
+                        result.isLocked = true;
+                        result.lockReason = 'countdown-timer';
+                    }
+                }
+                const hasM3u8 = /src\s*[:=]\s*["']?[^"'\s]*\.m3u8/i.test(rawHtml)
+                    || /(?:file|source|manifest|streamUrl)\s*[:=]\s*["']?[^"'\s]*\.m3u8/i.test(rawHtml)
+                    || /https?:\/\/[^"'\s]+\.m3u8(?:\?[^"'\s]*)?/i.test(rawHtml);
+                const pageText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+                const hasInProgress = /\bIN\s*PROGRESS\b|\b2ND\s*QUARTER\b|\b1ST\s*QUARTER\b|\b3RD\s*QUARTER\b|\b4TH\s*QUARTER\b|\b1ST\s*HALF\b|\b2ND\s*HALF\b|\bHALFTIME\b|\bOVERTIME\b|\bHALF\s*TIME\b|\bTOP\s+\d+\b|\bBOTTOM\s+\d+\b|\bINNING\b/i.test(pageText);
+                const hasLiveScore = /<span[^>]*class=["'][^"']*score[^"']*["'][^>]*>\s*\d+\s*<\/span>/i.test(rawHtml);
+                if (hasM3u8 || (hasInProgress && hasLiveScore)) {
+                    result.hasActiveStream = true;
+                    result.isLive = true;
+                    result.isLocked = false;
+                    result.lockReason = 'early-broadcast';
+                }
+                this._setDeepProbeCache(probeId, result);
+                return result;
+            } catch (err) {
+                console.warn(`[Stream.js] Deep probe failed for ${probeId}:`, err?.message || err);
+                return { canonicalEventDate: '', countdownSeconds: -1, hasActiveStream: false, isLocked: false, lockReason: 'probe-error' };
+            } finally {
+                this._probeInFlight.delete(probeId);
+            }
+        })();
+        this._probeInFlight.set(probeId, promise);
+        return promise;
+    }
+
+    extractCountdownFromScripts(rawHtml) {
+        if (!rawHtml) return null;
+        const scriptBlocks = rawHtml.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
+        for (const block of scriptBlocks) {
+            const inner = block.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '');
+            const explicitCountdown = inner.match(/["']?(?:countdown|countdownSeconds|countdownLeft|timeLeft|timeRemaining|secondsLeft|secondsRemaining)["']?\s*[:=]\s*(\d{3,6})\b/i);
+            if (explicitCountdown) {
+                const totalSeconds = parseInt(explicitCountdown[1], 10);
+                if (totalSeconds > 60 && totalSeconds < 86400) {
+                    const h = Math.floor(totalSeconds / 3600);
+                    const m = Math.floor((totalSeconds % 3600) / 60);
+                    const s = totalSeconds % 60;
+                    return { h, m, s };
+                }
+            }
+            const explicitHMS = inner.match(/["']?(?:countdown|countdownSeconds|countdownLeft|timeLeft|timeRemaining)["']?\s*[:=]\s*["']?(\d{1,2})\s*[:\-,/]\s*(\d{1,2})\s*[:\-,/]\s*(\d{1,2})["']?/i);
+            if (explicitHMS) {
+                const h = parseInt(explicitHMS[1], 10);
+                const m = parseInt(explicitHMS[2], 10);
+                const s = parseInt(explicitHMS[3], 10);
+                if (h < 48 && m < 60 && s < 60 && (h * 3600 + m * 60 + s) > 60) return { h, m, s };
+            }
+            const timestampCountdown = inner.match(/["']?(?:startAt|eventStart|startTime|eventStartUtc|countdownTarget)["']?\s*[:=]\s*(\d{10,13})\b/i);
+            if (timestampCountdown) {
+                const ts = parseInt(timestampCountdown[1], 10);
+                const now = Date.now();
+                const diffMs = (ts > 1e12 ? ts : ts * 1000) - now;
+                if (diffMs > 60000 && diffMs < 86400000) {
+                    const totalSeconds = Math.floor(diffMs / 1000);
+                    const h = Math.floor(totalSeconds / 3600);
+                    const m = Math.floor((totalSeconds % 3600) / 60);
+                    const s = totalSeconds % 60;
+                    return { h, m, s };
+                }
+            }
+        }
+        return null;
+    }
+
+    fetchRawHtml(url, referer = this.homeUrl, options = {}) {
+        const headers = {
+            ...this.buildHeaders(referer),
+            'Accept': 'text/html,application/xhtml+xml',
+            'Range': `bytes=0-${Math.max(0, (options.maxBytes || 512 * 1024) - 1)}`
+        };
+        return (async () => {
+            const response = await fetch(url, { headers, signal: AbortSignal.timeout(10000) });
+            if (!response.ok && response.status !== 206) throw new Error(`HTTP error! status: ${response.status}`);
+            return this.readTextLean(response, { ...options, strip: false });
+        })();
+    }
+
+    async batchDeepProbe(streams) {
+        const targets = streams.filter((s) => s?.url && !this._getDeepProbeCache(s.url));
+        if (!targets.length) return streams;
+        const batches = [];
+        for (let i = 0; i < targets.length; i += this._DEEP_PROBE_CONCURRENCY) {
+            batches.push(targets.slice(i, i + this._DEEP_PROBE_CONCURRENCY));
+        }
+        for (const batch of batches) {
+            await Promise.allSettled(batch.map((s) => this.deepProbeStream(s.url)));
+        }
+        return streams.map((stream) => {
+            const probe = this._getDeepProbeCache(stream.url);
+            if (!probe) return stream;
+            const enriched = { ...stream };
+            if (probe.canonicalEventDate) enriched.canonicalEventDate = probe.canonicalEventDate;
+            if (Number.isFinite(probe.eventStartUtcMs) && probe.eventStartUtcMs > 0) enriched.eventStartUtcMs = probe.eventStartUtcMs;
+            if (Number.isFinite(probe.countdownSeconds) && probe.countdownSeconds >= 0) {
+                enriched.countdownSeconds = probe.countdownSeconds;
+            }
+            if (probe.hasActiveStream) {
+                enriched.hasActiveStream = true;
+                enriched.isLive = true;
+                enriched.isLocked = false;
+            }
+            if (probe.isLocked) {
+                enriched.isLocked = true;
+                enriched.lockReason = probe.lockReason;
+            }
+            if (probe.lockReason === 'early-broadcast') {
+                enriched.isLive = true;
+                enriched.hasActiveStream = true;
+                enriched.isLocked = false;
+            }
+            return enriched;
+        });
+    }
+
+    _applyHysteresisGuard(existingStreams, newStreams) {
+        const existingMap = new Map(existingStreams.map((s) => [s.url || s.id, s]));
+        return newStreams.map((stream) => {
+            const key = stream.url || stream.id;
+            const prev = existingMap.get(key);
+            if (!prev) return stream;
+            if (prev.isLive === true || prev.hasActiveStream === true) {
+                return { ...stream, isLive: true, hasActiveStream: true, isLocked: false };
+            }
+            return stream;
+        });
+    }
+
     resolveSearchTarget(query) {
         const raw = String(query || '').trim().toLowerCase();
         if (!raw || raw === 'all') return { url: this.homeUrl, mode: 'all' };
         const categoryKey = raw.replace(/^category:/, '');
-        if (this.categoryPages[categoryKey]) return { url: this.categoryPages[categoryKey], mode: 'category', categoryKey };
+        const categoryUrl = this.categoryPages[categoryKey];
+        const mainPages = [this.homeUrl, `${this.baseUrl}/index18`];
+        if (categoryKey === 'fighting') return { urls: [this.categoryPages.boxing, this.categoryPages.mma, `${this.baseUrl}/index18`, ...mainPages].filter(Boolean), mode: 'category', categoryKey };
+        if (categoryUrl) return { urls: [categoryUrl, ...mainPages].filter(Boolean), mode: 'category', categoryKey };
         return { url: this.homeUrl, mode: 'search', raw };
     }
 
@@ -331,10 +597,48 @@ class BuffStreams extends Provider {
     async search(query) {
         try {
             const target = this.resolveSearchTarget(query);
-            if (target.mode === 'all') return await this.fetchAllStreams();
-            const streams = await this.fetchCategoryStreams(target.url);
-            if (target.mode === 'category') return streams;
-            return streams.filter((stream) => `${stream.title} ${stream.statusText || ''} ${stream.type} ${stream.sectionTitle || ''}`.toLowerCase().includes(target.raw));
+            let streams;
+            if (target.mode === 'all') {
+                streams = await this.fetchAllStreams();
+            } else if (target.urls) {
+                const results = await Promise.allSettled(target.urls.map((url) => this.fetchCategoryStreams(url)));
+                streams = this.mergeStreams(results.filter((r) => r.status === 'fulfilled').map((r) => r.value));
+            } else {
+                streams = await this.fetchCategoryStreams(target.url);
+            }
+            if (target.mode === 'category') {
+                if (target.categoryKey === 'fighting') {
+                    streams = streams.filter((s) => /\/(?:boxing|mma|ufc|pfl|lfc|wwe)\b|title-game\/(?:boxing|mma|ufc|pfl|lfc|wwe)|\b(?:boxing|mma|ufc|pfl|lfc|wwe|bkfc|bellator|one fight|fighting championship)\b/i.test(`${s.url || ''} ${s.title || ''} ${s.sectionTitle || ''}`));
+                }
+            } else if (target.mode === 'search') {
+                streams = streams.filter((stream) => `${stream.title} ${stream.statusText || ''} ${stream.type} ${stream.sectionTitle || ''}`.toLowerCase().includes(target.raw));
+            }
+            const probeLimit = target.mode === 'all' ? 24 : 12;
+            const toProbe = streams.slice(0, probeLimit);
+            if (toProbe.length) {
+                await this.batchDeepProbe(toProbe);
+                streams = streams.map((stream) => {
+                    const probe = this._getDeepProbeCache(stream.url);
+                    if (!probe) return stream;
+                    const enriched = { ...stream };
+                    if (probe.canonicalEventDate) enriched.canonicalEventDate = probe.canonicalEventDate;
+                    if (Number.isFinite(probe.eventStartUtcMs) && probe.eventStartUtcMs > 0) enriched.eventStartUtcMs = probe.eventStartUtcMs;
+                    if (Number.isFinite(probe.countdownSeconds) && probe.countdownSeconds >= 0) {
+                        enriched.countdownSeconds = probe.countdownSeconds;
+                    }
+                    if (probe.hasActiveStream) {
+                        enriched.hasActiveStream = true;
+                        enriched.isLive = true;
+                        enriched.isLocked = false;
+                    }
+                    if (probe.isLocked) {
+                        enriched.isLocked = true;
+                        enriched.lockReason = probe.lockReason;
+                    }
+                    return enriched;
+                });
+            }
+            return streams;
         } catch (error) {
             console.error('Error in BuffStreams search:', error);
             return [];
@@ -351,9 +655,72 @@ class BuffStreams extends Provider {
     }
 
     extractEmbedUrl(html, pageUrl) {
-        const iframeMatch = html.match(/<iframe[^>]+id=["']cx-iframe["'][^>]+src=["']([^"']+)["']/i) || html.match(/<iframe[^>]+src=["']([^"']+)["'][^>]*>/i);
-        if (!iframeMatch?.[1]) return null;
-        return this.toAbsoluteUrl(iframeMatch[1], pageUrl);
+        const source = String(html || '');
+        const candidates = [];
+        const push = (value) => {
+            const raw = String(value || '').trim();
+            if (!raw || candidates.includes(raw)) return;
+            candidates.push(raw);
+        };
+        const resolve = (value) => {
+            try { return this.toAbsoluteUrl(value, pageUrl); } catch { return null; }
+        };
+
+        const iframePatterns = [
+            /<iframe[^>]+id=["']cx-iframe["'][^>]+src=["']([^"']+)["']/i,
+            /<iframe[^>]+data-src=["']([^"']+)["'][^>]*>/i,
+            /<iframe[^>]+src=["']([^"']+)["'][^>]*>/i,
+            /data-iframe=["']([^"']+)["']/i,
+            /src=["']([^"']+(?:embed|iframe|player)[^"']*)["']/i
+        ];
+
+        for (const pattern of iframePatterns) {
+            const match = source.match(pattern);
+            if (match?.[1]) push(match[1]);
+        }
+
+        for (const match of source.matchAll(/(?:src|data-src|href)\s*=\s*["']([^"']+)["']/gi)) {
+            push(match[1]);
+        }
+
+        const scriptUrlPatterns = [
+            /window\.location\s*=\s*["']([^"']+)["']/i,
+            /src\s*:\s*["']([^"']+)["']/i,
+            /source\s*:\s*["']([^"']+)["']/i,
+            /file\s*:\s*["']([^"']+)["']/i,
+            /url\s*:\s*["']([^"']+)["']/i,
+            /iframe\s*:\s*["']([^"']+)["']/i,
+            /['"](https?:\/\/[^'"\s>]+(?:embed|playlist|m3u8|load-playlist)[^'"\s>]*)['"]/i
+        ];
+        for (const pattern of scriptUrlPatterns) {
+            const match = source.match(pattern);
+            if (match?.[1]) push(match[1]);
+        }
+
+        const base64Segments = [...source.matchAll(/(?:atob|window\.atob|Buffer\.from)\(\s*["']([^"']+)["']/gi)]
+            .map((match) => match[1])
+            .filter(Boolean);
+        for (const encoded of base64Segments) {
+            const cleaned = String(encoded)
+                .replace(/\\+/g, '')
+                .replace(/["'`]/g, '')
+                .replace(/\s+/g, '')
+                .replace(/[^A-Za-z0-9+/=]/g, '');
+            if (!cleaned) continue;
+            try {
+                const padded = cleaned.replace(/=+$/g, '').padEnd(Math.ceil(cleaned.length / 4) * 4, '=');
+                const decoded = Buffer.from(padded, 'base64').toString('utf8');
+                if (/^https?:\/\//i.test(decoded)) push(decoded);
+                const nested = decoded.match(/https?:\/\/[^'"\s>]+/i)?.[0];
+                if (nested) push(nested);
+            } catch { }
+        }
+
+        for (const candidate of candidates) {
+            const resolved = resolve(candidate);
+            if (resolved && /^https?:\/\//i.test(resolved)) return resolved;
+        }
+        return null;
     }
 
     extractSessionCards(html) {
@@ -390,7 +757,7 @@ class BuffStreams extends Provider {
             if (classDigitMatches.length >= 2) {
                 return { awayScore: classDigitMatches[0], homeScore: classDigitMatches[1], scores: classDigitMatches.map(String) };
             }
-        } catch {}
+        } catch { }
         return { awayScore: null, homeScore: null, scores: [] };
     }
 
@@ -427,9 +794,9 @@ class BuffStreams extends Provider {
                         startsAt: dateMatch ? dateMatch[0].replace(/\s+/g, ' ').trim() : '',
                         status
                     });
-                } catch {}
+                } catch { }
             }
-        } catch {}
+        } catch { }
         return sessions.slice(0, 24);
     }
 
@@ -475,9 +842,9 @@ class BuffStreams extends Provider {
                         record1: left.record,
                         record2: right.record
                     });
-                } catch {}
+                } catch { }
             });
-        } catch {}
+        } catch { }
         return fights.slice(0, 40);
     }
 
@@ -511,7 +878,7 @@ class BuffStreams extends Provider {
             try {
                 const decoded = Buffer.from(String(value || '').trim(), 'base64').toString('utf8').trim();
                 if (/^https?:\/\//i.test(decoded)) return decoded;
-            } catch {}
+            } catch { }
             return null;
         };
 
@@ -602,7 +969,7 @@ class BuffStreams extends Provider {
             if (!line.startsWith('#EXT-X-MEDIA:')) continue;
             const attrs = this.parseM3uAttributeList(line.slice('#EXT-X-MEDIA:'.length));
             const type = String(attrs.TYPE || '').toUpperCase();
-            
+
             // Only handle actual subtitle files (TYPE=SUBTITLES with URI)
             // Closed captions (TYPE=CLOSED-CAPTIONS) are handled natively by HLS.js
             if (type !== 'SUBTITLES') continue;
@@ -651,54 +1018,54 @@ class BuffStreams extends Provider {
 
     extractEventCards(html) {
         const cards = { mainCard: [], prelims: [] };
-        
+
         try {
             // Split by Main Card and Prelims sections
             const mainCardStartIdx = html.toUpperCase().indexOf('MAIN CARD');
             const prelimsStartIdx = html.toUpperCase().indexOf('PRELIM');
-            
+
             if (mainCardStartIdx === -1 && prelimsStartIdx === -1) {
                 // Generic fallback for sports without explicit Main Card / Prelims headers.
                 const listMatches = this.extractCardMatches(html);
                 if (listMatches && listMatches.length > 0) {
                     cards.mainCard = listMatches;
                 }
-                
+
                 // Limit to reasonable number
                 cards.mainCard = cards.mainCard.slice(0, 12);
                 return cards;
             }
-            
+
             // Extract Main Card section
             let mainCardHtml = '';
             if (mainCardStartIdx !== -1) {
                 const endIdx = prelimsStartIdx !== -1 ? prelimsStartIdx : html.length;
                 mainCardHtml = html.substring(mainCardStartIdx, endIdx);
             }
-            
+
             // Extract Prelims section
             let prelimsHtml = '';
             if (prelimsStartIdx !== -1) {
                 prelimsHtml = html.substring(prelimsStartIdx);
             }
-            
+
             // Parse Main Card matches
             cards.mainCard = this.extractCardMatches(mainCardHtml);
-            
+
             // Parse Prelims matches
             cards.prelims = this.extractCardMatches(prelimsHtml);
-            
+
         } catch (e) {
             console.warn('Error extracting event cards:', e);
         }
-        
+
         return cards;
     }
-    
+
     extractCardMatches(sectionHtml) {
         const matches = [];
         if (!sectionHtml) return matches;
-        
+
         // List of common non-competitor terms to filter out
         const invalidTerms = [
             'streameast', 'watch', 'click', 'play', 'link', 'stream', 'source',
@@ -709,13 +1076,13 @@ class BuffStreams extends Provider {
             'app', 'link', 'button', 'option', 'go', 'go to', 'open in',
             'reddit', 'thread', 'discussion', 'hd', 'sd', 'popup', 'ads'
         ];
-        
+
         const isInvalidCompetitor = (name) => {
             const lower = name.toLowerCase();
             return invalidTerms.some(term => lower === term || lower.includes(term)) ||
-                   name.length < 3 || /^watch|^click|^select|^go|^open/i.test(name);
+                name.length < 3 || /^watch|^click|^select|^go|^open/i.test(name);
         };
-        
+
         // Try list-based format first (under-card-events)
         const listItems = sectionHtml.match(/<li[^>]*>[\s\S]*?<\/li>/gi) || [];
         if (listItems.length > 0) {
@@ -730,34 +1097,34 @@ class BuffStreams extends Provider {
 
                     // Extract text content from the list item
                     const textContent = this.cleanText(item.replace(/<[^>]+>/g, ' '));
-                    
+
                     // Generic parsing for any sport - look for two competitors/teams separated by vs patterns
                     const parts = textContent.split(/\s+vs\s+|\s+vs\.?\s+|match\s+\d+|(?:^|\s)\d+\s+vs\s+\d+|@|-\s+(?!.*\d+-\d+)/i);
-                    
+
                     if (parts.length >= 2) {
                         let competitor1 = parts[0].trim();
                         let competitor2 = parts.slice(1).join(' ').trim();
-                        
+
                         // Remove date patterns
                         competitor1 = competitor1.replace(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d+|^\d+\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i, '').trim();
                         competitor2 = competitor2.replace(/\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d+\s*$|\s+\d+\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*$/i, '').trim();
-                        
+
                         // Extract record/stats if present
                         const record1Match = competitor1.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
                         const record2Match = competitor2.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
-                        
+
                         // Remove records/stats from names
                         const competitor1Clean = competitor1.replace(/\s*\d+\s*-\s*\d+(?:\s*-\s*\d+)?\s*(.*)$/, '').trim();
                         const competitor2Clean = competitor2.replace(/\s*\d+\s*-\s*\d+(?:\s*-\s*\d+)?\s*(.*)$/, '').trim();
-                        
+
                         const record1 = record1Match ? `${record1Match[1]}-${record1Match[2]}` : '';
                         const record2 = record2Match ? `${record2Match[1]}-${record2Match[2]}` : '';
-                        
+
                         // Validate: both competitors must be non-empty, reasonably sized, and not invalid terms
                         if (competitor1Clean && competitor2Clean &&
                             competitor1Clean.length > 2 && competitor2Clean.length > 2 &&
                             !isInvalidCompetitor(competitor1Clean) && !isInvalidCompetitor(competitor2Clean)) {
-                            
+
                             matches.push({
                                 sequenceLabel: `Match ${matches.length + 1}`,
                                 fighter1: competitor1Clean.substring(0, 100),
@@ -769,15 +1136,15 @@ class BuffStreams extends Provider {
                             });
                         }
                     }
-                } catch {}
+                } catch { }
             });
-            
+
             if (matches.length > 0) return matches;
         }
-        
+
         // Fallback to table-based format
         const rows = sectionHtml.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
-        
+
         rows.forEach(row => {
             const cells = row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
             if (cells.length >= 2) {
@@ -790,24 +1157,24 @@ class BuffStreams extends Provider {
                     // Extract competitor names - usually in first and last cells
                     const cell1 = this.cleanText(cells[0].replace(/<[^>]+>/g, ' '));
                     const cellLast = this.cleanText(cells[cells.length - 1].replace(/<[^>]+>/g, ' '));
-                    
+
                     // Split by records if present
                     const competitor1Parts = cell1.trim().split(/\s*\(|\s*\d+\s*-\s*\d+/);
                     const competitor2Parts = cellLast.trim().split(/\s*\(|\s*\d+\s*-\s*\d+/);
-                    
+
                     const competitor1 = (competitor1Parts[0] || '').trim();
                     const competitor2 = (competitor2Parts[0] || '').trim();
-                    
+
                     // Extract records if present
                     const record1Match = cell1.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
                     const record2Match = cellLast.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
-                    
+
                     const record1 = record1Match ? `${record1Match[1]}-${record1Match[2]}` : '';
                     const record2 = record2Match ? `${record2Match[1]}-${record2Match[2]}` : '';
-                    
+
                     if (competitor1 && competitor2 && competitor1.length > 2 && competitor2.length > 2 &&
                         !isInvalidCompetitor(competitor1) && !isInvalidCompetitor(competitor2)) {
-                        
+
                         matches.push({
                             sequenceLabel: `Match ${matches.length + 1}`,
                             fighter1: competitor1.substring(0, 100),
@@ -818,20 +1185,21 @@ class BuffStreams extends Provider {
                             image2
                         });
                     }
-                } catch {}
+                } catch { }
             }
         });
-        
+
         return matches;
     }
     async fetchInfo(id) {
         try {
-            const url = this.toAbsoluteUrl(id, this.baseUrl);
+            const url = await this.resolveEventUrl(id);
             if (!url) throw new Error(`Invalid stream URL: ${id}`);
-            const html = await this.fetchLeanHtml(url, this.homeUrl, {
+            const rawHtml = await this.fetchRawHtml(url, this.homeUrl, {
                 maxBytes: 700 * 1024,
                 stopWhen: (text) => /<\/html>/i.test(text)
             });
+            const html = this.stripUnneededHtml(rawHtml);
             const embedUrl = this.extractEmbedUrl(html, url);
             const details = this.extractEventDetails(html, url);
             const sessions = this.extractSessionCards(html);
@@ -847,18 +1215,128 @@ class BuffStreams extends Provider {
                 if (nextMatch) return nextMatch;
                 return candidates[candidates.length - 1];
             })();
+            const liveState = this.extractLiveState(details.title || this.extractTitle(html, url), details.status || '', html);
+            let canonicalEventDate = '';
+            const dateText = html.match(/<img[^>]+>\s*<span[^>]*>(\d{4}-\d{2}-\d{2})<\/span>/i)
+                || html.match(/<[^>]*class=["'][^"']*date[^"']*["'][^>]*>([^<]*\d{4}-\d{2}-\d{2}[^<]*)<\/[^>]*>/i)
+                || html.match(/>\s*(?:<[^>]+>\s*)*(\d{4}-\d{2}-\d{2})\s*</i);
+            if (dateText?.[1]) canonicalEventDate = dateText[1].trim();
+            let eventStartUtcMs = 0;
+            const epochMatchInfo = rawHtml.match(/var\s+countDownDate\s*=\s*(\d{10,13})\s*\*\s*1000/i)
+                || rawHtml.match(/(?:countDownDate|countdownTarget|eventStart|startAt|startTime|eventStartUtc)["']?\s*[:=]\s*["']?(\d{10,13})\b/i)
+                || rawHtml.match(/(?:countDownDate|countdownTarget|eventStart|startAt|startTime|eventStartUtc)["']?\s*[:=]\s*["']?(\d{10,13})\s*\*\s*1000/i);
+            if (epochMatchInfo) {
+                const rawTs = parseInt(epochMatchInfo[1], 10);
+                const tsMs = rawTs < 1e12 ? rawTs * 1000 : rawTs;
+                const diffMs = tsMs - Date.now();
+                if (diffMs > 0 && diffMs < 7 * 24 * 60 * 60 * 1000) {
+                    eventStartUtcMs = tsMs;
+                }
+            }
+            let countdownSeconds = -1;
+            let lockReason = '';
+            let countdownMatchInfo = null;
+            if (eventStartUtcMs > 0) {
+                countdownSeconds = Math.floor((eventStartUtcMs - Date.now()) / 1000);
+                lockReason = 'countdown-timer';
+            } else {
+                const countdownElInfo = html.match(/(?:countdown|timer|clock|time-?left|time-?remaining)[^>]*>\s*(\d{2}):(\d{2}):(\d{2})\s*</i)
+                    || html.match(/data-(?:countdown|timer|seconds|time)[=:]["']?\s*(\d{2}):(\d{2}):(\d{2})/i)
+                    || html.match(/["']countdown["']\s*:\s*["'](\d{2}):(\d{2}):(\d{2})["']/i);
+                if (countdownElInfo) {
+                    countdownMatchInfo = countdownElInfo;
+                }
+                if (countdownMatchInfo) {
+                    countdownSeconds = (parseInt(countdownMatchInfo[1], 10) * 3600) + (parseInt(countdownMatchInfo[2], 10) * 60) + parseInt(countdownMatchInfo[3], 10);
+                    lockReason = 'countdown-timer';
+                }
+            }
+            const hasM3u8InPage = /src\s*[:=]\s*["']?[^"'\s]*\.m3u8/i.test(rawHtml)
+                || /(?:file|source|manifest|streamUrl)\s*[:=]\s*["']?[^"'\s]*\.m3u8/i.test(rawHtml)
+                || /https?:\/\/[^"'\s]+\.m3u8(?:\?[^"'\s]*)?/i.test(rawHtml);
+            const pageTextContent = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+            const hasInProgressText = /\bIN\s*PROGRESS\b|\b2ND\s*QUARTER\b|\b1ST\s*QUARTER\b|\b3RD\s*QUARTER\b|\b4TH\s*QUARTER\b|\b1ST\s*HALF\b|\b2ND\s*HALF\b|\bHALFTIME\b|\bOVERTIME\b/i.test(pageTextContent);
+            const hasLiveScoreInPage = /<span[^>]*class=["'][^"']*score[^"']*["'][^>]*>\s*\d+\s*<\/span>/i.test(rawHtml);
+            const hasActiveStream = hasM3u8InPage || (hasInProgressText && hasLiveScoreInPage);
+            if (hasActiveStream) {
+                lockReason = 'early-broadcast';
+            }
+            const liveScoreboard = {
+                isLive: liveState.isLive,
+                status: liveState.periodText || details.status || '',
+                exactTime: liveState.exactTime || details.date || '',
+                homeTotal: details.homeScore,
+                awayTotal: details.awayScore,
+                matrix: {
+                    home: { T: details.homeScore ?? null },
+                    away: { T: details.awayScore ?? null },
+                    runsByInning: []
+                }
+            };
+            const liveStats = {
+                possession: '',
+                period: liveState.periodText || '',
+                time: liveState.exactTime || '',
+                status: details.status || ''
+            };
+            let boxStats = details.awayScore !== null && details.homeScore !== null ? {
+                home: { score: details.homeScore },
+                away: { score: details.awayScore }
+            } : null;
+
+            let liveDirectory = null;
+            let liveDirectoryTeams = null;
+            try {
+                const sport = this.inferType(url, details.league);
+                const title = this.cleanText(details.title || this.extractTitle(html, url));
+                const liveRes = await fetch(`${this.backendApiBase}/sports/buffstreams/livesport?title=${encodeURIComponent(title)}&sport=${encodeURIComponent(sport)}`, {
+                    headers: { 'User-Agent': this.userAgent }
+                });
+                if (liveRes.ok) {
+                    const liveJson = await liveRes.json();
+                    liveDirectory = liveJson?.liveScoreboard || null;
+                    liveDirectoryTeams = liveJson?.teams || null;
+                    if (liveJson?.boxStats) {
+                        boxStats = liveJson.boxStats;
+                    }
+                    if (liveJson?.homeLogo) {
+                        details.homeLogo = liveJson.homeLogo;
+                    }
+                    if (liveJson?.awayLogo) {
+                        details.awayLogo = liveJson.awayLogo;
+                    }
+                    if (liveJson?.teams) {
+                        details.teams = liveJson.teams;
+                    }
+                }
+            } catch (liveError) {
+                console.warn('BuffStreams live-sport enrichment failed:', liveError?.message || liveError);
+            }
+
             return {
                 id: url,
                 title: details.title || this.extractTitle(html, url),
                 url,
                 embedUrl,
                 league: details.league,
+                sport: this.inferType(url, details.league),
                 eventDate: details.date,
+                canonicalEventDate,
+                eventStartUtcMs,
+                countdownSeconds,
+                hasActiveStream,
+                isLive: liveState.isLive || hasActiveStream,
+                isLocked: lockReason === 'countdown-timer',
+                lockReason,
                 status: details.status,
                 teams: details.teams,
                 scores: details.scores,
                 awayScore: details.awayScore,
                 homeScore: details.homeScore,
+                liveScoreboard: liveDirectory || liveScoreboard,
+                liveStats,
+                boxStats,
+                liveDirectoryTeams,
                 sessions,
                 eventSessions,
                 activeSession,
@@ -872,48 +1350,59 @@ class BuffStreams extends Provider {
     }
 
     async fetchSources(eventUrl) {
+        const backendResult = await BuffStreams.fetchSourcesFromBackend(
+            eventUrl,
+            this.backendApiBase
+        );
+        const sourceCount = Array.isArray(backendResult?.sources) ? backendResult.sources.length : 0;
+        if (sourceCount > 0) {
+            console.log(`[Stream.js] Backend RPC returned ${sourceCount} source(s) for ${eventUrl}`);
+            return backendResult;
+        }
+        console.warn(`[Stream.js] Backend RPC returned no sources for ${eventUrl}: ${backendResult?.error || 'empty_sources'} — extracting from embed page`);
+
+        const embedFallback = backendResult?.embedUrl || '';
+        if (!embedFallback) return backendResult;
+
         try {
-            const normalizedEventUrl = this.toAbsoluteUrl(eventUrl, this.baseUrl);
-            if (!normalizedEventUrl) throw new Error(`Invalid event URL: ${eventUrl}`);
-            const eventHtml = await this.fetchLeanHtml(normalizedEventUrl, this.homeUrl, {
-                maxBytes: 700 * 1024,
-                stopWhen: (text) => /<iframe[^>]+(?:id=["']cx-iframe["'][^>]+)?src=["'][^"']+["']/i.test(text)
+            let embedOrigin = '';
+            try { embedOrigin = new URL(embedFallback).origin; } catch { }
+            const refererHeaders = embedOrigin
+                ? { Referer: embedOrigin + '/', Origin: embedOrigin }
+                : {};
+
+            const embedResponse = await fetch(embedFallback, {
+                headers: {
+                    'User-Agent': this.userAgent,
+                    ...refererHeaders
+                },
+                signal: AbortSignal.timeout(10000),
             });
-            const embedUrl = this.extractEmbedUrl(eventHtml, normalizedEventUrl);
-            if (!embedUrl) throw new Error('No stream iframe found on the event page');
-            const embedHtml = await this.fetchLeanHtml(embedUrl, normalizedEventUrl, {
-                maxBytes: 500 * 1024,
-                strip: false,
-                stopWhen: (text) => /(?:window\.atob|source\s*:|\.m3u8|load-playlist|\/playlist\/)/i.test(text)
-            });
+            if (!embedResponse.ok) return backendResult;
+            const embedHtml = await embedResponse.text();
+
             const hlsUrl = this.extractHlsFromEmbed(embedHtml);
-            if (!hlsUrl) throw new Error('No direct HLS URL found in embed');
+            if (!hlsUrl) {
+                console.warn(`[Stream.js] No HLS URL found in embed page HTML for ${embedFallback}`);
+                return backendResult;
+            }
 
-            const sourceHeaders = { 'Referer': embedUrl, 'Origin': new URL(embedUrl).origin, 'User-Agent': this.userAgent };
-            const manifestMedia = await this.extractManifestMedia(hlsUrl, sourceHeaders);
-            const variantSources = Array.isArray(manifestMedia.variants) ? manifestMedia.variants : [];
-            const subtitleSources = Array.isArray(manifestMedia.subtitles) ? manifestMedia.subtitles : [];
-            const baseSource = { url: hlsUrl, quality: 'auto', isM3U8: true, isDirect: true, headers: sourceHeaders };
-
-            const allSources = variantSources.length
-                ? [baseSource, ...variantSources]
-                : [baseSource];
-
+            console.log(`[Stream.js] Extracted HLS: ${hlsUrl}`);
             return {
-                sources: allSources,
-                subtitles: subtitleSources,
-                headers: sourceHeaders,
-                embedUrl
+                sources: [{ url: hlsUrl, quality: 'auto', isM3U8: true, isDirect: true, headers: refererHeaders }],
+                subtitles: [],
+                headers: refererHeaders,
+                embedUrl: embedFallback
             };
         } catch (error) {
-            console.error('Error in BuffStreams fetchSources:', error);
-            return { sources: [], subtitles: [], headers: {}, error: error.message };
+            console.error(`[Stream.js] Embed extraction failed for ${embedFallback}:`, error?.message || error);
+            return backendResult;
         }
     }
 
     async verifyEventSources(eventUrl) {
         try {
-            const normalizedEventUrl = this.toAbsoluteUrl(eventUrl, this.baseUrl);
+            const normalizedEventUrl = await this.resolveEventUrl(eventUrl);
             if (!normalizedEventUrl) throw new Error(`Invalid event URL: ${eventUrl}`);
 
             const headResponse = await this.supportsHead(normalizedEventUrl, this.homeUrl);
@@ -953,6 +1442,86 @@ class BuffStreams extends Provider {
             return { sources: [], subtitles: [], headers: {}, error: error.message, verifiedOnly: true };
         }
     }
+    // Lightweight transport bridge that forwards a watch request directly
+    // to the configured Consumet backend. Returns the normalized
+    // { sources, subtitles, headers, embedUrl } shape that watch.html and
+    // server.js consume. This is the PRIMARY source fetch path; the instance
+    // fetchSources() method falls through to local HTML extraction only when
+    // this returns an empty sources array.
+    //
+    // NOTE: This method MUST remain inside the class body so that
+    // BuffStreams.fetchSourcesFromBackend() is a valid static call.
+    static decodeUrlSafeToken(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        try {
+            const decodedUrl = decodeURIComponent(raw);
+            if (/^https?:\/\//i.test(decodedUrl)) return decodedUrl;
+            const normalized = decodedUrl.replace(/-/g, '+').replace(/_/g, '/');
+            const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+            const decoded = Buffer.from(padded, 'base64').toString('utf8').trim();
+            return /^https?:\/\//i.test(decoded) ? decoded : decodedUrl;
+        } catch {
+            return raw;
+        }
+    }
+
+    static normalizeBackendPayload(data, target) {
+        const sources = Array.isArray(data?.sources) ? data.sources : [];
+        const upstreamReferer = data?.headers?.Referer || data?.headers?.referer || data?.referer || BuffStreams.prototype.baseUrl;
+        const upstreamOrigin = (() => {
+            try { return new URL(upstreamReferer).origin; } catch { return BuffStreams.prototype.baseUrl; }
+        })();
+        return {
+            sources: sources.map((source) => ({
+                ...source,
+                headers: {
+                    ...(source?.headers || {}),
+                    ...(data?.headers || {}),
+                    Referer: source?.headers?.Referer || source?.headers?.referer || upstreamReferer,
+                    Origin: source?.headers?.Origin || source?.headers?.origin || upstreamOrigin,
+                    'User-Agent': source?.headers?.['User-Agent'] || source?.headers?.user_agent || BuffStreams.prototype.userAgent
+                }
+            })),
+            subtitles: Array.isArray(data?.subtitles) ? data.subtitles : [],
+            headers: {
+                ...(data?.headers || {}),
+                Referer: upstreamReferer,
+                Origin: upstreamOrigin,
+                'User-Agent': BuffStreams.prototype.userAgent
+            },
+            embedUrl: data?.embedURL || data?.embedUrl || target
+        };
+    }
+
+    static async fetchSourcesFromBackend(eventUrl, backendBase) {
+        const resolvedBase = backendBase
+            || (globalThis.process?.env?.CONSUMET_API_BASE || globalThis.process?.env?.SITE_API_BASE || 'http://localhost:3000').replace(/\/$/, '');
+        const target = BuffStreams.decodeUrlSafeToken(eventUrl);
+        if (!target) return { sources: [], subtitles: [], headers: {}, error: 'no_event_url' };
+        const isRacing = /fullraces|racing|formula-1|nascar|indycar/i.test(target);
+        const apiPath = isRacing
+            ? `/api/racing/watch?episodeId=${encodeURIComponent(target)}`
+            : `/sports/buffstreams/watch?episodeId=${encodeURIComponent(target)}`;
+        const base = isRacing
+            ? (globalThis.process?.env?.SITE_API_BASE || `http://localhost:${globalThis.process?.env?.PORT || 3001}`).replace(/\/$/, '')
+            : String(resolvedBase || '').replace(/\/$/, '');
+        try {
+            const response = await fetch(`${base}${apiPath}`, { cache: 'no-store' });
+            if (!response.ok) {
+                return { sources: [], subtitles: [], headers: {}, error: `backend_${response.status}` };
+            }
+            const data = await response.json();
+            return BuffStreams.normalizeBackendPayload(data, target);
+        } catch (err) {
+            return { sources: [], subtitles: [], headers: {}, error: err?.message || 'backend_unreachable' };
+        }
+    }
 }
 
 export default BuffStreams;
+
+
+
+
+

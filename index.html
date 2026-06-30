@@ -1,5 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -14,19 +15,19 @@
     <link rel="icon" type="image/svg+xml" href="/Logo.svg?v=1">
     <style>
         :root {
-            --bg: #05070c;
-            --bg-soft: #080c14;
-            --panel: rgba(14, 18, 28, 0.72);
-            --panel-hover: rgba(20, 26, 40, 0.82);
+            --bg: #0B0E14;
+            --bg-soft: #151A22;
+            --panel: rgba(11, 14, 20, 0.78);
+            --panel-hover: rgba(21, 26, 34, 0.88);
             --line: rgba(255, 255, 255, 0.07);
             --line-strong: rgba(255, 255, 255, 0.13);
             --line-accent: rgba(30, 167, 253, 0.22);
             --text: #eef2f8;
             --muted: #8a97ad;
-            --accent: #1ea7fd;
-            --primary: rgba(30, 167, 253, 0.14);
-            --primary-hover: rgba(30, 167, 253, 0.22);
-            --primary-border: rgba(30, 167, 253, 0.28);
+            --accent: #4d9fff;
+            --primary: rgba(255, 74, 93, 0.14);
+            --primary-hover: rgba(255, 74, 93, 0.2);
+            --primary-border: rgba(255, 31, 62, 0.72);
             --danger: rgba(255, 80, 110, 0.13);
             --danger-border: rgba(255, 80, 110, 0.28);
             --danger-text: #ff8ea3;
@@ -34,9 +35,9 @@
             --success-border: rgba(56, 189, 120, 0.28);
             --success-text: #5dd49a;
             --button-disabled: rgba(255, 255, 255, 0.06);
-            --shadow-sm: 0 2px 12px rgba(0,0,0,0.28);
-            --shadow: 0 8px 32px rgba(0,0,0,0.36), 0 1px 0 rgba(255,255,255,0.04) inset;
-            --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+            --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.28);
+            --shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
             --blur: blur(24px) saturate(160%);
             --blur-sm: blur(12px) saturate(140%);
             --pad: 20px;
@@ -47,9 +48,22 @@
             --r-pill: 999px;
         }
 
-        /* ── Reset ── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; scrollbar-gutter: stable; }
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Reset Ã¢â€â‚¬Ã¢â€â‚¬ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            scroll-behavior: smooth;
+            scrollbar-gutter: stable;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             background: var(--bg);
@@ -60,37 +74,43 @@
             -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
         }
+
         * {
             scrollbar-width: thin;
-            scrollbar-color: rgba(72, 159, 214, 0.72) rgba(5, 10, 19, 0.95);
+            scrollbar-color: rgba(132, 178, 225, 0.55) transparent;
         }
+
         *::-webkit-scrollbar {
-            width: 11px;
-            height: 11px;
+            width: 8px;
+            height: 8px;
         }
+
         *::-webkit-scrollbar-track {
-            background: linear-gradient(180deg, rgba(3, 8, 16, 0.94), rgba(6, 12, 22, 0.98));
+            background: transparent;
         }
+
         *::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, rgba(74, 173, 232, 0.88), rgba(45, 122, 184, 0.86));
-            border: 2px solid rgba(5, 10, 19, 0.95);
+            background: rgba(132, 178, 225, 0.46);
+            border: 2px solid transparent;
             border-radius: 999px;
+            background-clip: content-box;
         }
+
         *::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, rgba(109, 198, 249, 0.95), rgba(63, 148, 216, 0.95));
+            background: rgba(155, 200, 240, 0.68);
+            background-clip: content-box;
         }
+
         /* Ambient background glow */
         body::after {
             content: '';
             position: fixed;
             inset: 0;
             pointer-events: none;
-            background:
-                radial-gradient(ellipse 80% 40% at 50% -10%, rgba(30,167,253,0.12) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 30% at 80% 80%, rgba(120,80,255,0.06) 0%, transparent 50%),
-                linear-gradient(180deg, #05070c 0%, #080c14 100%);
+            background: rgba(5, 7, 12, 0.92);
             z-index: -1;
         }
+
         /* Subtle grid overlay */
         body::before {
             content: '';
@@ -98,18 +118,34 @@
             inset: 0;
             pointer-events: none;
             background:
-                linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+                linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
             background-size: 40px 40px;
-            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.05) 60%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.05) 60%, transparent 100%);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.05) 60%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.05) 60%, transparent 100%);
             z-index: -1;
         }
-        a { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
-        img { max-width: 100%; height: auto; display: block; }
-        button { font-family: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; }
 
-        /* ── Shell ── */
+        a {
+            color: inherit;
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        button {
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Shell Ã¢â€â‚¬Ã¢â€â‚¬ */
         .shell {
             max-width: 1440px;
             margin: 0 auto;
@@ -119,19 +155,16 @@
             padding-bottom: max(var(--pad), env(safe-area-inset-bottom));
         }
 
-        /* ── Glassmorphism base ── */
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Glassmorphism base Ã¢â€â‚¬Ã¢â€â‚¬ */
         .glass {
-            background: rgba(12, 16, 26, 0.65);
-            border: 1px solid rgba(255,255,255,0.08);
-            backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
-            box-shadow:
-                0 4px 24px rgba(0,0,0,0.4),
-                0 1px 0 rgba(255,255,255,0.05) inset,
-                0 -1px 0 rgba(0,0,0,0.3) inset;
+            background: rgba(8, 10, 16, 0.72);
+            border: 1px solid var(--line);
+            backdrop-filter: blur(18px) saturate(130%);
+            -webkit-backdrop-filter: blur(18px) saturate(130%);
+            box-shadow: var(--shadow);
         }
 
-        /* ── Top Bar ── */
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Top Bar Ã¢â€â‚¬Ã¢â€â‚¬ */
         .topbar {
             display: flex;
             align-items: center;
@@ -145,6 +178,7 @@
             top: 10px;
             z-index: 100;
         }
+
         .brand {
             display: inline-flex;
             align-items: center;
@@ -154,14 +188,16 @@
             letter-spacing: -0.04em;
             flex-shrink: 0;
             margin-left: -14px;
-            background: linear-gradient(135deg, #fff 30%, rgba(30,167,253,0.85) 100%);
+            background: linear-gradient(135deg, #fff 30%, rgba(30, 167, 253, 0.85) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
         .brand span {
             margin-left: -14px;
         }
+
         .brand-logo {
             height: clamp(52px, 4.8vw, 66px);
             width: auto;
@@ -169,6 +205,7 @@
             flex-shrink: 0;
             filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.35));
         }
+
         .nav {
             display: flex;
             flex-wrap: wrap;
@@ -177,11 +214,12 @@
             flex: 1;
             min-width: 0;
         }
+
         .nav-link {
             padding: 7px 14px;
             border-radius: var(--r-pill);
-            border: 1px solid rgba(255,255,255,0.07);
-            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.04);
             color: var(--muted);
             font-size: 0.84rem;
             font-weight: 500;
@@ -191,92 +229,193 @@
             -webkit-user-select: none;
             letter-spacing: 0.01em;
         }
+
         .nav-link:hover {
             color: var(--text);
-            border-color: rgba(255,255,255,0.14);
-            background: rgba(255,255,255,0.08);
-        }
-        .nav-link.active {
-            color: #c8e8ff;
-            border-color: rgba(30,167,253,0.35);
-            background: rgba(30,167,253,0.12);
-            box-shadow: 0 0 12px rgba(30,167,253,0.15);
+            border-color: rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.08);
         }
 
-        /* ── Hero ── */
+        .nav-link.active {
+            color: #a6cbff;
+            border-color: rgba(77, 159, 255, 0.35);
+            background: rgba(77, 159, 255, 0.12);
+            box-shadow: 0 0 12px rgba(77, 159, 255, 0.14);
+        }
+
+        /* Pulsating live badge dot animation — applied to .live-dot elements
+           rendered inside event cards when isLive === true. */
+        @keyframes pulse-live {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 74, 93, 0.6);
+                opacity: 1;
+            }
+
+            50% {
+                box-shadow: 0 0 0 5px rgba(255, 74, 93, 0);
+                opacity: 0.75;
+            }
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ff4a5d;
+            animation: pulse-live 1.4s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 5px;
+            flex-shrink: 0;
+        }
+
+        .watch-recaps-btn {
+            border: 1px solid rgba(255, 74, 93, 0.5);
+            background: rgba(255, 74, 93, 0.14);
+            color: #ffd0d6;
+            font-weight: 800;
+        }
+
+        .watch-recaps-btn:hover {
+            border-color: rgba(255, 74, 93, 0.78);
+            background: rgba(255, 74, 93, 0.2);
+            color: #fff0f2;
+        }
+
+        .hero-recaps-cta {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: auto;
+            padding: 14px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 74, 93, 0.5);
+            background: rgba(255, 74, 93, 0.12);
+            color: #ffd6dc;
+            font-size: 0.92rem;
+            font-weight: 850;
+            letter-spacing: 0.01em;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .hero-recaps-cta:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 74, 93, 0.84);
+            background: rgba(255, 74, 93, 0.18);
+            box-shadow: 0 12px 28px rgba(255, 74, 93, 0.12);
+        }
+
+        .hero-recaps-cta.visible {
+            display: inline-flex;
+        }
+
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Hero Ã¢â€â‚¬Ã¢â€â‚¬ */
         .hero {
             display: grid;
             grid-template-columns: 1fr auto;
             gap: 0;
             padding: 0;
-            border-radius: var(--r-xl);
+            border-radius: 28px;
             margin-bottom: 14px;
             overflow: hidden;
             position: relative;
+            background: rgba(8, 10, 16, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.07);
         }
+
+        .hero::after {
+            content: none;
+        }
+
         .hero::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(30,167,253,0.4), transparent);
+            background: rgba(255, 255, 255, 0.06);
         }
+
         .hero-copy {
             padding: 28px 28px 24px;
             min-width: 0;
+            position: relative;
+            z-index: 1;
+            background: transparent;
         }
+
         .hero-copy h1 {
             font-size: clamp(1.6rem, 3.5vw, 3.2rem);
             line-height: 1.05;
             letter-spacing: -0.04em;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #fff 40%, rgba(180,220,255,0.8) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #f5f7fb;
         }
+
         .hero-copy p {
-            color: var(--muted);
+            color: #b4c0d3;
             line-height: 1.65;
-            font-size: clamp(0.82rem, 1.4vw, 0.96rem);
-            max-width: 560px;
+            font-size: clamp(0.9rem, 1.4vw, 1rem);
+            max-width: 640px;
+            font-weight: 500;
         }
+
         .logo-row {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 16px;
             overflow-x: auto;
             padding-top: 24px;
             padding-bottom: 2px;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-        .logo-row::-webkit-scrollbar { display: none; }
+
+        .logo-row::-webkit-scrollbar {
+            display: none;
+        }
+
         .logo-badge {
             width: 78px;
             height: 78px;
             padding: 8px;
-            border-radius: var(--r-md);
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.03);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex: 0 0 auto;
-            transition: border-color 0.2s, background 0.2s;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
         }
-        .logo-badge:hover {
-            border-color: rgba(30,167,253,0.3);
-            background: rgba(30,167,253,0.08);
-        }
-        .logo-badge.active {
-            border-color: rgba(30,167,253,0.55);
-            background: rgba(30,167,253,0.16);
-            box-shadow: 0 0 14px rgba(30,167,253,0.22);
-        }
-        .logo-badge img { width: 100%; height: 100%; object-fit: contain; }
 
-        /* Hero side chips — vertical strip on desktop */
+        .logo-badge:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .logo-badge.active {
+            border-color: rgba(77, 159, 255, 0.28);
+            background: rgba(77, 159, 255, 0.08);
+            box-shadow: 0 0 12px rgba(77, 159, 255, 0.12);
+        }
+
+        .logo-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Hero side chips Ã¢â‚¬â€ vertical strip on desktop */
         .hero-side {
             display: flex;
             flex-direction: column;
@@ -284,55 +423,72 @@
             width: 320px;
             flex-shrink: 0;
             padding: 12px;
-            background: linear-gradient(180deg, rgba(10, 16, 30, 0.45), rgba(8, 13, 24, 0.25));
-            border-left: 1px solid rgba(255,255,255,0.06);
+            background: rgba(10, 12, 18, 0.96);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 1;
         }
+
         .hero-chip {
             padding: 18px 16px;
             flex: 1;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-            transition: background 0.2s, border-color 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            background: rgba(12, 14, 20, 0.96);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025), 0 10px 30px rgba(0, 0, 0, 0.18);
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
         }
+
         .hero-chip:hover {
-            background: linear-gradient(180deg, rgba(30,167,253,0.14), rgba(255,255,255,0.03));
-            border-color: rgba(30,167,253,0.35);
+            background: rgba(14, 16, 23, 0.98);
+            border-color: rgba(255, 255, 255, 0.09);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
+
         .hero-chip-icon {
             width: 30px;
             height: 30px;
-            border-radius: 8px;
-            background: rgba(30,167,253,0.15);
-            border: 1px solid rgba(30,167,253,0.25);
+            border-radius: 10px;
+            background: rgba(77, 159, 255, 0.12);
+            border: 1px solid rgba(77, 159, 255, 0.16);
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 12px;
             font-size: 15px;
         }
+
         .hero-chip strong {
             display: block;
-            font-size: 0.9rem;
-            font-weight: 750;
+            font-size: 0.92rem;
+            font-weight: 850;
             margin-bottom: 8px;
             color: var(--text);
             letter-spacing: 0.01em;
         }
+
         .hero-chip span {
-            color: var(--muted);
-            font-size: 0.79rem;
-            line-height: 1.65;
+            color: #b4c0d3;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            font-weight: 500;
         }
 
-        /* ── Content Grid ── */
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Content Grid Ã¢â€â‚¬Ã¢â€â‚¬ */
         .content {
             display: grid;
             grid-template-columns: 1fr;
             gap: 14px;
             align-items: start;
         }
-        .column-stack { display: flex; flex-direction: column; gap: 12px; }
+
+        .column-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
         .panel-title {
             font-size: 0.78rem;
             font-weight: 700;
@@ -342,52 +498,115 @@
             letter-spacing: 0.08em;
         }
 
-        /* ── Event Cards ── */
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Event Cards Ã¢â€â‚¬Ã¢â€â‚¬ */
         .event-card {
             border-radius: var(--r-xl);
             overflow: hidden;
+            content-visibility: auto;
+            contain-intrinsic-size: 320px;
+            background: rgba(8, 10, 16, 0.72);
+            border: 1px solid var(--line);
+            backdrop-filter: blur(18px) saturate(130%);
+            -webkit-backdrop-filter: blur(18px) saturate(130%);
         }
+
         .event-header {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 16px 16px 13px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.025);
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.015);
         }
+
         .event-header-logo {
             width: 34px;
             height: 34px;
             border-radius: 10px;
-            object-fit: cover;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
+            object-fit: contain;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             flex-shrink: 0;
+            padding: 4px;
         }
+
         .event-header-title {
             font-size: 0.9rem;
             font-weight: 700;
             letter-spacing: -0.01em;
         }
-        .event-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+
+        .event-list {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
         .event-row {
             display: grid;
+            contain: layout paint style;
             grid-template-columns: minmax(0, 1fr) auto auto auto;
             gap: 10px;
             align-items: center;
             padding: 13px 14px;
             border-radius: var(--r-lg);
-            border: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.025);
-            transition: background 0.18s, border-color 0.18s;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.02);
+            transition: background 0.18s, border-color 0.18s, transform 0.18s ease;
         }
+
         .event-row:hover {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.13);
+            transform: translateY(-1px);
         }
-        .team { font-size: 0.9rem; font-weight: 600; min-width: 0; }
-        .team.away, .team.home { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .team-wrap { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+
+.team {
+            min-width: 0;
+        }
+
+        .team.home {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .team-wrap {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .match-title-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .match-title-line .live-indicator {
+            align-self: center;
+            transform: translateY(1px);
+        }
+
+        .match-title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: clamp(0.98rem, 1.4vw, 1.08rem);
+            line-height: 1.2;
+            font-weight: 900;
+            letter-spacing: 0;
+            color: #f3f6fb;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
         .team-meta {
             font-size: 0.74rem;
             color: var(--muted);
@@ -398,29 +617,79 @@
             gap: 5px;
             align-items: center;
         }
+
         .team-meta-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
             padding: 3px 8px;
             border-radius: var(--r-pill);
-            border: 1px solid rgba(30,167,253,0.2);
-            background: rgba(30,167,253,0.08);
-            color: #a8d8f8;
+            border: 1px solid rgba(77, 159, 255, 0.2);
+            background: rgba(77, 159, 255, 0.14);
+            color: #a6cbff;
             font-size: 0.68rem;
             font-weight: 700;
             letter-spacing: 0.03em;
         }
+
+        .team-meta-badge.in-progress {
+            background: rgba(56, 189, 120, 0.12) !important;
+            border-color: rgba(56, 189, 120, 0.28) !important;
+            color: var(--success-text) !important;
+        }
+
+        .team-meta-badge.in-progress::before {
+            background: var(--success-text) !important;
+            box-shadow: 0 0 6px rgba(56, 189, 120, 0.7) !important;
+        }
+
+        .team-meta-badge.upcoming {
+            background: rgba(255, 171, 64, 0.13) !important;
+            border-color: rgba(255, 171, 64, 0.35) !important;
+            color: #ffc96b !important;
+        }
+
+        .team-meta-badge.upcoming::before {
+            background: #ffc96b !important;
+            box-shadow: 0 0 6px rgba(255, 171, 64, 0.7) !important;
+        }
+
         .team-meta-badge::before {
             content: '';
             width: 5px;
             height: 5px;
             border-radius: 50%;
             background: var(--accent);
-            box-shadow: 0 0 6px rgba(30,167,253,0.7);
+            box-shadow: 0 0 6px rgba(77, 159, 255, 0.7);
             flex-shrink: 0;
         }
-        .team-meta-text { color: var(--muted); font-size: 0.72rem; }
+
+        .team-meta-text {
+            color: var(--muted);
+            font-size: 0.72rem;
+        }
+
+        .team-flag {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            vertical-align: middle;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+
+        .team-name-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .event-time {
             min-width: 90px;
             text-align: center;
@@ -429,6 +698,11 @@
             letter-spacing: 0.02em;
             white-space: nowrap;
         }
+
+        .event-status-slot {
+            min-width: 90px;
+        }
+
         .event-status-live {
             display: inline-flex;
             align-items: center;
@@ -446,20 +720,36 @@
             text-transform: uppercase;
             white-space: nowrap;
         }
+
+        .team-meta .event-status-live {
+            width: fit-content;
+        }
+
         .event-status-live::before {
             content: '';
             width: 5px;
             height: 5px;
             border-radius: 50%;
             background: var(--success-text);
-            box-shadow: 0 0 6px rgba(56,189,120,0.7);
+            box-shadow: 0 0 6px rgba(56, 189, 120, 0.7);
             flex-shrink: 0;
             animation: pulse-dot 2s ease-in-out infinite;
         }
+
         @keyframes pulse-dot {
-            0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(56,189,120,0.7); }
-            50% { opacity: 0.6; box-shadow: 0 0 12px rgba(56,189,120,0.4); }
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 6px rgba(56, 189, 120, 0.7);
+            }
+
+            50% {
+                opacity: 0.6;
+                box-shadow: 0 0 12px rgba(56, 189, 120, 0.4);
+            }
         }
+
         .row-actions {
             display: flex;
             align-items: center;
@@ -467,14 +757,15 @@
             justify-content: flex-end;
             flex-shrink: 0;
         }
+
         .live-indicator {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             padding: 5px 9px;
             border-radius: var(--r-pill);
-            background: rgba(255,60,100,0.12);
-            border: 1px solid rgba(255,60,100,0.28);
+            background: rgba(255, 60, 100, 0.12);
+            border: 1px solid rgba(255, 60, 100, 0.28);
             color: #ff8ea3;
             font-size: 0.66rem;
             font-weight: 800;
@@ -482,16 +773,18 @@
             letter-spacing: 0.06em;
             white-space: nowrap;
         }
+
         .live-indicator::before {
             content: '';
             width: 6px;
             height: 6px;
             border-radius: 50%;
             background: #ff5c7a;
-            box-shadow: 0 0 8px rgba(255,92,122,0.9);
+            box-shadow: 0 0 8px rgba(255, 92, 122, 0.9);
             flex-shrink: 0;
             animation: pulse-dot 1.4s ease-in-out infinite;
         }
+
         .btn {
             border: 1px solid transparent;
             border-radius: var(--r-md);
@@ -507,27 +800,43 @@
             transition: all 0.18s ease;
             letter-spacing: 0.01em;
         }
+
         .watch-btn {
-            background: linear-gradient(135deg, rgba(30,167,253,0.18), rgba(30,167,253,0.1));
-            border-color: rgba(30,167,253,0.32);
-            color: #c8e8ff;
-            box-shadow: 0 0 0 0 rgba(30,167,253,0);
+            background: rgba(255, 74, 93, 0.14);
+            border-color: rgba(255, 31, 62, 0.72);
+            color: #ff727e;
+            box-shadow: 0 0 18px rgba(255, 31, 62, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            font-weight: 900;
         }
+
         .watch-btn:hover {
-            background: linear-gradient(135deg, rgba(30,167,253,0.28), rgba(30,167,253,0.18));
-            border-color: rgba(30,167,253,0.5);
-            box-shadow: 0 0 16px rgba(30,167,253,0.2);
+            background: rgba(255, 74, 93, 0.2);
+            border-color: rgba(255, 64, 88, 0.92);
+            box-shadow: 0 0 22px rgba(255, 31, 62, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
             transform: translateY(-1px);
         }
-        .watch-btn:active { transform: scale(0.97); }
+
+        .watch-btn:active {
+            transform: scale(0.97);
+        }
+
         .watch-btn.locked {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.07);
-            color: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.035);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #aab5c6;
             cursor: not-allowed;
-            box-shadow: none;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
             transform: none;
         }
+
+        .watch-btn.locked:hover {
+            background: rgba(255, 255, 255, 0.035);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #aab5c6;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            transform: none;
+        }
+
         .lock-icon {
             width: 11px;
             height: 11px;
@@ -538,6 +847,7 @@
             margin-top: 1px;
             flex-shrink: 0;
         }
+
         .lock-icon::before {
             content: '';
             position: absolute;
@@ -552,8 +862,9 @@
             box-sizing: border-box;
         }
 
-        /* ── States ── */
-        .loading, .empty {
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ States Ã¢â€â‚¬Ã¢â€â‚¬ */
+        .loading,
+        .empty {
             border-radius: var(--r-xl);
             padding: 36px 20px;
             text-align: center;
@@ -561,33 +872,36 @@
             font-size: 0.9rem;
         }
 
-        /* ── Footer ── */
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Footer Ã¢â€â‚¬Ã¢â€â‚¬ */
         .site-footer {
             margin-top: 18px;
             margin-bottom: calc(-1 * max(var(--pad), env(safe-area-inset-bottom)));
             border-radius: var(--r-xl);
-            background:
-                radial-gradient(ellipse 120% 80% at 50% 0%, rgba(30,167,253,0.08), transparent 55%),
-                linear-gradient(180deg, rgba(3,8,16,0.94) 0%, rgba(1,4,10,0.97) 100%);
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 14px 44px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.05) inset;
+            background: rgba(8, 10, 16, 0.72);
+            border: 1px solid var(--line);
+            backdrop-filter: blur(18px) saturate(130%);
+            -webkit-backdrop-filter: blur(18px) saturate(130%);
+            box-shadow: var(--shadow);
             padding: clamp(28px, 4.2vw, 46px) 20px;
             text-align: center;
         }
+
         .site-footer h2 {
             margin-bottom: 14px;
             font-size: clamp(2.1rem, 4.2vw, 3.1rem);
             letter-spacing: -0.04em;
             font-weight: 900;
             line-height: 1;
-            background: linear-gradient(135deg, #fff 30%, rgba(30,167,253,0.85) 100%);
+            background: linear-gradient(135deg, #fff 30%, rgba(30, 167, 253, 0.85) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
         .site-footer h2 span {
             color: inherit;
         }
+
         .site-footer p {
             max-width: 720px;
             margin: 0 auto;
@@ -595,6 +909,7 @@
             font-size: clamp(0.94rem, 1.15vw, 1.08rem);
             line-height: 1.75;
         }
+
         .footer-links {
             margin-top: 22px;
             display: inline-flex;
@@ -603,35 +918,40 @@
             gap: 10px;
             flex-wrap: wrap;
         }
+
         .footer-links a {
             color: #ecf2fb;
             font-size: 0.9rem;
             padding: 7px 12px;
             border-radius: var(--r-pill);
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
             transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
         }
+
         .footer-links button {
             color: #ecf2fb;
             font-size: 0.9rem;
             padding: 7px 12px;
             border-radius: var(--r-pill);
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
             transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
             cursor: pointer;
         }
+
         .footer-links a:hover {
-            color: #8bc8ff;
-            border-color: rgba(139, 200, 255, 0.55);
-            background: rgba(139, 200, 255, 0.12);
+            color: #ff727e;
+            border-color: rgba(255, 64, 88, 0.72);
+            background: rgba(255, 74, 93, 0.14);
         }
+
         .footer-links button:hover {
-            color: #8bc8ff;
-            border-color: rgba(139, 200, 255, 0.55);
-            background: rgba(139, 200, 255, 0.12);
+            color: #ff727e;
+            border-color: rgba(255, 64, 88, 0.72);
+            background: rgba(255, 74, 93, 0.14);
         }
+
         .footer-copy {
             margin-top: 18px;
             color: #8a93a4;
@@ -639,7 +959,7 @@
             letter-spacing: 0.02em;
         }
 
-        /* ── Privacy Modal ── */
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Privacy Modal Ã¢â€â‚¬Ã¢â€â‚¬ */
         .policy-modal {
             position: fixed;
             inset: 0;
@@ -649,56 +969,68 @@
             padding: 18px;
             z-index: 1300;
         }
-        .policy-modal.open { display: flex; }
+
+        .policy-modal.open {
+            display: flex;
+        }
+
         .policy-backdrop {
             position: absolute;
             inset: 0;
-            background: rgba(2, 7, 13, 0.72);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            background: rgba(2, 5, 10, 0.76);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
+
         .policy-dialog {
             position: relative;
             width: min(900px, 95vw);
             max-height: min(84vh, 900px);
             border-radius: var(--r-xl);
-            border: 1px solid rgba(255,255,255,0.12);
-            background: linear-gradient(180deg, rgba(9, 16, 27, 0.96), rgba(5, 10, 19, 0.98));
-            box-shadow: 0 30px 90px rgba(0,0,0,0.55);
+            border: 1px solid var(--line-strong);
+            background: rgba(8, 10, 16, 0.88);
+            backdrop-filter: blur(18px) saturate(130%);
+            -webkit-backdrop-filter: blur(18px) saturate(130%);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
             overflow: hidden;
             display: grid;
             grid-template-rows: auto minmax(0, 1fr);
         }
+
         .policy-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
             padding: 14px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.02);
         }
+
         .policy-head h3 {
             margin: 0;
             font-size: 1.02rem;
             letter-spacing: 0.01em;
             color: #eef3fb;
         }
+
         .policy-close {
             width: 34px;
             height: 34px;
             border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.16);
-            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
             color: #dbe5f5;
             font-size: 1.1rem;
             line-height: 1;
             cursor: pointer;
         }
+
         .policy-close:hover {
-            border-color: rgba(139, 200, 255, 0.45);
-            color: #9dd2ff;
+            border-color: rgba(255, 64, 88, 0.72);
+            color: #ff727e;
         }
+
         .policy-content {
             padding: 16px;
             overflow: auto;
@@ -709,31 +1041,44 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(97, 183, 237, 0.76) rgba(6, 13, 23, 0.94);
         }
-        body.policy-open { overflow: hidden; }
 
-        /* ══════════════════════════════════════
+        body.policy-open {
+            overflow: hidden;
+        }
+
+        /* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
            RESPONSIVE
-        ══════════════════════════════════════ */
+        Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 
         /* Tablet landscape / small laptop */
         @media (max-width: 1100px) {
-            .content { grid-template-columns: 1fr; }
-            .hero { grid-template-columns: 1fr; }
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
             .hero-side {
                 flex-direction: row;
                 width: 100%;
                 border-left: none;
-                border-top: 1px solid rgba(255,255,255,0.06);
+                border-top: 1px solid rgba(255, 255, 255, 0.06);
                 padding: 12px;
                 gap: 10px;
-                background: rgba(255,255,255,0.01);
+                background: rgba(255, 255, 255, 0.01);
             }
+
             .hero-chip {
                 flex: 1;
-                border-bottom: 1px solid rgba(255,255,255,0.08);
-                border-right: 1px solid rgba(255,255,255,0.08);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                border-right: 1px solid rgba(255, 255, 255, 0.08);
             }
-            .hero-chip:last-child { border-right: none; }
+
+            .hero-chip:last-child {
+                border-right: none;
+            }
         }
 
         /* Laptop/Desktop full-bleed footer */
@@ -741,32 +1086,39 @@
             .hero {
                 grid-template-columns: minmax(0, 1fr) 300px;
             }
+
             .hero-side {
                 width: 300px;
             }
+
             .hero-copy {
                 padding: 34px 34px 28px;
             }
+
             .hero-copy h1 {
                 font-size: clamp(2.5rem, 4.1vw, 3.6rem);
             }
+
             .hero-copy p {
                 max-width: 760px;
                 font-size: 1.04rem;
                 line-height: 1.7;
             }
+
             .logo-row {
                 gap: 16px;
                 padding-top: 26px;
                 flex-wrap: wrap;
                 overflow: visible;
             }
+
             .logo-badge {
                 width: 116px;
                 height: 116px;
                 padding: 10px;
                 border-radius: 18px;
             }
+
             .site-footer {
                 margin-left: calc(50% - 50vw);
                 margin-right: calc(50% - 50vw);
@@ -780,7 +1132,12 @@
 
         /* Tablet portrait */
         @media (max-width: 768px) {
-            :root { --pad: 14px; --r-xl: 20px; --r-lg: 16px; }
+            :root {
+                --pad: 14px;
+                --r-xl: 20px;
+                --r-lg: 16px;
+            }
+
             .topbar {
                 position: static;
                 flex-direction: column;
@@ -788,77 +1145,317 @@
                 gap: 10px;
                 padding: 14px 16px 14px 6px;
             }
-            .brand { font-size: 1.75rem; }
-            .brand-logo { height: 50px; }
-            .nav { justify-content: flex-start; gap: 6px; }
-            .nav-link { padding: 7px 12px; font-size: 0.8rem; }
-            .hero-copy { padding: 20px 18px 18px; }
-            .hero-copy h1 { font-size: clamp(1.5rem, 5.5vw, 2.2rem); }
-            .hero-side { flex-direction: column; border-top: 1px solid rgba(255,255,255,0.06); gap: 8px; padding: 10px; }
-            .hero-chip { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
-            .hero-chip:last-child { border-bottom: none; }
+
+            .brand {
+                font-size: 1.75rem;
+            }
+
+            .brand-logo {
+                height: 50px;
+            }
+
+            .nav {
+                justify-content: flex-start;
+                gap: 6px;
+            }
+
+            .nav-link {
+                padding: 7px 12px;
+                font-size: 0.8rem;
+            }
+
+            .hero-copy {
+                padding: 20px 18px 18px;
+            }
+
+            .hero-copy h1 {
+                font-size: clamp(1.5rem, 5.5vw, 2.2rem);
+            }
+
+            .hero-side {
+                flex-direction: column;
+                border-top: 1px solid rgba(255, 255, 255, 0.06);
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .hero-chip {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .hero-chip:last-child {
+                border-bottom: none;
+            }
+
             .event-row {
-                grid-template-columns: minmax(0,1fr) auto;
+                grid-template-columns: minmax(0, 1fr) auto;
                 grid-template-rows: auto auto;
                 gap: 8px;
             }
-            .team-wrap { grid-column: 1 / -1; }
-            .event-time, .event-status-live { text-align: left; min-width: 0; }
-            .row-actions { grid-column: 1 / -1; justify-content: space-between; width: 100%; }
-            .team.away, .team.home { white-space: normal; }
-            .btn { min-width: 0; flex: 1; }
+
+            .team-wrap {
+                grid-column: 1 / -1;
+            }
+
+            .event-time,
+            .event-status-live {
+                text-align: left;
+                min-width: 0;
+            }
+
+            .row-actions {
+                grid-column: 1 / -1;
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .match-title-line {
+                align-items: flex-start;
+            }
+
+            .match-title-line .live-indicator {
+                transform: none;
+            }
+
+            .match-title {
+                white-space: normal;
+            }
+
+            .team.home {
+                white-space: normal;
+            }
+
+            .btn {
+                min-width: 0;
+                flex: 1;
+            }
         }
 
         /* Mobile */
         @media (max-width: 540px) {
-            :root { --pad: 12px; --r-xl: 18px; --r-lg: 14px; --r-md: 11px; }
-            .topbar { border-radius: var(--r-xl); padding-left: 4px; }
-            .nav-link { padding: 6px 10px; font-size: 0.76rem; }
-            .hero-copy { padding: 18px 16px 16px; }
-            .hero-copy h1 { font-size: clamp(1.35rem, 6vw, 1.9rem); }
-            .hero-copy p { font-size: 0.8rem; }
-            .hero-chip { padding: 14px 16px; }
-            .event-row { padding: 11px 12px; gap: 7px; }
-            .event-list { padding: 8px; gap: 7px; }
-            .event-header { padding: 13px 13px 11px; }
-            .event-header-logo { width: 30px; height: 30px; }
-            .event-header-title { font-size: 0.84rem; }
-            .logo-badge { width: 38px; height: 38px; padding: 7px; }
-            .btn { font-size: 0.78rem; padding: 8px 10px; }
-            .live-indicator { font-size: 0.62rem; padding: 4px 8px; }
-            .site-footer { border-radius: var(--r-lg); padding: 28px 14px; }
-            .footer-links { gap: 14px; }
-            .footer-copy { font-size: 0.8rem; }
-            .policy-modal { padding: 10px; }
-            .policy-dialog { width: 100%; max-height: 88vh; border-radius: var(--r-lg); }
-            .policy-content { font-size: 0.88rem; }
+            :root {
+                --pad: 12px;
+                --r-xl: 18px;
+                --r-lg: 14px;
+                --r-md: 11px;
+            }
+
+            .topbar {
+                border-radius: var(--r-xl);
+                padding-left: 4px;
+            }
+
+            .nav {
+                padding-left: 8px;
+            }
+
+            .nav-link {
+                padding: 7px 11px;
+                font-size: 0.78rem;
+            }
+
+            .hero-copy {
+                padding: 18px 16px 16px;
+            }
+
+            .hero-copy h1 {
+                font-size: clamp(1.35rem, 6vw, 1.9rem);
+            }
+
+            .hero-copy p {
+                font-size: 0.8rem;
+            }
+
+            .hero-chip {
+                padding: 15px 16px;
+            }
+
+            .hero-chip span {
+                font-size: 0.8rem;
+            }
+
+            .hero {
+                border-radius: 22px;
+            }
+
+            .hero-side {
+                padding: 12px;
+            }
+
+            .logo-row {
+                gap: 14px;
+                padding-top: 20px;
+                padding-bottom: 6px;
+            }
+
+            .logo-badge {
+                width: 66px;
+                height: 66px;
+                padding: 10px;
+                border-radius: 18px;
+            }
+
+            .logo-badge img {
+                transform: scale(1.18);
+            }
+
+            .event-row {
+                padding: 11px 12px;
+                gap: 7px;
+            }
+
+            .event-list {
+                padding: 8px;
+                gap: 7px;
+            }
+
+            .event-header {
+                padding: 15px 14px 12px;
+            }
+
+            .event-header-logo {
+                width: 36px;
+                height: 36px;
+                object-fit: contain;
+                padding: 4px;
+            }
+
+            .event-header-title {
+                font-size: 0.9rem;
+            }
+
+            .logo-badge:hover {
+                transform: none;
+            }
+
+            .btn {
+                font-size: 0.78rem;
+                padding: 8px 10px;
+            }
+
+            .live-indicator {
+                font-size: 0.62rem;
+                padding: 4px 8px;
+            }
+
+            .site-footer {
+                border-radius: var(--r-lg);
+                padding: 28px 14px;
+            }
+
+            .footer-links {
+                gap: 14px;
+            }
+
+            .footer-copy {
+                font-size: 0.8rem;
+            }
+
+            .policy-modal {
+                padding: 10px;
+            }
+
+            .policy-dialog {
+                width: 100%;
+                max-height: 88vh;
+                border-radius: var(--r-lg);
+            }
+
+            .policy-content {
+                font-size: 0.88rem;
+            }
         }
 
         /* Small phones (iPhone SE, Galaxy A series) */
         @media (max-width: 390px) {
-            :root { --pad: 10px; --r-xl: 16px; --r-lg: 12px; }
-            .brand { font-size: 1.45rem; }
-            .brand-logo { height: 42px; }
-            .nav-link { padding: 5px 9px; font-size: 0.72rem; }
-            .hero-copy h1 { font-size: 1.3rem; }
-            .event-row { padding: 10px; }
-            .btn { font-size: 0.74rem; padding: 7px 9px; }
-            .team { font-size: 0.84rem; }
+            :root {
+                --pad: 10px;
+                --r-xl: 16px;
+                --r-lg: 12px;
+            }
+
+            .brand {
+                font-size: 1.45rem;
+            }
+
+            .brand-logo {
+                height: 42px;
+            }
+
+            .nav {
+                padding-left: 10px;
+            }
+
+            .nav-link {
+                padding: 6px 9px;
+                font-size: 0.74rem;
+            }
+
+            .hero-copy h1 {
+                font-size: 1.3rem;
+            }
+
+            .logo-row {
+                gap: 12px;
+            }
+
+            .logo-badge {
+                width: 60px;
+                height: 60px;
+                padding: 9px;
+            }
+
+            .logo-badge img {
+                transform: scale(1.16);
+            }
+
+            .event-row {
+                padding: 10px;
+            }
+
+            .btn {
+                font-size: 0.74rem;
+                padding: 7px 9px;
+            }
+
+            .team {
+                font-size: 0.84rem;
+            }
         }
 
         /* Touch targets */
         @media (hover: none) and (pointer: coarse) {
-            .nav-link { min-height: 38px; display: inline-flex; align-items: center; }
-            .btn { min-height: 42px; }
-            .watch-btn:hover { background: linear-gradient(135deg, rgba(30,167,253,0.18), rgba(30,167,253,0.1)); transform: none; box-shadow: none; }
+            .nav-link {
+                min-height: 38px;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .btn {
+                min-height: 42px;
+            }
+
+            .watch-btn:hover {
+                background: rgba(255, 74, 93, 0.14);
+                transform: none;
+                box-shadow: 0 0 18px rgba(255, 31, 62, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            }
         }
 
         /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+
+            *,
+            *::before,
+            *::after {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="shell">
         <header class="topbar glass">
@@ -866,34 +1463,44 @@
                 <img class="brand-logo" src="/GhoulStream-Logo.svg" alt="">
                 <span>GhoulStreams</span>
             </a>
-            <nav class="nav">
-                <a class="nav-link active" href="#" data-filter="">All</a>
-                <a class="nav-link" href="#" data-filter="nfl">NFL</a>
-                <a class="nav-link" href="#" data-filter="soccer">Football</a>
-                <a class="nav-link" href="#" data-filter="mma">MMA</a>
-                <a class="nav-link" href="#" data-filter="boxing">Boxing</a>
-                <a class="nav-link" href="#" data-filter="f1">Formula 1</a>
-                <a class="nav-link" href="#" data-filter="nba">NBA</a>
+            <nav class="nav" role="tablist" aria-label="Sport category filter">
+                <span class="nav-link active" data-filter="" role="tab" aria-selected="true" tabindex="0">All</span>
+                <span class="nav-link" data-filter="nfl" role="tab" aria-selected="false" tabindex="0">NFL</span>
+                <span class="nav-link" data-filter="soccer" role="tab" aria-selected="false" tabindex="0">Football</span>
+                <span class="nav-link" data-filter="mma" role="tab" aria-selected="false" tabindex="0">MMA</span>
+                <span class="nav-link" data-filter="boxing" role="tab" aria-selected="false" tabindex="0">Boxing</span>
+                <span class="nav-link" data-filter="f1" role="tab" aria-selected="false" tabindex="0">Formula 1</span>
+                <span class="nav-link" data-filter="nba" role="tab" aria-selected="false" tabindex="0">NBA</span>
+                <span class="nav-link" data-filter="mlb" role="tab" aria-selected="false" tabindex="0">MLB</span>
             </nav>
         </header>
 
         <section class="hero glass">
             <div class="hero-copy">
                 <h1>Live Sports Streams</h1>
-                <p>Track active events, spot upcoming fixtures, and open direct stream pages from a cleaner modern control room layout.</p>
+                <p>Track active events, spot upcoming fixtures, and open direct stream pages from a cleaner modern
+                    control room layout.</p>
                 <div class="logo-row" id="logoRow"></div>
             </div>
             <div class="hero-side">
                 <div class="hero-chip">
-                    <div class="hero-chip-icon">🔴</div>
+                    <div class="hero-chip-icon">🗼</div>
                     <strong>Live detection</strong>
-                    <span>Only in-progress events with a verified source keep the live badge and active button state.</span>
+                    <span>Only in-progress events with a verified source keep the live badge and active button
+                        state.</span>
                 </div>
                 <div class="hero-chip">
-                    <div class="hero-chip-icon">✓</div>
+                    <div class="hero-chip-icon">🕑</div>
                     <strong>Countdown first</strong>
                     <span>Upcoming events stay lightweight with local timers until the provider marks them live.</span>
                 </div>
+                <button class="hero-recaps-cta" type="button" data-watch-recaps hidden>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none"
+                        style="width:18px;height:18px;display:block">
+                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+                    </svg>
+                    <span>Watch Formula 1 Recaps</span>
+                </button>
             </div>
         </section>
 
@@ -908,11 +1515,12 @@
 
         <footer class="site-footer">
             <h2><span>Ghoul</span>Streams</h2>
-            <p>GhoulStreams does not host or store any media files on its own servers and only provides links to content hosted on third-party services. 🔒</p>
+            <p>GhoulStreams does not host or store any media files on its own servers and only provides links to content
+                hosted on third-party services.</p>
             <div class="footer-links">
-                <button type="button" data-open-policy>Privacy Policy 🛡️</button>
-                <button type="button" data-open-terms>Terms of Service ⚖️</button>
-                <a href="#">Contact 📬</a>
+                <button type="button" data-open-policy>Privacy Policy</button>
+                <button type="button" data-open-terms>Terms of Service</button>
+                <a href="#">Contact</a>
             </div>
             <div class="footer-copy">&copy; 2026 GhoulStreams. All rights reserved.</div>
         </footer>
@@ -921,10 +1529,11 @@
             <div class="policy-backdrop" data-close-policy></div>
             <div class="policy-dialog">
                 <div class="policy-head">
-                    <h3>Privacy Policy 🛡️</h3>
-                    <button class="policy-close" type="button" data-close-policy aria-label="Close privacy policy">×</button>
+                    <h3>Privacy Policy</h3>
+                    <button class="policy-close" type="button" data-close-policy
+                        aria-label="Close privacy policy">&times;</button>
                 </div>
-                <div class="policy-content" id="privacyPolicyContent">Loading privacy policy... ⏳</div>
+                <div class="policy-content" id="privacyPolicyContent">Loading privacy policy...</div>
             </div>
         </div>
 
@@ -932,10 +1541,11 @@
             <div class="policy-backdrop" data-close-terms></div>
             <div class="policy-dialog">
                 <div class="policy-head">
-                    <h3>Terms of Service ⚖️</h3>
-                    <button class="policy-close" type="button" data-close-terms aria-label="Close terms of service">×</button>
+                    <h3>Terms of Service</h3>
+                    <button class="policy-close" type="button" data-close-terms
+                        aria-label="Close terms of service">&times;</button>
                 </div>
-                <div class="policy-content" id="termsContent">Loading terms of service... ⏳</div>
+                <div class="policy-content" id="termsContent">Loading terms of service...</div>
             </div>
         </div>
     </div>
@@ -943,28 +1553,77 @@
     <script>
         const SPORT_META = {
             nba: { label: 'NBA', icon: 'https://buffstreams.plus/images/nba.webp?v3e32' },
+            wnba: { label: 'WNBA', icon: 'https://buffstreams.plus/images/wnba.webp?v3e32' },
             nfl: { label: 'NFL', icon: 'https://buffstreams.plus/images/nfl.webp?v3e32' },
+            cfl: { label: 'CFL', icon: 'https://buffstreams.plus/images/nfl.webp?v3e32' },
             soccer: { label: 'Football', icon: 'https://buffstreams.plus/images/soccer.webp?v3e32' },
             nhl: { label: 'NHL', icon: 'https://buffstreams.plus/images/nhl.webp?v3e32' },
             mlb: { label: 'MLB', icon: 'https://buffstreams.plus/images/mlb.webp?v3e32' },
             boxing: { label: 'Boxing', icon: 'https://buffstreams.plus/images/boxing.webp?v3e32' },
             mma: { label: 'MMA', icon: 'https://buffstreams.plus/images/ufc.webp?v3e32' },
+            wwe: { label: 'WWE', icon: 'https://buffstreams.plus/images/wwe.webp?v3e32' },
             f1: { label: 'Formula 1', icon: 'https://buffstreams.plus/images/f1.webp?v3e32' },
+            racing: { label: 'Racing', icon: 'https://buffstreams.plus/images/f1.webp?v3e32' },
             ncaa: { label: 'NCAA', icon: 'https://buffstreams.plus/images/ncaa.webp?v3e32' },
-            sports: { label: 'Live Sports', icon: 'https://buffstreams.plus/images/mlb.webp?v3e32' }
+            sports: { label: 'Live Sports', icon: '/Logo.svg?v=1' }
         };
         const TITLE_HINTS = [
             { type: 'nba', patterns: [/\bnba\b/i, /cavaliers|lakers|warriors|knicks|celtics|bucks|nets|bulls|heat|spurs|raptors|mavericks|wizards|suns|rockets|pistons|pacers|pelicans|thunder|jazz|grizzlies|76ers|hornets|magic|kings|timberwolves|trail blazers|clippers|hawks|nuggets/i] },
-            { type: 'nhl', patterns: [/\bnhl\b/i, /bruins|rangers|maple leafs|canadiens|canucks|oilers|flames|penguins|flyers|senators|capitals|lightning|panthers|sabres|red wings|avalanche|stars|wild|jets|kraken|sharks|ducks|kings|predators|hurricanes|blackhawks|blue jackets|golden knights|devils|islanders/i] },
+            { type: 'wnba', patterns: [/\bwnba\b|\/wnba\//i, /\b(?:atlanta dream|indiana fever|los angeles sparks|chicago sky|las vegas aces|new york liberty|minnesota lynx|washington mystics|phoenix mercury|dallas wings|seattle storm|connecticut sun|golden state valkyries|portland fire)\b/i] },
             { type: 'mlb', patterns: [/\bmlb\b/i, /yankees|mets|red sox|dodgers|cubs|cardinals|astros|braves|phillies|padres|giants|blue jays|orioles|guardians|rockies|white sox|tigers|marlins|mariners|athletics|rangers|diamondbacks|brewers|twins|nationals|pirates|reds|rays|royals|angels/i, /world baseball classic/i] },
+            { type: 'nhl', patterns: [/\bnhl\b/i, /bruins|rangers|maple leafs|canadiens|canucks|oilers|flames|penguins|flyers|senators|capitals|lightning|panthers|sabres|red wings|avalanche|stars|wild|jets|kraken|sharks|ducks|kings|predators|hurricanes|blackhawks|blue jackets|golden knights|devils|islanders/i] },
             { type: 'nfl', patterns: [/\bnfl\b/i, /chiefs|eagles|cowboys|49ers|giants|jets|packers|bears|vikings|lions|steelers|ravens|browns|bengals|bills|dolphins|patriots|saints|falcons|panthers|buccaneers|seahawks|rams|chargers|raiders|broncos|colts|titans|jaguars|texans|commanders|cardinals/i] },
-            { type: 'soccer', patterns: [/soccer|football|premier league|la liga|serie a|bundesliga|ligue 1|uefa|champions league|europa/i, /united|city|arsenal|chelsea|liverpool|tottenham|barcelona|real madrid|atletico|juventus|inter|milan|roma|napoli|psg|bayern|dortmund|ajax|benfica|porto|celtic|rangers|west ham|brentford|sassuolo|lazio|real oviedo/i] },
+            { type: 'cfl', patterns: [/\bcfl\b/i, /alouettes|redblacks|argonauts|tiger.?cats|ticats|blue bombers|elks|stampeders|roughriders|bc lions/i] },
+            { type: 'soccer', patterns: [/soccer|football|premier league|la liga|serie a|bundesliga|ligue 1|uefa|champions league|europa|fifa|world cup|world championship|copa america|euro 20|mls/i, /united|city|arsenal|chelsea|liverpool|tottenham|barcelona|real madrid|atletico|juventus|inter|milan|roma|napoli|psg|bayern|dortmund|ajax|benfica|porto|celtic|rangers|west ham|brentford|sassuolo|lazio|real oviedo/i] },
             { type: 'ncaa', patterns: [/\bncaa\b/i, /huskies|wildcats|bulldogs|tar heels|blue devils|boilermakers|spartans|longhorns|volunteers|crimson tide|fighting irish|wolfpack|gators|cardinal|jayhawks|cyclones|seminoles|orange|hoosiers|villanova/i] },
-            { type: 'mma', patterns: [/\bmma\b|\bufc\b|bellator|octagon/i] },
+            { type: 'wwe', patterns: [/\bwwe\b|\/wwe\//i] },
+            { type: 'mma', patterns: [/\bmma\b|\bufc\b|\bpfl\b|bellator|one championship|octagon|fight|fighting/i] },
             { type: 'boxing', patterns: [/boxing|title fight|heavyweight|welterweight|middleweight|featherweight/i] },
-            { type: 'f1', patterns: [/formula 1|\bf1\b|grand prix|qualifying|sprint race/i] }
+            { type: 'racing', patterns: [/\bnascar\b|\bindycar\b|\bmotogp\b|\bmoto2\b|\bmoto3\b|\bwrc\b|\bimsa\b|\bgtworld\b|\ble mans\b|racing series|cup series/i] },
+            { type: 'f1', patterns: [/formula|\bf1\b|grand prix|qualifying|sprint race/i] }
         ];
 
+        const KNOWN_MATCH_TEAMS = [
+            'Arizona Diamondbacks', 'Atlanta Braves', 'Baltimore Orioles', 'Boston Red Sox', 'Chicago Cubs', 'Chicago White Sox',
+            'Cincinnati Reds', 'Cleveland Guardians', 'Colorado Rockies', 'Detroit Tigers', 'Houston Astros', 'Kansas City Royals',
+            'Los Angeles Angels', 'Los Angeles Dodgers', 'Miami Marlins', 'Milwaukee Brewers', 'Minnesota Twins', 'New York Mets',
+            'New York Yankees', 'Athletics', 'Philadelphia Phillies', 'Pittsburgh Pirates', 'San Diego Padres', 'San Francisco Giants',
+            'Seattle Mariners', 'St. Louis Cardinals', 'Tampa Bay Rays', 'Texas Rangers', 'Toronto Blue Jays', 'Washington Nationals',
+            'Arizona Cardinals', 'Atlanta Falcons', 'Baltimore Ravens', 'Buffalo Bills', 'Carolina Panthers', 'Chicago Bears',
+            'Cincinnati Bengals', 'Cleveland Browns', 'Dallas Cowboys', 'Denver Broncos', 'Detroit Lions', 'Green Bay Packers',
+            'Houston Texans', 'Indianapolis Colts', 'Jacksonville Jaguars', 'Kansas City Chiefs', 'Las Vegas Raiders', 'Los Angeles Chargers',
+            'Los Angeles Rams', 'Miami Dolphins', 'Minnesota Vikings', 'New England Patriots', 'New Orleans Saints', 'New York Giants',
+            'New York Jets', 'Philadelphia Eagles', 'Pittsburgh Steelers', 'San Francisco 49ers', 'Seattle Seahawks', 'Tampa Bay Buccaneers',
+            'Tennessee Titans', 'Washington Commanders', 'Boston Celtics', 'Brooklyn Nets', 'New York Knicks', 'Philadelphia 76ers',
+            'Toronto Raptors', 'Chicago Bulls', 'Cleveland Cavaliers', 'Detroit Pistons', 'Indiana Pacers', 'Milwaukee Bucks',
+            'Atlanta Hawks', 'Charlotte Hornets', 'Miami Heat', 'Orlando Magic', 'Washington Wizards', 'Denver Nuggets',
+            'Minnesota Timberwolves', 'Oklahoma City Thunder', 'Portland Trail Blazers', 'Utah Jazz', 'Golden State Warriors',
+            'Los Angeles Clippers', 'Los Angeles Lakers', 'Phoenix Suns', 'Sacramento Kings', 'Dallas Mavericks', 'Houston Rockets',
+            'Memphis Grizzlies', 'New Orleans Pelicans', 'San Antonio Spurs', 'Anaheim Ducks', 'Boston Bruins', 'Buffalo Sabres',
+            'Calgary Flames', 'Carolina Hurricanes', 'Chicago Blackhawks', 'Colorado Avalanche', 'Columbus Blue Jackets', 'Dallas Stars',
+            'Detroit Red Wings', 'Edmonton Oilers', 'Florida Panthers', 'Los Angeles Kings', 'Minnesota Wild', 'Montreal Canadiens',
+            'Nashville Predators', 'New Jersey Devils', 'New York Islanders', 'New York Rangers', 'Ottawa Senators', 'Philadelphia Flyers',
+            'Pittsburgh Penguins', 'San Jose Sharks', 'Seattle Kraken', 'St. Louis Blues', 'Tampa Bay Lightning', 'Toronto Maple Leafs',
+            'Vancouver Canucks', 'Vegas Golden Knights', 'Washington Capitals', 'Winnipeg Jets',
+            'Atlanta Dream', 'Chicago Sky', 'Connecticut Sun', 'Dallas Wings', 'Golden State Valkyries', 'Indiana Fever',
+            'Las Vegas Aces', 'Los Angeles Sparks', 'Minnesota Lynx', 'New York Liberty', 'Phoenix Mercury',
+            'Portland Fire', 'Seattle Storm', 'Washington Mystics'
+        ];
+        const COUNTRY_MATCH_TEAMS = [
+            'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria',
+            'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Belgium', 'Bolivia', 'Bosnia and Herzegovina', 'Brazil',
+            'Bulgaria', 'Cameroon', 'Cabo Verde', 'Cape Verde', 'Canada', 'Chile', 'China', 'Colombia', 'Costa Rica', 'Croatia', 'Cuba', 'Cura�ao',
+            'Cote d\'Ivoire', 'Cote d\'Ivoire', 'Czech Republic', 'Denmark', 'Dominican Republic', 'Ecuador', 'Egypt',
+            'England', 'Finland', 'France', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Haiti', 'Honduras', 'Hungary',
+            'India', 'Iran', 'Iraq', 'Ireland', 'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Latvia', 'Lebanon',
+            'Lithuania', 'Mexico', 'Morocco', 'Netherlands', 'New Zealand', 'Nigeria', 'Northern Ireland', 'Norway',
+            'Pakistan', 'Panama', 'Paraguay', 'Peru', 'Poland', 'Portugal', 'Puerto Rico', 'Romania', 'Saudi Arabia',
+            'Scotland', 'Senegal', 'Serbia', 'Slovakia', 'Slovenia', 'South Africa', 'South Korea', 'Spain', 'Sweden',
+            'Switzerland', 'Syria', 'Taiwan', 'Tunisia', 'Turkey', 'Turkiye', 'Ukraine', 'United Kingdom', 'United States',
+            'USA', 'Uruguay', 'Venezuela', 'Wales', 'Curacao', 'Cura ao', 'Cote d Ivoire', 'C te d Ivoire', 'Turkiye', 'T rkiye',
+            'Winnipeg Blue Bombers', 'Edmonton Elks', 'Montreal Alouettes', 'Ottawa Redblacks', 'Toronto Argonauts',
+            'Hamilton Tiger Cats', 'Calgary Stampeders', 'Saskatchewan Roughriders', 'BC Lions'
+        ];
         let allStreams = [];
         let activeFilter = null;
         let availability = {};
@@ -975,12 +1634,38 @@
         let refreshBackoffStep = 0;
         const verifiedEvents = new Set();
         const verificationCooldowns = new Map();
-        const VERIFY_BATCH_SIZE = 3;
+        const VERIFY_BATCH_SIZE = 1;
         const VERIFY_COOLDOWN_MS = 20 * 60 * 1000;
-        const ACTIVE_REFRESH_MS = 120000;
+        const ACTIVE_REFRESH_MS = 5 * 60 * 1000;
         const HIDDEN_REFRESH_MS = 10 * 60 * 1000;
+        const CATALOG_CACHE_TTL_MS = 2 * 60 * 1000;
+        const CATALOG_CACHE_PREFIX = 'ghoulstreams:catalog:v2:';
+        let catalogRequestInFlight = null;
         let privacyPolicyLoaded = false;
         let termsLoaded = false;
+        let homepageRefreshInFlight = false;
+        let pendingHomepageRefresh = false;
+        let homepageRefreshSeq = 0;
+        let lastRenderedStreamsHtml = '';
+        let lastUserScrollAt = 0;
+        let renderFrame = null;
+        let renderRetryTimer = null;
+        let renderGeneration = 0;
+        const categoryLayerCache = new Map();
+        const enrichmentMismatchWarnings = new Set();
+        const ENRICHABLE_SPORTS = new Set(['nba', 'wnba', 'nhl', 'mlb', 'nfl', 'cfl', 'soccer']);
+        const ENRICH_LIMIT_ALL = 18;
+        const ENRICH_LIMIT_FILTERED = 30;
+
+        // GhoulStreams disables the old PWA cache locally so stale heavy pages cannot keep controlling localhost.
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations?.().then((registrations) => {
+                registrations.forEach((registration) => registration.unregister().catch(() => { }));
+            }).catch(() => { });
+        }
+        if (window.caches?.keys) {
+            caches.keys().then((keys) => keys.forEach((key) => caches.delete(key).catch(() => { }))).catch(() => { });
+        }
 
         const privacyPolicyModal = document.getElementById('privacyPolicyModal');
         const privacyPolicyContent = document.getElementById('privacyPolicyContent');
@@ -996,7 +1681,7 @@
                 privacyPolicyContent.textContent = text;
                 privacyPolicyLoaded = true;
             } catch {
-                privacyPolicyContent.textContent = 'Privacy Policy is currently unavailable. ⚠️';
+                privacyPolicyContent.textContent = 'Privacy Policy is currently unavailable.';
             }
         }
 
@@ -1022,7 +1707,7 @@
                 termsContent.textContent = text;
                 termsLoaded = true;
             } catch {
-                termsContent.textContent = 'Terms of Service is currently unavailable. ⚠️';
+                termsContent.textContent = 'Terms of Service is currently unavailable.';
             }
         }
 
@@ -1039,57 +1724,198 @@
             document.body.classList.remove('policy-open');
         }
 
+        function sanitizeMojibake(value) {
+            return String(value || '')
+                .replace(/Ã¢Å“â€œ/g, 'OK')
+                .replace(/Ã°Å¸â€ Â´/g, 'LIVE')
+                .replace(/Ã°Å¸â€ â€™|Ã°Å¸â€ºÂ¡Ã¯Â¸Â |Ã¢Å¡â€“Ã¯Â¸Â |Ã°Å¸â€œÂ¬|Ã¢Â Â³|Ã¢Å¡Â Ã¯Â¸Â /g, '')
+                .replace(/Ãƒâ€”/g, 'x')
+                .replace(/Ã¯Â¿Â½/g, ' • ')
+                .replace(/[ÃÂ][^\s<>{}\[\]'"`]*|â[^\s<>{}\[\]'"`]*/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
         function cleanDisplayTitle(value) {
-            return decodeHtmlEntities(String(value || ''))
+            return sanitizeMojibake(decodeHtmlEntities(String(value || '')))
                 .replace(/^https?:\/\/buffstreams\.plus\/?/i, '')
                 .replace(/^buffstreams\.?plus\/?/i, '')
                 .replace(/^title game\//i, '')
-                .replace(/\blive streams links\b/ig, '')
+                .replace(/\blive streams?(?:\s+links)?\b/ig, ' ')
+                .replace(/\blive streams\b/ig, '')
+                .replace(/\bstreams links\b/ig, '')
                 .replace(/\s+/g, ' ')
                 .trim();
         }
 
+        function getStandaloneEventTitle(value) {
+            return cleanDisplayTitle(value)
+                .replace(/\b\d{1,2}:\d{2}\s*(AM|PM)(?:\s*(?:ET|EST|EDT|CT|CST|CDT|MT|MST|MDT|PT|PST|PDT|UTC|GMT))?\b/ig, '')
+                .replace(/\b[A-Z]{2,4}\s+\d+\s+(?:week|weeks|day|days|hour|hours|minute|minutes)\s+(?:from now|ago)\b/ig, '')
+                .replace(/\s*\b\d+\s+(?:year|years|month|months|week|weeks|day|days|hour|hours|hr|hrs)\s+ago\b\s*/ig, '')
+                .replace(/\s*\b\d+\s+(?:week|weeks|day|days|hour|hours|minute|minutes)\s+from now\b\s*/ig, '')
+                .replace(/\bIN\s*PROGRESS\b|\bLIVE\b|\bON\s*AIR\b|\bUPCOMING\b/ig, ' ')
+                .replace(/\s+-\s*$/i, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function racingFlagUrl(title) {
+            const key = normalizeTeamKey(title);
+            if (/\bnascar\b|\bcup series\b|\bxfinity\b|\btruck series\b/.test(key)) {
+                return 'https://1000logos.net/wp-content/uploads/2017/03/Nascar-Logo.png';
+            }
+            const rules = [
+                { pattern: /\baustria\b|\bred bull ring\b|\bspielberg\b/, code: 'at' },
+                { pattern: /\bgreece\b/, code: 'gr' },
+                { pattern: /\bassen\b|\bdutch\b|\bnetherlands\b/, code: 'nl' },
+                { pattern: /\bsonoma\b|\bpocono\b|\bmichigan\b|\bfirekeepers\b|\btoyota save mart\b|\bnascar\b/, code: 'us' },
+                { pattern: /\ble mans\b|\bfrance\b/, code: 'fr' },
+                { pattern: /\bsilverstone\b|\bbritish\b|\bunited kingdom\b|\buk\b/, code: 'gb' },
+                { pattern: /\bmonza\b|\bimola\b|\bitaly\b|\bsan marino\b/, code: 'it' },
+                { pattern: /\bspa\b|\bbelgium\b/, code: 'be' },
+                { pattern: /\bbarcelona\b|\bspain\b|\bcatalunya\b/, code: 'es' },
+                { pattern: /\bsuzuka\b|\bjapan\b/, code: 'jp' },
+                { pattern: /\bmelbourne\b|\baustralia\b/, code: 'au' },
+                { pattern: /\bcanada\b|\bmontreal\b/, code: 'ca' },
+                { pattern: /\bmexico\b/, code: 'mx' },
+                { pattern: /\bbrazil\b|\bsao paulo\b/, code: 'br' },
+                { pattern: /\babu dhabi\b|\buae\b/, code: 'ae' },
+                { pattern: /\bsaudi\b|\bjeddah\b/, code: 'sa' },
+                { pattern: /\bbahrain\b/, code: 'bh' },
+                { pattern: /\bsingapore\b/, code: 'sg' },
+                { pattern: /\bqatar\b/, code: 'qa' },
+                { pattern: /\bmiami\b|\blas vegas\b|\baustin\b|\bcota\b|\bindianapolis\b/, code: 'us' }
+            ];
+            const found = rules.find((rule) => rule.pattern.test(key));
+            return found ? `https://flagcdn.com/w40/${found.code}.png` : '';
+        }
+        function racingSeriesLogo(title, fallback = '') {
+            const key = normalizeTeamKey(title);
+            if (/\bnascar\b|\bcup series\b|\bxfinity\b|\btruck series\b/.test(key)) {
+                return 'https://1000logos.net/wp-content/uploads/2017/03/Nascar-Logo.png';
+            }
+            return fallback;
+        }
         function getMainTitle(value) {
             const clean = cleanDisplayTitle(value);
-            // Strip trailing time information (e.g., "- 11:29 AM ET")
-            return clean.replace(/\s*-\s*\d{1,2}:\d{2}\s*(AM|PM)(?:\s*ET)?$/i, '').trim();
+            return clean
+                // Strip ANY time patterns (e.g. "11:29 AM", "02:00 am", "11:29 AM ET")
+                .replace(/\b\d{1,2}:\d{2}\s*(AM|PM)(?:\s*(?:ET|EST|EDT|CT|CST|CDT|MT|MST|MDT|PT|PST|PDT|UTC|GMT))?\b/ig, '')
+                // Strip "ET 2 days from now" etc
+                .replace(/\b[A-Z]{2,4}\s+\d+\s+(?:week|weeks|day|days|hour|hours|minute|minutes)\s+(?:from now|ago)\b/ig, '')
+                .replace(/\s*-\s*$/i, '') // remove trailing dash
+                // Replace live minute markers like "16'" or "45+2'" with " vs "
+                .replace(/\s+\d{1,3}(?:\+\d+)?'\s+/g, ' vs ')
+                // Strip stale age labels like "9 years ago", "2 days ago", "12:00 AM ET 9 years ago"
+                .replace(/\s*\b\d+\s+(?:year|years|month|months|week|weeks|day|days|hour|hours|hr|hrs)\s+ago\b\s*/ig, '')
+                .replace(/\s*\b\d+\s+(?:week|weeks|day|days|hour|hours|minute|minutes)\s+from now\b\s*/ig, '')
+                .replace(/\s+/g, ' ')
+                .replace(/\s+-\s+/g, ' vs ') // change stray dashes to vs
+                .replace(/^\s*(?:-\s*|vs\s*)+/, '')
+                .replace(/(?:\s*-|\s*vs)+\s*$/, '')
+                .trim();
+        }
+
+        function stripLiveStatusText(value) {
+            return String(value || '')
+                .replace(/\bIN\s*PROGRESS\b/ig, ' ')
+                .replace(/\bLIVE\b/ig, ' ')
+                .replace(/\bON\s*AIR\b/ig, ' ')
+                .replace(/\bONGOING\b/ig, ' ')
+                .replace(/\bSTARTED\b/ig, ' ')
+                .replace(/\bUPCOMING\b/ig, ' ')
+                .replace(/\b1ST\s*HALF\b/ig, ' ')
+                .replace(/\b2ND\s*HALF\b/ig, ' ')
+                .replace(/\bHALFTIME\b/ig, ' ')
+                .replace(/\bOVERTIME\b/ig, ' ')
+                .replace(/\bQ[1-4]\b/ig, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+
+        function hasMlbEvidence(stream) {
+            const haystack = `${stream?.title || ''} ${stream?.sectionTitle || ''} ${stream?.id || ''} ${stream?.url || ''}`.toLowerCase();
+            if (/\/(?:mlb|baseball)(?:streams?|\/|$)/i.test(haystack) || /\bmlb\b|world baseball classic/i.test(haystack)) return true;
+            return /yankees|mets|red sox|dodgers|cubs|cardinals|astros|braves|phillies|padres|giants|blue jays|orioles|guardians|rockies|white sox|tigers|marlins|mariners|athletics|texas rangers|diamondbacks|brewers|twins|nationals|pirates|reds|rays|royals|angels/i.test(haystack);
+        }
+
+        function hasNhlEvidence(stream) {
+            const haystack = `${stream?.title || ''} ${stream?.sectionTitle || ''} ${stream?.id || ''} ${stream?.url || ''}`.toLowerCase();
+            if (/\/(?:nhl|hockey)(?:streams?|\/|$)/i.test(haystack) || /\bnhl\b/i.test(haystack)) return true;
+            return /bruins|maple leafs|canadiens|canucks|oilers|flames|penguins|flyers|senators|capitals|lightning|panthers|sabres|red wings|avalanche|stars|wild|jets|kraken|sharks|ducks|predators|hurricanes|blackhawks|blue jackets|golden knights|devils|islanders/i.test(haystack);
+        }
+
+        function isBoxingStream(stream) {
+            const haystack = `${stream?.title || ''} ${stream?.sectionTitle || ''} ${stream?.id || ''} ${stream?.url || ''}`.toLowerCase();
+            const hasNonBoxingSportPath = /\/(?:soccer|football|mlb|nba|wnba|nfl|nhl|mma|ufc|formula-1|nascar|motogp|moto2|moto3|wrc)\//i.test(haystack);
+            if (hasNonBoxingSportPath) return false;
+            const sectionOrUrlSaysBoxing = /\bboxing\b|title-game\/boxing|\/boxing(?:streams?|\/|$)/i.test(haystack);
+            const titleLooksLikeFight = /\bvs\.?\b|\bfight\b|\bboxing\b|\btitle fight\b|\bheavyweight\b|\bwelterweight\b|\bmiddleweight\b|\bfeatherweight\b/i.test(String(stream?.title || ''));
+            return sectionOrUrlSaysBoxing && titleLooksLikeFight;
         }
 
         function detectSportType(stream) {
-            if (stream.type && stream.type !== 'sports' && SPORT_META[stream.type]) return stream.type;
-            const haystack = `${stream.title || ''} ${stream.sectionTitle || ''}`.toLowerCase();
+            const type = stream.sportType || stream.type;
+            if (hasMlbEvidence(stream)) return 'mlb';
+            if (type === 'boxing' && !isBoxingStream(stream)) return 'sports';
+            if (type && type !== 'sports' && SPORT_META[type]) return type;
+            const haystack = `${stream.title || ''} ${stream.sectionTitle || ''} ${stream.id || ''} ${stream.url || ''}`.toLowerCase();
             for (const rule of TITLE_HINTS) {
+                if (rule.type === 'boxing') {
+                    if (isBoxingStream(stream)) return 'boxing';
+                    continue;
+                }
                 if (rule.patterns.some((pattern) => pattern.test(haystack))) return rule.type;
             }
             return 'sports';
         }
 
+        function getProviderAgeMs(stream) {
+            const text = cleanDisplayTitle(`${stream?.title || ''} ${stream?.statusText || ''} ${stream?.relativeTime || ''} ${stream?.date || ''}`);
+            const match = text.match(/\b(\d+)\s+(second|seconds|sec|secs|minute|minutes|min|mins|hour|hours|hr|hrs|day|days|week|weeks|month|months|year|years)\s+ago\b/i);
+            if (!match) return 0;
+            const amount = Number(match[1]);
+            const unit = match[2].toLowerCase();
+            if (!Number.isFinite(amount) || amount <= 0) return 0;
+            if (/^sec/.test(unit)) return amount * 1000;
+            if (/^(min|minute)/.test(unit)) return amount * 60 * 1000;
+            if (/^(hr|hour)/.test(unit)) return amount * 60 * 60 * 1000;
+            if (/^day/.test(unit)) return amount * 24 * 60 * 60 * 1000;
+            if (/^week/.test(unit)) return amount * 7 * 24 * 60 * 60 * 1000;
+            if (/^month/.test(unit)) return amount * 30 * 24 * 60 * 60 * 1000;
+            if (/^year/.test(unit)) return amount * 365 * 24 * 60 * 60 * 1000;
+            return 0;
+        }
+
+        function hasStaleProviderAge(stream) {
+            return getProviderAgeMs(stream) >= (6 * 60 * 60 * 1000);
+        }
+
+        function hasExplicitLivePhaseText(value) {
+            const text = cleanDisplayTitle(value || '').replace(/\blive streams?(?:\s+links)?\b/ig, ' ');
+            return /\b(?:in progress|on air|ongoing|started|kickoff|first half|second half|halftime|ht|overtime|quarter|period|inning|top\s+\d+|bottom\s+\d+|match live|live now)\b/i.test(text)
+                || /^\d{1,3}(?:\+\d+)?'\s*$/i.test(text);
+        }
+
         function isActuallyLive(stream) {
+            if (!stream) return false;
             if (stream.liveState?.isLive === true) return true;
             const override = availability[stream.id];
             if (override?.isLive === true) return true;
-            
-            // Check if the stream has live keywords in title/status
-            const haystack = `${stream.title || ''} ${stream.statusText || ''}`
-                .replace(/\blive streams?(?:\s+links)?\b/ig, ' ')
-                .replace(/\bwatch(?:\s+live)?\b/ig, ' ')
-                .toLowerCase();
-            
-            // Enhanced live detection for F1 and other sports
-            const matchesLiveKeywords = /\bin progress\b|\blive\b|\bon\s*air\b|\bjust now\b|\b\d+\s+(?:hour|hours|hr|hrs|minute|minutes|min|mins)\s+ago\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\b|\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\bwarm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(haystack);
-            
-            // For F1 specifically, also check if it's a current session type
-            const isF1Stream = stream.type === 'f1' || /\bf1\b|\bformula 1\b|\bgrand prix\b/i.test(haystack);
-            const isF1Session = /\bfp\d*\b|\bfree practice\b|\bqualifying\b|\bsprint\b|\bsprint shootout\b|\bwarm.?up\b/i.test(haystack);
-            
-            if (matchesLiveKeywords || (isF1Stream && isF1Session)) return true;
-            const scheduleInfo = extractScheduleInfo(stream);
-            if (scheduleInfo.eventDate && scheduleInfo.eventDate.getTime() > Date.now()) return false;
-            if (typeof stream.isLive === 'boolean') return stream.isLive;
             if (override?.isLive === false) return false;
+
+            const scheduleInfo = extractScheduleInfo(stream);
+            if (hasFutureScheduleSignal(stream, scheduleInfo)) return false;
+
+            const haystack = `${stream.title || ''} ${stream.statusText || ''} ${stream.liveSportStatus || ''} ${stream.liveState?.periodText || ''}`;
+            const explicitPhase = hasExplicitLivePhaseText(haystack);
+            if (hasStaleProviderAge(stream) && !explicitPhase) return false;
+            if (explicitPhase) return true;
+
+            if (typeof stream.isLive === 'boolean') return stream.isLive && !hasStaleProviderAge(stream) && hasExplicitLivePhaseText(haystack);
             return false;
         }
-
         function detectSessionLabel(stream) {
             const haystack = `${stream.title || ''} ${stream.statusText || ''} ${stream.sectionTitle || ''}`.toLowerCase();
             const mapping = [
@@ -1122,8 +1948,31 @@
         function goToWatchPage(id, title) {
             try {
                 sessionStorage.setItem('selected_watch_event', JSON.stringify({ id, title, savedAt: Date.now() }));
-            } catch {}
-            window.location.href = '/watch.html';
+            } catch { }
+            const watchParams = new URLSearchParams();
+            watchParams.set('g', encodeWatchToken(id));
+            window.location.href = '/watch/' + encodeURIComponent(createWatchSlug(title)) + '?' + watchParams.toString();
+        }
+
+        function encodeWatchToken(value) {
+            try {
+                return btoa(unescape(encodeURIComponent(String(value || ''))))
+                    .replace(/\+/g, '-')
+                    .replace(/\//g, '_')
+                    .replace(/=+$/g, '');
+            } catch {
+                return encodeURIComponent(String(value || ''));
+            }
+        }
+
+        function createWatchSlug(value) {
+            const slug = decodeHtmlEntities(value)
+                .toLowerCase()
+                .replace(/&/g, ' and ')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .replace(/-{2,}/g, '-');
+            return slug || 'live-event';
         }
 
         function setActiveNav() {
@@ -1131,6 +1980,41 @@
                 const filter = link.dataset.filter || null;
                 link.classList.toggle('active', filter === activeFilter || (!filter && !activeFilter));
             });
+            const recapsButton = document.querySelector('[data-watch-recaps]');
+            if (recapsButton) {
+                const showRecaps = activeFilter === 'f1' || activeFilter === 'racing';
+                recapsButton.hidden = !showRecaps;
+                recapsButton.classList.toggle('visible', showRecaps);
+            }
+        }
+
+        function getCategoryPath(filter) {
+            if (!filter) return '/';
+            const map = {
+                soccer: '/football',
+                nfl: '/nfl',
+                mma: '/mma',
+                boxing: '/boxing',
+                f1: '/formula-1',
+                nba: '/nba',
+                wnba: '/wnba',
+                mlb: '/mlb'
+            };
+            return map[filter] || `/${encodeURIComponent(filter)}`;
+        }
+
+        function syncCategoryPath(filter, replace = false) {
+            const nextPath = getCategoryPath(filter);
+            const nextUrl = nextPath + window.location.search;
+            if (window.location.pathname + window.location.search === nextUrl) return;
+            const state = { filter };
+            if (replace) window.history.replaceState(state, '', nextUrl);
+            else window.history.pushState(state, '', nextUrl);
+        }
+
+        function getRecapsPath() {
+            if (activeFilter === 'f1') return '/formula-1/recaps';
+            return '/recaps';
         }
 
         function renderLogos(types) {
@@ -1147,36 +2031,191 @@
         }
 
         function renderMetaLine(metaLine) {
-            const parts = String(metaLine || '').split(' � ');
+            const parts = sanitizeMojibake(metaLine).split(' | ');
             const badgePart = parts.find((part) => /from now|to go|starting now|tomorrow|today|tonight/i.test(part)) || '';
             const plainParts = parts.filter((part) => part !== badgePart);
-            return `<div class="team-meta">${badgePart ? `<span class="team-meta-badge">${escapeHtml(badgePart)}</span>` : ''}${plainParts.length ? `<span class="team-meta-text">${escapeHtml(plainParts.join(' � '))}</span>` : ''}</div>`;
+            return `<div class="team-meta">${badgePart ? `<span class="team-meta-badge">${escapeHtml(badgePart)}</span>` : ''}${plainParts.length ? `<span class="team-meta-text">${escapeHtml(plainParts.join(' | '))}</span>` : ''}</div>`;
         }
 
-        function splitTeams(title, liveNow) {
-            const raw = cleanDisplayTitle(title);
-            const liveMatch = raw.match(/\b(In Progress|Live|On Air|1st half|2nd half|Halftime|OT|Overtime|Q1|Q2|Q3|Q4|1st quarter|2nd quarter|3rd quarter|4th quarter)\b/i);
+        function normalizeTeamKey(value) {
+            return cleanDisplayTitle(value)
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/\b(?:streams?|links?|live|watch)\b/g, ' ')
+                .replace(/\b(women|womens|women's)\b/g, ' ')
+                .replace(/\bw\b/g, ' ')
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function getKnownTeamNames() {
+            const names = new Set([...KNOWN_MATCH_TEAMS, ...COUNTRY_MATCH_TEAMS]);
+            for (const match of livesportDirectory || []) {
+                if (match?.homeTeam) names.add(match.homeTeam);
+                if (match?.awayTeam) names.add(match.awayTeam);
+                if (match?.teams?.home) names.add(match.teams.home);
+                if (match?.teams?.away) names.add(match.teams.away);
+            }
+            return [...names]
+                .map((name) => cleanDisplayTitle(name))
+                .filter(Boolean)
+                .sort((a, b) => normalizeTeamKey(b).length - normalizeTeamKey(a).length);
+        }
+
+        function inferTeamPairFromKnownTitle(title) {
+            const clean = cleanDisplayTitle(title);
+            const normalizedTitle = normalizeTeamKey(clean);
+            if (!normalizedTitle) return null;
+            const teams = getKnownTeamNames();
+            const keyedTeams = teams.map((name) => ({ name, key: normalizeTeamKey(name) })).filter((team) => team.key);
+            const aliasMap = new Map(keyedTeams.map((team) => [team.key, team.name]));
+            aliasMap.set('york yankees', 'New York Yankees');
+            aliasMap.set('york mets', 'New York Mets');
+            aliasMap.set('st louis cardinals', 'St. Louis Cardinals');
+            aliasMap.set('saint louis cardinals', 'St. Louis Cardinals');
+            aliasMap.set('san francisco 49 ers', 'San Francisco 49ers');
+            aliasMap.set('cote d ivoire', "C�te d'Ivoire");
+            aliasMap.set('cote divoire', "C�te d'Ivoire");
+            aliasMap.set('ivory coast', "C�te d'Ivoire");
+            aliasMap.set('turkiye', 'Turkiye');
+            aliasMap.set('turkey', 'Turkiye');
+            aliasMap.set('t rkiye', 'Turkiye');
+            aliasMap.set('cura ao', 'Curacao');
+            aliasMap.set('curacao', 'Curacao');
+            aliasMap.set('la aces', 'Las Vegas Aces');
+            aliasMap.set('vegas aces', 'Las Vegas Aces');
+            aliasMap.set('golden state valkyries', 'Golden State Valkyries');
+            aliasMap.set('portland fire', 'Portland Fire');
+            aliasMap.set('c te d ivoire', 'Cote d Ivoire');
+            aliasMap.set('cote d ivoire', 'Cote d Ivoire');
+
+            for (const first of keyedTeams) {
+                if (!normalizedTitle.startsWith(first.key + ' ')) continue;
+                const remaining = normalizedTitle.slice(first.key.length).trim();
+                if (!remaining) continue;
+                const second = aliasMap.get(remaining) || keyedTeams.find((team) => team.key === remaining)?.name;
+                if (second) return { away: aliasMap.get(first.key) || first.name, home: second, raw: clean };
+            }
+            for (const second of keyedTeams) {
+                if (!normalizedTitle.endsWith(' ' + second.key)) continue;
+                const leading = normalizedTitle.slice(0, -second.key.length).trim();
+                if (!leading) continue;
+                const first = aliasMap.get(leading) || keyedTeams.find((team) => team.key === leading)?.name;
+                if (first) return { away: first, home: aliasMap.get(second.key) || second.name, raw: clean };
+            }
+            return null;
+        }
+        function parseTeamPair(title) {
+            const clean = getMainTitle(title);
+            const normalized = clean
+                .replace(/\bvs\.?\b/ig, ' vs ')
+                .replace(/\bv\.?\b/ig, ' vs ')
+                .replace(/\b(at|@)\b/ig, ' @ ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            const separators = [/\s+vs\.?\s+/i, /\s+@\s+/i, /\s+-\s+/i, /\s+\bat\b\s+/i, /\s+\bv\s+/i];
+            for (const separator of separators) {
+                const parts = normalized.split(separator).map((part) => part.trim()).filter(Boolean);
+                if (parts.length >= 2) return { away: parts[0], home: parts[1], raw: clean };
+            }
+            const titleParts = clean.match(/^(.+?)\s+(?:vs\.?|v\.?|@|at|-)\s+(.+)$/i);
+            if (titleParts && titleParts[1] && titleParts[2]) {
+                return { away: titleParts[1].trim(), home: titleParts[2].trim(), raw: clean };
+            }
+            const inferred = inferTeamPairFromKnownTitle(clean);
+            if (inferred) return inferred;
+            return { away: clean, home: '', raw: clean };
+        }
+        function titleCaseWords(value) {
+            return cleanDisplayTitle(value)
+                .toLowerCase()
+                .replace(/\b\w/g, (char) => char.toUpperCase())
+                .replace(/\bFc\b/g, 'FC')
+                .replace(/\bUsa\b/g, 'USA')
+                .replace(/\bUfc\b/g, 'UFC')
+                .replace(/\bNba\b/g, 'NBA')
+                .replace(/\bWnba\b/g, 'WNBA')
+                .replace(/\bMlb\b/g, 'MLB')
+                .replace(/\bNfl\b/g, 'NFL')
+                .replace(/\bNhl\b/g, 'NHL');
+        }
+
+        function knownTeamScore(value) {
+            const key = normalizeTeamKey(value);
+            if (!key) return 0;
+            const names = getKnownTeamNames().map((name) => normalizeTeamKey(name)).filter(Boolean);
+            if (names.includes(key)) return 1000 + key.length;
+            if (names.some((name) => key === name || key.startsWith(name + ' ') || key.endsWith(' ' + name))) return 700 + key.length;
+            return Math.min(key.split(' ').length * 8, 80);
+        }
+
+        function inferTeamPairFromBuffstreamsSlug(streamUrl) {
+            try {
+                const sid = String(streamUrl || '');
+                if (!sid.startsWith('http')) return null;
+                const pathParts = new URL(sid).pathname.replace(/\/+$/, '').split('/').filter(Boolean);
+                let slug = pathParts[pathParts.length - 1] || '';
+                if (/^\d+$/.test(slug) && pathParts.length >= 2) slug = pathParts[pathParts.length - 2];
+                if (!slug || /^\d+$/.test(slug) || /live-streams-links/i.test(slug)) return null;
+                const directPair = parseTeamPair(slug.replace(/-/g, ' '));
+                if (directPair.home) return directPair;
+                const words = slug.split('-').map((part) => part.trim()).filter(Boolean);
+                if (words.length < 2) return null;
+                let best = null;
+                for (let index = 1; index < words.length; index += 1) {
+                    const away = titleCaseWords(words.slice(0, index).join(' '));
+                    const home = titleCaseWords(words.slice(index).join(' '));
+                    const balancePenalty = Math.abs(index - (words.length - index)) * 2;
+                    const score = knownTeamScore(away) + knownTeamScore(home) - balancePenalty;
+                    if (!best || score > best.score) best = { away, home, raw: slug.replace(/-/g, ' '), score };
+                }
+                return best && best.away && best.home ? { away: best.away, home: best.home, raw: best.raw } : null;
+            } catch {
+                return null;
+            }
+        }
+
+        function getBuffstreamsTeamPair(stream) {
+            const titlePair = parseTeamPair(getMainTitle(stream?.title || ''));
+            if (titlePair.home) return titlePair;
+            const slugPair = inferTeamPairFromBuffstreamsSlug(stream?.id || stream?.url || '');
+            if (slugPair?.home) return slugPair;
+            return titlePair;
+        }
+
+        function splitTeams(title, liveNow, stream = null) {
+            const raw = getMainTitle(title);
+            const parsed = stream ? getBuffstreamsTeamPair(stream) : parseTeamPair(raw);
+            const liveMatch = raw.match(/\b(In Progress|Live|On Air|1st half|2nd half|HT|Halftime|Break|Intermission|Delayed|Postponed|Cancelled|OT|Overtime|Q1|Q2|Q3|Q4|1st quarter|2nd quarter|3rd quarter|4th quarter)\b/i);
             if (liveNow && liveMatch) {
                 const status = liveMatch[0];
                 const parts = raw.split(liveMatch[0]).map((part) => part.trim()).filter(Boolean);
-                return { away: parts[0] || raw, time: status.toUpperCase(), home: parts[1] || '' };
+                return { away: parts[0] || parsed.away, time: status.toUpperCase(), home: parts[1] || parsed.home };
             }
-            return { away: raw, time: '', home: '' };
+            return { away: parsed.away, time: '', home: parsed.home };
         }
 
         function extractScheduleInfo(stream) {
             const liveState = stream.liveState || {};
+            const liveSportStart = Number(stream.liveSportStartTime || stream.livesportStartTime || 0);
+            const liveSportEventDate = Number.isFinite(liveSportStart) && liveSportStart > 0
+                ? new Date(liveSportStart < 100000000000 ? liveSportStart * 1000 : liveSportStart)
+                : null;
             const cleanTitle = cleanDisplayTitle(stream.title || '');
-            const cleanStatus = cleanDisplayTitle(liveState.periodText || stream.statusText || '');
+            const cleanStatus = cleanDisplayTitle(liveState.periodText || stream.liveSportStatus || stream.statusText || '');
             const liveExactTime = cleanDisplayTitle(liveState.exactTime || '');
-            const exactMatch = cleanTitle.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?[A-Z]{2,4})?\b/i) || cleanStatus.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?[A-Z]{2,4})?\b/i);
-            const exactTime = liveExactTime || (exactMatch ? exactMatch[0].replace(/\s+/g, ' ').trim() : '');
-            const relativeText = /from now|tomorrow|today|tonight|later/i.test(cleanStatus) ? cleanStatus : '';
-            const eventDate = buildSourceUtcEventDate(exactTime, relativeText);
+            const exactMatch = cleanTitle.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?(?:ET|EST|EDT|CT|CST|CDT|MT|MST|MDT|PT|PST|PDT|UTC|GMT))?\b/i) || cleanStatus.match(/\b\d{1,2}:\d{2}\s?(AM|PM)(?:\s?(?:ET|EST|EDT|CT|CST|CDT|MT|MST|MDT|PT|PST|PDT|UTC|GMT))?\b/i);
+            const exactTime = liveSportEventDate ? '' : (liveExactTime || (exactMatch ? exactMatch[0].replace(/\s+/g, ' ').trim() : ''));
+            const relativeSource = /from now|ago|tomorrow|today|tonight|later/i.test(cleanStatus) ? cleanStatus : cleanTitle;
+            const relativeText = liveSportEventDate ? '' : (/from now|ago|tomorrow|today|tonight|later/i.test(relativeSource) ? relativeSource.match(/(?:today|tonight|tomorrow|later|\d+\s+(?:week|weeks|day|days|hour|hours|hr|hrs|minute|minutes|min|mins)\s+(?:from now|ago))/i)?.[0] || relativeSource : '');
+            const eventStartUtcMs = Number(stream.eventStartUtcMs) || 0;
+            const eventDateFromEpoch = eventStartUtcMs > Date.now() ? new Date(eventStartUtcMs) : null;
+            const eventDate = liveSportEventDate || eventDateFromEpoch || buildSourceUtcEventDate(exactTime, relativeText, stream.canonicalEventDate || '');
             const computedRelative = formatRelativeStart(eventDate);
             const localTimeLabel = formatLocalDateTime(eventDate);
             const countdownText = formatCountdown(eventDate);
-            const display = [localTimeLabel || exactTime, countdownText || (computedRelative && computedRelative !== 'Started' ? computedRelative : relativeText)].filter(Boolean).join(' ? ');
+            const display = [localTimeLabel || exactTime, countdownText || (computedRelative && computedRelative !== 'Started' ? computedRelative : relativeText)].filter(Boolean).join(' | ');
             return {
                 exactTime,
                 relativeText,
@@ -1188,9 +2227,73 @@
             };
         }
 
-        function buildSourceUtcEventDate(exactTime, relativeText) {
+        function formatCountdownFromMs(diffMs) {
+            if (!Number.isFinite(diffMs)) return '';
+            if (diffMs <= 0) return 'Starting now';
+            const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            const clock = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            return days > 0 ? `${days}d ${clock}` : clock;
+        }
+        function updateCountdownChips() {
+            const now = Date.now();
+            document.querySelectorAll('[data-event-start]').forEach((el) => {
+                const startsAt = Number(el.getAttribute('data-event-start'));
+                if (!Number.isFinite(startsAt)) return;
+                el.textContent = formatCountdownFromMs(startsAt - now);
+            });
+            document.querySelectorAll('[data-countdown-seconds]').forEach((el) => {
+                const seconds = Number(el.getAttribute('data-countdown-seconds'));
+                const updated = Number(el.getAttribute('data-countdown-updated'));
+                if (!Number.isFinite(seconds) || !Number.isFinite(updated)) return;
+                const remainingMs = (seconds * 1000) - (now - updated);
+                el.textContent = formatCountdownFromMs(remainingMs);
+            });
+        }
+        function getTimeZoneOffsetMs(timeZone, date) {
+            try {
+                const parts = new Intl.DateTimeFormat('en-US', {
+                    timeZone,
+                    timeZoneName: 'shortOffset',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                }).formatToParts(date);
+                const zone = parts.find((part) => part.type === 'timeZoneName')?.value || '';
+                const match = zone.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/i);
+                if (!match) return 0;
+                const sign = match[1] === '-' ? -1 : 1;
+                const hours = Number(match[2] || 0);
+                const minutes = Number(match[3] || 0);
+                return sign * ((hours * 60) + minutes) * 60000;
+            } catch {
+                return 0;
+            }
+        }
+
+        function getSourceDateParts(timeZone = 'America/New_York') {
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone,
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+            }).formatToParts(new Date());
+            return {
+                year: Number(parts.find((part) => part.type === 'year')?.value),
+                month: Number(parts.find((part) => part.type === 'month')?.value),
+                day: Number(parts.find((part) => part.type === 'day')?.value)
+            };
+        }
+
+        function buildSourceUtcEventDate(exactTime, relativeText, canonicalDate) {
             if (!exactTime) return null;
-            const match = exactTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            const match = exactTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)(?:\s*(ET|EST|EDT|CT|CST|CDT|MT|MST|MDT|PT|PST|PDT|UTC|GMT))?/i);
             if (!match) return null;
 
             let hours = Number(match[1]) % 12;
@@ -1198,35 +2301,65 @@
             const meridiem = match[3].toUpperCase();
             if (meridiem === 'PM') hours += 12;
 
-            const now = new Date();
-            let eventUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hours, minutes);
+            const zoneToken = String(match[4] || 'ET').toUpperCase();
+            const sourceTimeZone = zoneToken.startsWith('CT') ? 'America/Chicago'
+                : zoneToken.startsWith('MT') ? 'America/Denver'
+                    : zoneToken.startsWith('PT') ? 'America/Los_Angeles'
+                        : (zoneToken === 'UTC' || zoneToken === 'GMT') ? 'UTC'
+                            : 'America/New_York';
 
-            if (/tomorrow/i.test(relativeText || '')) {
-                eventUtc += 24 * 60 * 60 * 1000;
-            } else if (!/today/i.test(relativeText || '') && eventUtc < Date.now() - (6 * 60 * 60 * 1000)) {
-                eventUtc += 24 * 60 * 60 * 1000;
+            let sourceMiddayUtc;
+            const canonicalMatch = String(canonicalDate || '').match(/(\d{4})-(\d{2})-(\d{2})/);
+            if (canonicalMatch) {
+                sourceMiddayUtc = Date.UTC(Number(canonicalMatch[1]), Number(canonicalMatch[2]) - 1, Number(canonicalMatch[3]), 12, 0);
+            } else {
+                const sourceDate = getSourceDateParts(sourceTimeZone);
+                sourceMiddayUtc = Date.UTC(sourceDate.year, sourceDate.month - 1, sourceDate.day, 12, 0);
+            }
+            const relative = String(relativeText || '');
+            const relativeFuture = relative.match(/\b(\d+)\s+(minute|minutes|min|mins|hour|hours|hr|hrs|day|days|week|weeks)\s+from now\b/i);
+            const relativePast = relative.match(/\b(\d+)\s+(minute|minutes|min|mins|hour|hours|hr|hrs|day|days|week|weeks)\s+ago\b/i);
+            if (/tomorrow/i.test(relative)) {
+                sourceMiddayUtc += 24 * 60 * 60 * 1000;
+            } else if (relativeFuture || relativePast) {
+                const relativeAmount = relativeFuture || relativePast;
+                const direction = relativeFuture ? 1 : -1;
+                const amount = Number(relativeAmount[1] || 0);
+                const unit = relativeAmount[2].toLowerCase();
+                if (/^week/.test(unit)) {
+                    sourceMiddayUtc += direction * amount * 7 * 24 * 60 * 60 * 1000;
+                } else if (/^day/.test(unit)) {
+                    sourceMiddayUtc += direction * amount * 24 * 60 * 60 * 1000;
+                } else if (/^(hour|hr|minute|min)/.test(unit)) {
+                    const approxMs = /^(hour|hr)/.test(unit) ? amount * 60 * 60 * 1000 : amount * 60 * 1000;
+                    const approxDate = new Date(Date.now() + (direction * approxMs));
+                    sourceMiddayUtc = Date.UTC(approxDate.getFullYear(), approxDate.getMonth(), approxDate.getDate(), 12, 0);
+                }
+            }
+
+            let sourceDay = new Date(sourceMiddayUtc);
+            const offsetMs = sourceTimeZone === 'UTC' ? 0 : getTimeZoneOffsetMs(sourceTimeZone, sourceDay);
+            let eventUtc = Date.UTC(sourceDay.getUTCFullYear(), sourceDay.getUTCMonth(), sourceDay.getUTCDate(), hours, minutes) - offsetMs;
+
+            if (!/today|tomorrow|\b\d+\s+(?:minute|minutes|min|mins|hour|hours|hr|hrs|day|days|week|weeks)\s+(?:from now|ago)\b/i.test(relativeText || '') && eventUtc < Date.now() - (2 * 60 * 60 * 1000)) {
+                sourceDay = new Date(sourceMiddayUtc + 24 * 60 * 60 * 1000);
+                const nextOffsetMs = sourceTimeZone === 'UTC' ? 0 : getTimeZoneOffsetMs(sourceTimeZone, sourceDay);
+                eventUtc = Date.UTC(sourceDay.getUTCFullYear(), sourceDay.getUTCMonth(), sourceDay.getUTCDate(), hours, minutes) - nextOffsetMs;
             }
 
             return new Date(eventUtc);
         }
-
         function formatCountdown(eventDate) {
             if (!eventDate) return '';
             const diffMs = eventDate.getTime() - Date.now();
-            if (diffMs <= 0) return '';
-            const totalSeconds = Math.floor(diffMs / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            return diffMs > 0 ? formatCountdownFromMs(diffMs) : '';
         }
-
         function formatRelativeStart(eventDate) {
             if (!eventDate) return '';
             const diffMs = eventDate.getTime() - Date.now();
             const diffMinutes = Math.round(diffMs / 60000);
             if (diffMinutes <= -10) return 'Started';
-            if (diffMinutes <= 5) return 'Starting now';
+            if (diffMinutes <= 15) return diffMinutes > 0 ? (diffMinutes + ' mins to go') : 'Starting now';
             if (diffMinutes < 60) return diffMinutes + ' mins to go';
             const hours = Math.floor(diffMinutes / 60);
             const minutes = diffMinutes % 60;
@@ -1235,10 +2368,43 @@
             return days === 1 ? '1 day to go' : (days + ' days to go');
         }
 
+        function hasFutureScheduleSignal(stream, scheduleInfo) {
+            if (scheduleInfo?.eventDate && scheduleInfo.eventDate.getTime() > Date.now()) return true;
+            if (scheduleInfo?.countdownText) return true;
+            const text = cleanDisplayTitle(`${stream?.title || ''} ${stream?.statusText || ''} ${stream?.liveState?.periodText || ''}`);
+            if (/\b(?:today|tonight|tomorrow)\b/i.test(text) && /\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i.test(text)) return true;
+            if (/\b\d+\s+(?:week|weeks|day|days|hour|hours|hr|hrs|minute|minutes|min|mins)\s+from now\b/i.test(text)) return true;
+            if (/\b(?:starts?|starting|scheduled|upcoming)\b/i.test(text) && !/\b(?:started|in progress|live now)\b/i.test(text)) return true;
+            return false;
+        }
+        function isEventStarted(stream, scheduleInfo, providerStatus) {
+            if (stream?.liveState?.isLive === true || availability[stream?.id]?.isLive === true) return true;
+            const statusText = String(providerStatus || '').trim();
+            if (/\b(live|in progress|on air|ongoing|started|kickoff|first half|second half|halftime|ht|overtime|quarter|period|match live)\b/i.test(statusText)) {
+                return true;
+            }
+            if (/^\d{1,3}(?:\+\d+)?'\s*$/.test(statusText)) {
+                return true;
+            }
+            if (/^\d{1,3}(?:\+\d+)?'\s*(?:\+\s*)?(?:first|second|third|fourth)?\s*$/i.test(statusText)) {
+                return true;
+            }
+            if ((scheduleInfo?.computedRelative === 'Started' || scheduleInfo?.computedRelative === 'Starting now') && hasExplicitLivePhaseText(statusText)) {
+                return true;
+            }
+            if (scheduleInfo?.eventDate && scheduleInfo.eventDate.getTime() <= Date.now()) {
+                const ageMs = Date.now() - scheduleInfo.eventDate.getTime();
+                return ageMs <= getSportLiveWindowMs(detectSportType(stream)) && !hasStaleProviderAge(stream);
+            }
+            return false;
+        }
+
         function formatLocalDateTime(eventDate) {
             if (!eventDate) return '';
             return new Intl.DateTimeFormat(undefined, {
                 weekday: 'short',
+                month: 'short',
+                day: 'numeric',
                 hour: 'numeric',
                 minute: '2-digit',
                 timeZoneName: 'short'
@@ -1247,13 +2413,108 @@
 
         function convertSourceTimeToLocalLabel(eventDate) {
             const localText = formatLocalDateTime(eventDate);
-            return localText ? 'Your time ' + localText : '';
+            return localText ? 'Your time - ' + localText : '';
         }
+        function isSportPhaseCompatible(sportType, statusText = '') {
+            const status = cleanDisplayTitle(statusText).toLowerCase();
+            if (!status) return true;
+            if (sportType === 'soccer') return !/\b(?:quarter|q[1-4]|period|inning|top|bottom)\b/.test(status);
+            if (sportType === 'mlb') return !/\b(?:quarter|q[1-4]|half|period)\b/.test(status);
+            if (sportType === 'nba' || sportType === 'wnba') return !/\b(?:inning|top|bottom|half)\b/.test(status);
+            if (sportType === 'nhl') return !/\b(?:inning|top|bottom|quarter|q[1-4]|half)\b/.test(status);
+            if (sportType === 'nfl') return !/\b(?:inning|top|bottom|period)\b/.test(status);
+            return true;
+        }
+
+        function getMatchStartMs(match) {
+            const raw = Number(match?.startTime || match?.timestamp || match?.startTimestamp || match?.time || 0);
+            if (!Number.isFinite(raw) || raw <= 0) return 0;
+            return raw < 100000000000 ? raw * 1000 : raw;
+        }
+
+        function isFinishedStatusText(value) {
+            return /\b(?:finished|final|ended|full\s*time|ft\b|after\s+penalties|cancelled|postponed|walkover)\b/i.test(cleanDisplayTitle(value || ''));
+        }
+
+        function getSportLiveWindowMs(sportType) {
+            if (sportType === 'mlb') return 5 * 60 * 60 * 1000;
+            if (sportType === 'nfl') return 5 * 60 * 60 * 1000;
+            if (sportType === 'cfl') return 5 * 60 * 60 * 1000;
+            if (sportType === 'nba' || sportType === 'wnba') return 4 * 60 * 60 * 1000;
+            if (sportType === 'nhl') return 4 * 60 * 60 * 1000;
+            if (sportType === 'soccer') return 3 * 60 * 60 * 1000;
+            return 4 * 60 * 60 * 1000;
+        }
+
+        function isCurrentLiveSportMatch(match, sportType) {
+            const status = cleanDisplayTitle(match?.status || match?.statusText || match?.periodText || '');
+            if (isFinishedStatusText(status)) return false;
+            const startMs = getMatchStartMs(match);
+            if (!startMs) return false;
+            const ageMs = Date.now() - startMs;
+            return ageMs >= -(30 * 60 * 1000) && ageMs <= getSportLiveWindowMs(sportType);
+        }
+
+        function shouldPromoteLiveSportStatus(stream, match, sportType) {
+            const scheduleInfo = extractScheduleInfo(stream);
+            if (hasFutureScheduleSignal(stream, scheduleInfo) || (scheduleInfo?.eventDate && scheduleInfo.eventDate.getTime() > Date.now() + (10 * 60 * 1000))) return false;
+            const matchStartMs = getMatchStartMs(match);
+            if (scheduleInfo?.eventDate && matchStartMs && Math.abs(matchStartMs - scheduleInfo.eventDate.getTime()) > (90 * 60 * 1000)) return false;
+            if (!isCurrentLiveSportMatch(match, sportType)) return false;
+            const buffStatus = cleanDisplayTitle(`${stream?.title || ''} ${stream?.statusText || ''}`);
+            if (/\b(?:upcoming|scheduled|starts?|starting)\b/i.test(buffStatus) && !/\b(?:in progress|live|on air|inning|quarter|period|half)\b/i.test(buffStatus)) return false;
+            return true;
+        }
+
+        function findLiveSportMatchForPair(awayName, homeName, sportType = '') {
+        const awayKey = normalizeTeamKey(awayName);
+        const homeKey = normalizeTeamKey(homeName);
+        if (!awayKey || !homeKey) return null;
+        for (const match of livesportDirectory || []) {
+            const mHome = match?.homeTeam || match?.teams?.home || '';
+            const mAway = match?.awayTeam || match?.teams?.away || '';
+            const mHomeKey = normalizeTeamKey(mHome);
+            const mAwayKey = normalizeTeamKey(mAway);
+            if (!mHomeKey || !mAwayKey) continue;
+            const matchSport = String(match?.sport || match?.sportType || '').toLowerCase();
+            if (sportType === 'mlb' && matchSport && !/baseball|mlb/.test(matchSport)) continue;
+            if ((sportType === 'nba' || sportType === 'wnba') && matchSport && !/basketball|nba|wnba/.test(matchSport)) continue;
+            if (sportType === 'nhl' && matchSport && !/hockey|nhl/.test(matchSport)) continue;
+            if (sportType === 'nfl' && matchSport && !/american/.test(matchSport)) continue;
+            if (sportType === 'soccer' && matchSport && !/soccer|association|world cup/.test(matchSport)) continue;
+            if (!isSportPhaseCompatible(sportType, match?.status || match?.statusText || match?.periodText || '')) continue;
+            if (mAwayKey === awayKey && mHomeKey === homeKey) return { match, reversed: false };
+            if (mHomeKey === awayKey && mAwayKey === homeKey) return { match, reversed: true };
+        }
+        return null;
+        }
+
+        function applyLiveSportScheduleData(stream) {
+        if (!stream || stream.liveSportMatched) return stream;
+        const displayType = detectSportType(stream);
+        if (!ENRICHABLE_SPORTS.has(displayType)) return stream;
+        const pair = getBuffstreamsTeamPair(stream);
+        if (!pair.home) return stream;
+        const hit = findLiveSportMatchForPair(pair.away, pair.home, displayType);
+        if (!hit?.match) return stream;
+        const match = hit.match;
+        stream.liveSportMatched = true;
+        if (shouldPromoteLiveSportStatus(stream, match, displayType)) {
+            stream.liveSportStartTime = match.startTime || match.timestamp || match.startTimestamp || stream.liveSportStartTime;
+            stream.liveSportStatus = match.status || stream.liveSportStatus || '';
+        }
+        stream.awayLogo = hit.reversed ? (match.homeLogo || stream.awayLogo || '') : (match.awayLogo || stream.awayLogo || '');
+        stream.homeLogo = hit.reversed ? (match.awayLogo || stream.homeLogo || '') : (match.homeLogo || stream.homeLogo || '');
+        return stream;
+        }
+
 
         function shouldVerifyStream(stream) {
             const lastChecked = verificationCooldowns.get(stream.id) || 0;
             if (Date.now() - lastChecked < VERIFY_COOLDOWN_MS) return false;
-            return isActuallyLive(stream);
+            if (stream?.hasActiveStream === true) return false;
+            const state = getScheduleDrivenState(stream);
+            return state.startsAt !== Number.MAX_SAFE_INTEGER && state.startsAt <= Date.now() && !state.stale;
         }
 
         function getVerificationCandidates() {
@@ -1271,75 +2532,628 @@
             return decorated.slice(0, VERIFY_BATCH_SIZE).map(({ stream }) => stream);
         }
 
+        function isClockOnlyText(value) {
+            return /^\s*\d{1,2}:\d{2}\s*(?:AM|PM)?(?:\s*(?:ET|EST|EDT|CT|CST|CDT|MT|MST|MDT|PT|PST|PDT|UTC|GMT))?\s*$/i.test(String(value || ''));
+        }
+
+        function getScheduleDrivenState(stream) {
+            const scheduleInfo = extractScheduleInfo(stream);
+            const startsAt = scheduleInfo.eventDate ? scheduleInfo.eventDate.getTime() : Number.MAX_SAFE_INTEGER;
+            const now = Date.now();
+            const liveWindowMs = getSportLiveWindowMs(detectSportType(stream));
+            const hasActiveStream = stream?.hasActiveStream === true;
+            const backendCountdownSeconds = Number(stream?.countdownSeconds);
+            const backendCountdownReason = String(stream?.lockReason || '').toLowerCase();
+            const hasBackendCountdown = backendCountdownReason === 'countdown-timer' && Number.isFinite(backendCountdownSeconds) && backendCountdownSeconds > 0;
+            const streamChecked = stream?.sourceChecked === true || stream?.isLocked === true || stream?.hasActiveStream === true || hasBackendCountdown;
+            const providerAgeMs = getProviderAgeMs(stream);
+            const staleByProvider = providerAgeMs >= (90 * 60 * 1000);
+            const staleBySchedule = Number.isFinite(startsAt) && startsAt < now - liveWindowMs;
+            const staleByFuture = Number.isFinite(startsAt) && startsAt > now + (7 * 24 * 60 * 60 * 1000) && startsAt < Number.MAX_SAFE_INTEGER;
+            const stale = !hasActiveStream && (staleByProvider || staleBySchedule || staleByFuture);
+            const hasFutureSchedule = Number.isFinite(startsAt) && startsAt > now;
+            const scheduleDue = !stale && Number.isFinite(startsAt) && startsAt !== Number.MAX_SAFE_INTEGER && startsAt <= now && now - startsAt <= liveWindowMs;
+            const backendLockStillApplies = hasBackendCountdown || ((stream?.isLocked === true || (streamChecked && !hasActiveStream)) && !scheduleDue);
+            const backendLocked = backendLockStillApplies && !hasActiveStream;
+            const explicitProviderLive = stream?.isLive === true || stream?.liveNow === true || hasExplicitLivePhaseText(`${stream?.statusText || ''} ${stream?.title || ''}`);
+            const effectivelyLive = !backendLocked && !stale && (explicitProviderLive || hasActiveStream || scheduleDue);
+            const isLocked = backendLocked || !effectivelyLive;
+            return { scheduleInfo, startsAt, hasFutureSchedule, effectivelyLive, stale, hasActiveStream, isLocked, sourceChecked: streamChecked, scheduleDue, explicitProviderLive, backendLocked, hasBackendCountdown };
+        }
+
+        function getRenderableStreamState(stream) {
+            const state = getScheduleDrivenState(stream);
+            const providerStatus = stripLiveStatusText(cleanDisplayTitle(stream?.statusText || ''));
+            return {
+                ...state,
+                livePeriodText: state.effectivelyLive ? 'LIVE' : '',
+                providerStatus,
+                displayStatus: state.effectivelyLive ? 'LIVE' : 'UPCOMING'
+            };
+        }
+        const SECTION_ORDER = [
+            'Upcoming MLB', 'Upcoming NBA', 'Upcoming WNBA', 'Upcoming NFL', 'Upcoming NHL', 'Upcoming CFL',
+            'Upcoming FIFA World Cup', 'Upcoming Football', 'Upcoming Soccer', 'Upcoming Boxing', 'Upcoming MMA',
+            'Upcoming Racing'
+        ];
+
+        function sectionRank(label) {
+            const normalized = cleanDisplayTitle(label).replace(/\s+Streams(?:\s+Links)?$/i, '');
+            const index = SECTION_ORDER.findIndex((item) => normalizeTeamKey(item) === normalizeTeamKey(normalized));
+            if (index >= 0) return index;
+            if (/mlb/i.test(normalized)) return 0;
+            if (/nba/i.test(normalized)) return 1;
+            if (/wnba/i.test(normalized)) return 2;
+            if (/nfl/i.test(normalized)) return 3;
+            if (/nhl/i.test(normalized)) return 4;
+            if (/cfl/i.test(normalized)) return 5;
+            if (/fifa|world cup|football|soccer/i.test(normalized)) return 6;
+            if (/boxing/i.test(normalized)) return 9;
+            if (/mma|ufc/i.test(normalized)) return 10;
+            if (/racing|formula|nascar|motogp|moto2|moto3|wrc|rally/i.test(normalized)) return 11;
+            return 100;
+        }
+        function isBuffStreamsCatalogStream(stream) {
+            const id = String(stream?.id || stream?.url || '');
+            if (/(^|\/\/)(?:www\.)?(?:buffstreams\.plus|ibuffstreams\.app)\//i.test(id)) return true;
+            return Boolean(stream?.title && stream?.url && /^https?:\/\//i.test(String(stream.url)));
+        }
+
+        function canonicalSectionTitle(stream) {
+            const type = stream?.displayType || detectSportType(stream || {});
+            const raw = cleanDisplayTitle(stream?.sectionTitle || '')
+                .replace(/\s+Live\s+Streams(?:\s+Links)?$/i, '')
+                .replace(/\s+Streams(?:\s+Links)?$/i, '')
+                .trim();
+            const isFighting = ['boxing', 'mma', 'wwe'].includes(type);
+            const isRacing = ['f1', 'racing'].includes(type);
+            if (!activeFilter && isFighting) return 'Upcoming Boxing';
+            if (!activeFilter && isRacing) return 'Upcoming Racing';
+            if (raw && !/^other$/i.test(raw) && !/^lfc$/i.test(raw)) return raw;
+
+            const labels = {
+                mlb: 'Upcoming MLB',
+                nba: 'Upcoming NBA',
+                wnba: 'Upcoming WNBA',
+                wwe: 'Upcoming Boxing',
+                nfl: 'Upcoming NFL',
+                nhl: 'Upcoming NHL',
+                soccer: 'Upcoming Football',
+                boxing: 'Upcoming Boxing',
+                mma: 'Upcoming Boxing',
+                f1: 'Upcoming Racing',
+                racing: 'Upcoming Racing',
+                ncaa: 'Upcoming NCAA'
+            };
+            return labels[type] || getSportMeta(type).label;
+        }
+        function stableEventKey(stream) {
+            const id = String(stream?.id || stream?.url || '').trim();
+            if (id) {
+                try {
+                    const url = new URL(id);
+                    const parts = url.pathname.replace(/\/+$|^\/+/, '').split('/').filter(Boolean);
+                    const slug = parts.findLast((part) => !/^\d+$/.test(part)) || parts[parts.length - 1] || id;
+                    return normalizeTeamKey(slug);
+                } catch {
+                    return normalizeTeamKey(id);
+                }
+            }
+            return normalizeTeamKey(getMainTitle(stream?.title || ''));
+        }
+        function scheduleRenderStreams(options = {}) {
+            const force = Boolean(options.force);
+            if (renderFrame) return;
+            renderFrame = requestAnimationFrame(() => {
+                renderFrame = null;
+                if (!force && Date.now() - lastUserScrollAt < 700) {
+                    if (renderRetryTimer) clearTimeout(renderRetryTimer);
+                    renderRetryTimer = setTimeout(() => scheduleRenderStreams(), 750);
+                    return;
+                }
+                renderStreams();
+            });
+        }
+        function getCategoryLayerKey() {
+            return activeFilter || 'all';
+        }
+
+        function showCategoryLayer(key) {
+            const container = document.getElementById('streamsContainer');
+            categoryLayerCache.forEach((layer, layerKey) => {
+                layer.style.display = layerKey === key ? 'flex' : 'none';
+            });
+            const layer = categoryLayerCache.get(key);
+            if (layer && layer.parentNode !== container) container.appendChild(layer);
+            return layer;
+        }
+
+        function ensureCategoryLayer(key) {
+            const container = document.getElementById('streamsContainer');
+            if (!container.querySelector('[data-category-layer]')) container.replaceChildren();
+            let layer = categoryLayerCache.get(key);
+            if (!layer) {
+                layer = document.createElement('div');
+                layer.className = 'category-layer column-stack';
+                layer.dataset.categoryLayer = key;
+                categoryLayerCache.set(key, layer);
+                container.appendChild(layer);
+            }
+            showCategoryLayer(key);
+            return layer;
+        }
+
+        function clearCategoryLayer(key) {
+            const layer = ensureCategoryLayer(key);
+            layer.replaceChildren();
+            return layer;
+        }
+
+        function renderHtmlProgressively(key, html, token) {
+            const layer = ensureCategoryLayer(key);
+            lastRenderedStreamsHtml = html;
+            if (!html) {
+                layer.replaceChildren();
+                return;
+            }
+            if (key !== 'all') {
+                layer.innerHTML = html;
+                updateCountdownChips();
+                return;
+            }
+            const template = document.createElement('template');
+            template.innerHTML = html;
+            const sections = [...template.content.querySelectorAll('.event-card')];
+            if (!sections.length) {
+                layer.replaceChildren(template.content);
+                return;
+            }
+
+            const staging = document.createElement('div');
+            const queue = [];
+            for (const section of sections) {
+                const shell = section.cloneNode(true);
+                const shellList = shell.querySelector('.event-list');
+                const sourceRows = [...section.querySelectorAll('.event-row')];
+                if (!shellList || !sourceRows.length) continue;
+                shellList.replaceChildren();
+                staging.appendChild(shell);
+                queue.push(...sourceRows.map((row) => ({ row, target: shellList })));
+            }
+
+            const pumpBatch = () => {
+                const batches = new Map();
+                let count = 0;
+                while (queue.length && count < 15) {
+                    const item = queue.shift();
+                    if (!batches.has(item.target)) batches.set(item.target, document.createDocumentFragment());
+                    batches.get(item.target).appendChild(item.row);
+                    count += 1;
+                }
+                batches.forEach((fragment, target) => target.appendChild(fragment));
+            };
+
+            pumpBatch();
+            if (token !== renderGeneration || key !== getCategoryLayerKey()) return;
+            layer.replaceChildren(...staging.childNodes);
+            updateCountdownChips();
+
+            const pump = () => {
+                if (token !== renderGeneration || key !== getCategoryLayerKey()) return;
+                pumpBatch();
+                updateCountdownChips();
+                if (queue.length) requestAnimationFrame(pump);
+            };
+            if (queue.length) requestAnimationFrame(pump);
+        }
+
+        function canonicalRenderKey(stream) {
+            const parts = [
+                stream?.id,
+                stream?.url,
+                stream?.episodeId,
+                stream?.title,
+                stream?.sectionTitle,
+                stream?.category
+            ];
+            const raw = parts.map((part) => cleanDisplayTitle(part || '')).find(Boolean) || 'stream';
+            return normalizeTeamKey(stripLiveStatusText(raw)) || String(raw).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'stream';
+        }
+        function getStreamMatchupKey(stream) {
+            const displayType = stream?.displayType || detectSportType(stream || {});
+            if (displayType === 'f1' || displayType === 'racing') {
+                return `${displayType}:${normalizeTeamKey(getStandaloneEventTitle(stream?.title || '')) || canonicalRenderKey(stream)}`;
+            }
+            const pair = getBuffstreamsTeamPair(stream);
+            const awayKey = normalizeTeamKey(pair?.away || '');
+            const homeKey = normalizeTeamKey(pair?.home || '');
+            if (awayKey && homeKey) {
+                return `${displayType}:${[awayKey, homeKey].sort().join('|')}`;
+            }
+            return `${displayType}:${canonicalRenderKey(stream)}`;
+        }
+
+        function streamRenderPriority(stream) {
+            const state = getScheduleDrivenState(stream);
+            const scheduleInfo = state.scheduleInfo || extractScheduleInfo(stream);
+            const now = Date.now();
+            const explicitLive = isActuallyLive(stream) || hasExplicitLivePhaseText(`${stream?.title || ''} ${stream?.statusText || ''}`);
+            const startsAt = Number.isFinite(state.startsAt) ? state.startsAt : Number.MAX_SAFE_INTEGER;
+            let score = 0;
+            if (explicitLive) score += 1000000000;
+            else if (state.explicitProviderLive) score += 800000000;
+            else if (state.hasFutureSchedule) score += 500000000;
+            if (state.stale) score -= 1000000000;
+            if (stream?.hasActiveStream === true) score += 10000000;
+            if (scheduleInfo?.eventDate) {
+                if (startsAt <= now) score -= Math.min(now - startsAt, 12 * 60 * 60 * 1000) / 1000;
+                else score -= Math.min(startsAt - now, 14 * 24 * 60 * 60 * 1000) / 100000;
+            }
+            return score;
+        }
+
+        function dedupeStreamsForRender(streams) {
+            const bestByMatchup = new Map();
+            streams.forEach((stream, index) => {
+                const key = getStreamMatchupKey(stream);
+                const candidateScore = streamRenderPriority(stream);
+                const existing = bestByMatchup.get(key);
+                if (!existing || candidateScore > existing.score || (candidateScore === existing.score && (stream.stableIndex ?? index) < (existing.stream.stableIndex ?? existing.index))) {
+                    bestByMatchup.set(key, { stream, score: candidateScore, index });
+                }
+            });
+            return [...bestByMatchup.values()]
+                .sort((a, b) => (a.stream.stableIndex || a.index || 0) - (b.stream.stableIndex || b.index || 0))
+                .map((entry) => entry.stream);
+        }
+
         function renderStreams() {
-            const normalized = allStreams.map((stream) => ({ ...stream, displayType: detectSportType(stream), liveNow: isActuallyLive(stream) }));
-            const filtered = activeFilter ? normalized.filter((stream) => stream.displayType === activeFilter) : normalized;
+            const normalized = allStreams
+                .map((stream, index) => ({ ...stream, displayType: detectSportType(stream), stableIndex: index }))
+                .filter((stream) => !getScheduleDrivenState(stream).stale);
+            const rawFiltered = activeFilter ? normalized.filter((stream) => activeFilter === 'boxing' ? ['boxing', 'wwe'].includes(stream.displayType) : (activeFilter === 'mma' ? stream.displayType === 'mma' : (activeFilter === 'f1' ? ['f1', 'racing'].includes(stream.displayType) : stream.displayType === activeFilter))) : normalized;
+            const filtered = dedupeStreamsForRender(rawFiltered);
             const grouped = {};
             filtered.forEach((stream) => {
-                const key = cleanDisplayTitle(stream.sectionTitle || getSportMeta(stream.displayType).label);
+                const key = canonicalSectionTitle(stream);
                 if (!grouped[key]) grouped[key] = [];
                 grouped[key].push(stream);
             });
-            const types = [...new Set(normalized.map((stream) => stream.displayType).filter(Boolean))];
+            // Remove LFC section — it's a buffstreams artifact, not a real sport category
+            delete grouped['LFC'];
+            delete grouped['lfc'];
+            // Also remove any section whose name is only 2-3 uppercase letters and not a known sport
+            const KNOWN_SECTIONS = new Set(['NFL', 'NBA', 'MLB', 'NHL', 'MMA', 'UFC', 'MLS']);
+            for (const key of Object.keys(grouped)) {
+                if (/^[A-Z]{2,3}$/.test(key) && !KNOWN_SECTIONS.has(key)) delete grouped[key];
+            }
+            const types = activeFilter === 'boxing' ? ['boxing'] : (activeFilter === 'mma' ? ['mma'] : (activeFilter === 'f1' ? ['f1'] : [...new Set(normalized.map((stream) => ['boxing', 'wwe'].includes(stream.displayType) ? 'boxing' : (stream.displayType === 'mma' ? 'mma' : (['f1', 'racing'].includes(stream.displayType) ? 'f1' : stream.displayType))).filter(Boolean))]));
             renderLogos(types);
             const container = document.getElementById('streamsContainer');
-            const entries = Object.entries(grouped);
+            const teamLogoCache = new Map();
+            const entries = Object.entries(grouped).sort(([aLabel], [bLabel]) => {
+                const rankDiff = sectionRank(aLabel) - sectionRank(bLabel);
+                if (rankDiff) return rankDiff;
+                return cleanDisplayTitle(aLabel).localeCompare(cleanDisplayTitle(bLabel));
+            });
             if (!entries.length) {
-                container.innerHTML = '<div class="glass empty">No streams found for this category.</div>';
+                const emptyHtml = '<div class="glass empty">No streams found for this category.</div>';
+                if (emptyHtml !== lastRenderedStreamsHtml) {
+                    container.innerHTML = emptyHtml;
+                    lastRenderedStreamsHtml = emptyHtml;
+                }
                 return;
             }
-            container.innerHTML = entries.map(([sectionTitle, streams]) => {
-                const lead = streams[0];
+            const nextHtml = entries.map(([sectionTitle, streams]) => {
+                const orderedStreams = [...streams].sort((a, b) => {
+                    const aState = getRenderableStreamState(a);
+                    const bState = getRenderableStreamState(b);
+                    if (aState.effectivelyLive !== bState.effectivelyLive) return aState.effectivelyLive ? -1 : 1;
+                    if (aState.startsAt !== bState.startsAt) return aState.startsAt - bState.startsAt;
+                    return (a.stableIndex || 0) - (b.stableIndex || 0);
+                });
+                const lead = orderedStreams[0];
                 const meta = getSportMeta(lead.displayType);
-                const logo = lead.tournamentImage || lead.categoryImage || meta.icon;
-                const rows = streams.map((stream) => {
-                    const teams = splitTeams(stream.title, stream.liveNow);
+                const prefersSportLogo = lead.displayType === 'soccer';
+                const defaultLogo = prefersSportLogo
+                    ? (meta.icon || lead.categoryImage || lead.tournamentImage || lead.logo || '/Logo.svg?v=1')
+                    : (lead.tournamentImage || lead.categoryImage || lead.logo || meta.icon || '/Logo.svg?v=1');
+                const logo = (lead.displayType === 'f1' || lead.displayType === 'racing')
+                    ? racingSeriesLogo(sectionTitle || lead.sectionTitle || lead.title || '', defaultLogo)
+                    : defaultLogo;
+                const rows = orderedStreams.map((stream) => {
+                    const isRacingEvent = stream.displayType === 'f1' || stream.displayType === 'racing';
+                    const teams = isRacingEvent ? { away: getStandaloneEventTitle(stream.title), time: '', home: '' } : splitTeams(stream.title, stream.liveNow, stream);
                     const sessionLabel = detectSessionLabel(stream);
                     const liveState = stream.liveState || {};
-                    const livePeriodText = cleanDisplayTitle(liveState.periodText || '');
+                    const renderState = getRenderableStreamState(stream);
+                    const livePeriodText = renderState.livePeriodText;
                     const liveExactTime = cleanDisplayTitle(liveState.exactTime || '');
-                    const providerStatus = cleanDisplayTitle(livePeriodText || stream.statusText || '');
-                    const scheduleInfo = extractScheduleInfo(stream);
+                    const providerStatus = renderState.providerStatus;
+                    const scheduleInfo = renderState.scheduleInfo;
                     const localTimeLabel = convertSourceTimeToLocalLabel(scheduleInfo.eventDate);
-                    const autoLiveNow = !stream.liveNow && scheduleInfo.computedRelative === 'Started';
+                    const hasFutureSchedule = renderState.hasFutureSchedule;
+                    const verifiedCountdownSeconds = Number(stream.countdownSeconds);
+                    const verifiedCountdownReason = String(stream.lockReason || '').toLowerCase();
+                    const hasVerifiedCountdown = verifiedCountdownReason === 'countdown-timer' && Number.isFinite(verifiedCountdownSeconds) && verifiedCountdownSeconds > 0;
+                    const verifiedCountdownText = hasVerifiedCountdown ? formatCountdownFromMs(verifiedCountdownSeconds * 1000) : '';
+                    const hasActiveCountdown = hasVerifiedCountdown || Boolean(scheduleInfo.countdownText) || Boolean(scheduleInfo.eventDate) || hasFutureSchedule;
+                    const effectivelyLive = renderState.effectivelyLive;
+                    const canonicalDate = stream.canonicalEventDate || '';
+                    const isLiveLocked = stream.hasActiveStream === true || stream.isLive === true;
+
                     const statusOverride = availability[stream.id]?.reason || '';
                     const shouldShowOffline = Boolean(statusOverride) && !providerStatus && !scheduleInfo.exactTime;
-                    const centerText = (stream.liveNow || autoLiveNow)
-                        ? (livePeriodText || providerStatus || teams.time || 'LIVE')
-                        : (shouldShowOffline ? 'OFFLINE' : (scheduleInfo.countdownText || liveExactTime || scheduleInfo.exactTime || providerStatus || 'UPCOMING'));
-                    const statusCell = (stream.liveNow || autoLiveNow)
-                        ? `<div class="event-status-live">${escapeHtml(centerText)}</div>`
-                        : `<div class="event-time">${escapeHtml(centerText)}</div>`;
-                    const liveBadge = (stream.liveNow || autoLiveNow)
-                        ? `<span class="live-indicator">Live</span>`
-                        : (scheduleInfo.countdownText ? `<span class="team-meta-badge">${escapeHtml(scheduleInfo.countdownText)}</span>` : '');
-                    const actionButton = (stream.liveNow || autoLiveNow)
+                    const waitingForStream = renderState.scheduleDue && renderState.explicitProviderLive && !renderState.hasActiveStream;
+                    const centerText = effectivelyLive
+                        ? 'LIVE'
+                        : (waitingForStream ? 'Checking stream' : (shouldShowOffline ? 'OFFLINE' : (verifiedCountdownText || scheduleInfo.countdownText || liveExactTime || scheduleInfo.exactTime || 'UPCOMING')));
+
+                    let displayCenterText = centerText;
+                    const timeMatch = String(centerText || '').match(/^(\d+):(\d+)$/);
+                    if (timeMatch && effectivelyLive && typeof streamsLoadTime !== 'undefined') {
+                        const mins = parseInt(timeMatch[1], 10);
+                        const secs = parseInt(timeMatch[2], 10);
+                        const totalSecs = mins * 60 + secs;
+                        const elapsed = Math.floor((Date.now() - streamsLoadTime) / 1000);
+                        const currentSecs = totalSecs + elapsed;
+                        if (currentSecs >= 0) {
+                            const m = Math.floor(currentSecs / 60);
+                            const s = currentSecs % 60;
+                            displayCenterText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                        }
+                    }
+
+                    const scoreDisplay = escapeHtml(displayCenterText);
+                    const liveStatusChip = effectivelyLive
+                        ? `<div class="event-status-live">${scoreDisplay}</div>`
+                        : '';
+                    const livePhaseText = '';
+                    // Badge: green "IN PROGRESS" if truly live, yellow "UPCOMING" if has
+                    // countdown (provider incorrectly marks it live), or blue countdown chip.
+                    const titleLiveBadge = effectivelyLive
+                        ? `<span class="team-meta-badge in-progress">IN PROGRESS</span>`
+                        : (hasActiveCountdown
+                            ? `<span class="team-meta-badge upcoming">UPCOMING</span>`
+                            : (scheduleInfo.countdownText ? `<span class="team-meta-badge">${escapeHtml(scheduleInfo.countdownText)}</span>` : ''));
+                    const actionButton = effectivelyLive
                         ? `<button class="btn watch-btn" data-stream-id="${encodeURIComponent(stream.id)}" data-stream-title="${encodeURIComponent(getMainTitle(stream.title))}">Watch</button>`
-                        : '';
-                    const primaryTitle = (stream.liveNow || autoLiveNow) && teams.away ? teams.away : getMainTitle(stream.title);
-                    const secondaryTitle = (stream.liveNow || autoLiveNow) ? teams.home : '';
+                        : `<button class="btn watch-btn locked" type="button" disabled aria-disabled="true" title="${escapeHtml(centerText && centerText !== 'UPCOMING' ? centerText : 'Opens when live')}"><span class="lock-icon" aria-hidden="true"></span>Watch</button>`;
+                    const titleText = stripLiveStatusText(isRacingEvent ? getStandaloneEventTitle(stream.title) : getMainTitle(stream.title));
+                    // Buffstreams remains the source of truth for row titles. LiveSport may enrich
+                    // logos/scores only after strict same-game matching, but it must not rename rows.
+                    const parsedAway = teams.away || '';
+                    const parsedHome = teams.home || '';
+                    const primaryTitle = parsedAway || titleText;
+                    const secondaryTitle = parsedHome;
+                    const matchupTitle = secondaryTitle ? `${primaryTitle} vs ${secondaryTitle}` : primaryTitle;
 
-                    const isLiveSession = stream.liveNow || autoLiveNow || /in progress|live|just now|started|ongoing/i.test(providerStatus);
-                    const sessionBadge = isLiveSession && sessionLabel ? `<span class="team-meta-badge">${escapeHtml(sessionLabel)}</span>` : '';
-                    const scheduleText = [
-                        stream.liveNow && livePeriodText ? livePeriodText : scheduleInfo.display,
-                        localTimeLabel && !scheduleInfo.display.includes(localTimeLabel.replace(/^Your time\s+/, '')) ? localTimeLabel : ''
-                    ].filter(Boolean).join(' ? ') || 'Upcoming';
-                    const scheduleHtml = `<span class="team-meta-text">${escapeHtml(scheduleText)}</span>`;
-                    const metaHtml = (sessionBadge || scheduleText)
-                        ? `<div class="team-meta">${sessionBadge}${scheduleText ? scheduleHtml : ''}</div>`
-                        : '';
+                    const MLB_LOGO_CODES = {
+                        'arizona diamondbacks': 'ari', 'atlanta braves': 'atl', 'baltimore orioles': 'bal',
+                        'boston red sox': 'bos', 'chicago cubs': 'chc', 'chicago white sox': 'chw',
+                        'cincinnati reds': 'cin', 'cleveland guardians': 'cle', 'colorado rockies': 'col',
+                        'detroit tigers': 'det', 'houston astros': 'hou', 'kansas city royals': 'kc',
+                        'los angeles angels': 'laa', 'la angels': 'laa', 'los angeles dodgers': 'lad',
+                        'miami marlins': 'mia', 'milwaukee brewers': 'mil', 'minnesota twins': 'min',
+                        'new york mets': 'nym', 'ny mets': 'nym', 'new york yankees': 'nyy', 'ny yankees': 'nyy',
+                        'athletics': 'ath', 'oakland athletics': 'ath', 'philadelphia phillies': 'phi',
+                        'pittsburgh pirates': 'pit', 'san diego padres': 'sd', 'san francisco giants': 'sf',
+                        'seattle mariners': 'sea', 'st louis cardinals': 'stl', 'saint louis cardinals': 'stl',
+                        'tampa bay rays': 'tb', 'texas rangers': 'tex', 'toronto blue jays': 'tor',
+                        'washington nationals': 'wsh'
+                    };
+                    const NBA_LOGO_CODES = {
+                        'atlanta hawks': 'atl', 'boston celtics': 'bos', 'brooklyn nets': 'bkn', 'charlotte hornets': 'cha',
+                        'chicago bulls': 'chi', 'cleveland cavaliers': 'cle', 'dallas mavericks': 'dal', 'denver nuggets': 'den',
+                        'detroit pistons': 'det', 'golden state warriors': 'gs', 'houston rockets': 'hou', 'indiana pacers': 'ind',
+                        'la clippers': 'lac', 'los angeles clippers': 'lac', 'la lakers': 'lal', 'los angeles lakers': 'lal',
+                        'memphis grizzlies': 'mem', 'miami heat': 'mia', 'milwaukee bucks': 'mil', 'minnesota timberwolves': 'min',
+                        'new orleans pelicans': 'no', 'new york knicks': 'ny', 'ny knicks': 'ny', 'oklahoma city thunder': 'okc',
+                        'orlando magic': 'orl', 'philadelphia 76ers': 'phi', 'phoenix suns': 'phx', 'portland trail blazers': 'por',
+                        'sacramento kings': 'sac', 'san antonio spurs': 'sa', 'toronto raptors': 'tor', 'utah jazz': 'utah',
+                        'washington wizards': 'wsh'
+                    };
+                    const WNBA_LOGO_CODES = {
+                        'atlanta dream': 'atl', 'chicago sky': 'chi', 'connecticut sun': 'conn', 'dallas wings': 'dal',
+                        'golden state valkyries': 'gs', 'indiana fever': 'ind', 'las vegas aces': 'lv', 'los angeles sparks': 'la',
+                        'minnesota lynx': 'min', 'new york liberty': 'ny', 'phoenix mercury': 'phx', 'portland fire': 'por', 'seattle storm': 'sea',
+                        'washington mystics': 'wsh'
+                    };
+                    const COUNTRY_FLAGS = {
+                        'usa': 'us', 'united states': 'us', 'cuba': 'cu', 'cabo verde': 'cv', 'cape verde': 'cv', 'venezuela': 've', 'italy': 'it',
+                        'spain': 'es', 'france': 'fr', 'germany': 'de', 'brazil': 'br', 'argentina': 'ar',
+                        'united kingdom': 'gb', 'uk': 'gb', 'england': 'gb-eng', 'canada': 'ca', 'japan': 'jp',
+                        'south korea': 'kr', 'mexico': 'mx', 'dominican republic': 'do', 'puerto rico': 'pr',
+                        'australia': 'au', 'colombia': 'co', 'netherlands': 'nl', 'belgium': 'be',
+                        'switzerland': 'ch', 'austria': 'at', 'portugal': 'pt', 'turkey': 'tr', 'turkiye': 'tr', 't rkiye': 'tr', 't�rkiye': 'tr',
+                        'russia': 'ru', 'ukraine': 'ua', 'poland': 'pl', 'china': 'cn', 'taiwan': 'tw',
+                        'ecuador': 'ec', 'peru': 'pe', 'chile': 'cl', 'bolivia': 'bo', 'paraguay': 'py',
+                        'uruguay': 'uy', 'morocco': 'ma', 'croatia': 'hr', 'senegal': 'sn',
+                        'tunisia': 'tn', 'japan': 'jp', 'saudi arabia': 'sa', 'costa rica': 'cr',
+                        'denmark': 'dk', 'sweden': 'se', 'norway': 'no', 'finland': 'fi',
+                        'wales': 'gb-wls', 'scotland': 'gb-sct', 'ireland': 'ie', 'northern ireland': 'gb-nir',
+                        'algeria': 'dz', 'egypt': 'eg', 'ghana': 'gh', 'cameroon': 'cm',
+                        'nigeria': 'ng', 'ivory coast': 'ci', 'cote d ivoire': 'ci', 'cote divoire': 'ci', 'c te d ivoire': 'ci', 'south africa': 'za',
+                        'new zealand': 'nz', 'india': 'in', 'pakistan': 'pk', 'bangladesh': 'bd',
+                        'sri lanka': 'lk', 'nepal': 'np', 'afghanistan': 'af', 'iran': 'ir',
+                        'iraq': 'iq', 'syria': 'sy', 'lebanon': 'lb', 'jordan': 'jo',
+                        'curacao': 'cw', 'cura ao': 'cw', 'jamaica': 'jm', 'haiti': 'ht', 'honduras': 'hn',
+                        'panama': 'pa', 'guatemala': 'gt', 'el salvador': 'sv',
+                        'nicaragua': 'ni', 'greece': 'gr', 'serbia': 'rs', 'slovenia': 'si',
+                        'latvia': 'lv', 'lithuania': 'lt', 'estonia': 'ee', 'czech republic': 'cz',
+                        'slovakia': 'sk', 'hungary': 'hu', 'romania': 'ro', 'bulgaria': 'bg',
+                        'albania': 'al', 'georgia': 'ge', 'armenia': 'am', 'azerbaijan': 'az'
+                    };
+                    function findLiveSportPairLogos(awayName, homeName) {
+                        const awayKey = normalizeTeamKey(awayName);
+                        const homeKey = normalizeTeamKey(homeName);
+                        if (!awayKey || !homeKey) return null;
+                        for (const match of livesportDirectory || []) {
+                            const mHome = match?.homeTeam || match?.teams?.home || '';
+                            const mAway = match?.awayTeam || match?.teams?.away || '';
+                            const mHomeKey = normalizeTeamKey(mHome);
+                            const mAwayKey = normalizeTeamKey(mAway);
+                            if (mAwayKey === awayKey && mHomeKey === homeKey) {
+                                return { away: match.awayLogo || '', home: match.homeLogo || '' };
+                            }
+                            if (mHomeKey === awayKey && mAwayKey === homeKey) {
+                                return { away: match.homeLogo || '', home: match.awayLogo || '' };
+                            }
+                        }
+                        return null;
+                    }
+                    function findTeamLogo(teamName) {
+                        if (!teamName) return '';
+                        const cleanT = normalizeTeamKey(teamName);
+                        if (teamLogoCache.has(cleanT)) return teamLogoCache.get(cleanT);
+                        const rememberLogo = (value) => { teamLogoCache.set(cleanT, value || ''); return value || ''; };
 
+                        const nbaCode = NBA_LOGO_CODES[cleanT];
+                        if (nbaCode) {
+                            return rememberLogo(`https://a.espncdn.com/i/teamlogos/nba/500/${nbaCode}.png`);
+                        }
+                        const wnbaCode = WNBA_LOGO_CODES[cleanT];
+                        if (wnbaCode) {
+                            return rememberLogo(`https://a.espncdn.com/i/teamlogos/wnba/500/${wnbaCode}.png`);
+                        }
+                        const mlbCode = MLB_LOGO_CODES[cleanT];
+                        if (mlbCode) {
+                            return rememberLogo(`https://a.espncdn.com/i/teamlogos/mlb/500/${mlbCode}.png`);
+                        }
+                        // 1. Try matching country flags
+                        if (COUNTRY_FLAGS[cleanT]) {
+                            return rememberLogo(`https://flagcdn.com/w40/${COUNTRY_FLAGS[cleanT]}.png`);
+                        }
+                        for (const [country, code] of Object.entries(COUNTRY_FLAGS)) {
+                            if (cleanT === country || (cleanT.length > 3 && (cleanT.startsWith(country + ' ') || cleanT.endsWith(' ' + country)))) {
+                                return rememberLogo(`https://flagcdn.com/w40/${code}.png`);
+                            }
+                        }
+
+                        // 2. Use LiveSport logos only for exact normalized team-name matches.
+                        // Fuzzy logo matching was removed because it caused visible logo switching.
+                        for (const match of livesportDirectory || []) {
+                            const homeName = match?.homeTeam || match?.teams?.home || '';
+                            const awayName = match?.awayTeam || match?.teams?.away || '';
+                            if (homeName && normalizeTeamKey(homeName) === normalizeTeamKey(teamName) && match.homeLogo) {
+                                return rememberLogo(match.homeLogo);
+                            }
+                            if (awayName && normalizeTeamKey(awayName) === normalizeTeamKey(teamName) && match.awayLogo) {
+                                return rememberLogo(match.awayLogo);
+                            }
+                        }
+
+                        // 3. Dynamic glassmorphic gradient fallback with initials (Base64 encoded to prevent browser XML parser errors)
+                        const initials = teamName.split(/\s+/).map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+                        let hash = 0;
+                        for (let i = 0; i < cleanT.length; i++) {
+                            hash = cleanT.charCodeAt(i) + ((hash << 5) - hash);
+                        }
+                        const colors = [
+                            ['#ff4e50', '#f9d423'],
+                            ['#4facfe', '#00f2fe'],
+                            ['#43e97b', '#38f9d7'],
+                            ['#fa709a', '#fee140'],
+                            ['#f093fb', '#f5576c'],
+                            ['#30cfd0', '#330867'],
+                            ['#a8c0ff', '#3f2b96'],
+                            ['#e0c3fc', '#8ec5fc']
+                        ];
+                        const pair = colors[Math.abs(hash) % colors.length];
+                        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><defs><linearGradient id="g-${Math.abs(hash)}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${pair[0]}"/><stop offset="100%" stop-color="${pair[1]}"/></linearGradient></defs><rect width="20" height="20" rx="4" fill="url(#g-${Math.abs(hash)})"/><text x="10" y="10.5" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, system-ui, sans-serif" font-weight="bold" font-size="9px">${initials}</text></svg>`;
+                        try {
+                            return rememberLogo(`data:image/svg+xml;base64,` + btoa(unescape(encodeURIComponent(svg))));
+                        } catch (e) {
+                            return rememberLogo(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`);
+                        }
+                    }
+
+                    let homeLogoUrl = '';
+                    let awayLogoUrl = '';
+                    try {
+                        // First: use LiveSport-sourced logos if enrichLiveStreams attached them
+                        if (isRacingEvent) {
+                            awayLogoUrl = racingFlagUrl(titleText) || getSportMeta(stream.displayType).icon || '';
+                        } else if (stream.homeLogo || stream.awayLogo) {
+                            homeLogoUrl = stream.homeLogo || '';
+                            awayLogoUrl = stream.awayLogo || '';
+                        } else if (secondaryTitle) {
+                            const pairLogos = findLiveSportPairLogos(primaryTitle, secondaryTitle);
+                            if (pairLogos) {
+                                awayLogoUrl = pairLogos.away || '';
+                                homeLogoUrl = pairLogos.home || '';
+                            }
+                            awayLogoUrl = awayLogoUrl || findTeamLogo(primaryTitle);
+                            homeLogoUrl = homeLogoUrl || findTeamLogo(secondaryTitle);
+                        } else {
+                            const titleParts = primaryTitle.split(/\s+vs\.?\s+/i);
+                            if (titleParts.length >= 2) {
+                                awayLogoUrl = findTeamLogo(titleParts[0]);
+                                homeLogoUrl = findTeamLogo(titleParts[1]);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error matching logos:', e);
+                    }
+
+                    const isLiveSession = effectivelyLive;
+                    const sessionBadge = isLiveSession && sessionLabel && !/in progress|live|started|ongoing/i.test(sessionLabel) ? `<span class="team-meta-badge">${escapeHtml(sessionLabel)}</span>` : '';
+
+                    const upcomingLabel = waitingForStream ? 'Checking stream' : (verifiedCountdownText || (hasFutureSchedule ? (scheduleInfo.countdownText
+                        || (scheduleInfo.computedRelative && scheduleInfo.computedRelative !== 'Started' ? scheduleInfo.computedRelative : '')
+                        || scheduleInfo.relativeText
+                        || 'Upcoming') : 'Upcoming'));
+                    const localScheduleLabel = localTimeLabel || (scheduleInfo.exactTime ? 'Your time - ' + scheduleInfo.exactTime : '');
+                    const scheduleText = localScheduleLabel;
+
+                    const countdownAttrs = (hasFutureSchedule && scheduleInfo.eventDate)
+                        ? ` data-event-start="${scheduleInfo.eventDate.getTime()}"`
+                        : (hasVerifiedCountdown ? ` data-countdown-seconds="${Math.floor(verifiedCountdownSeconds)}" data-countdown-updated="${Date.now()}"` : '');
+                    const countdownBadge = !effectivelyLive
+                        ? `<span class="team-meta-badge upcoming"${countdownAttrs}>${escapeHtml(upcomingLabel)}</span>`
+                        : '';
+                    const canonicalDateBadge = canonicalDate
+                        ? `<span class="team-meta-badge">${escapeHtml(canonicalDate)}</span>`
+                        : '';
+                    const scheduleMetaBadge = !effectivelyLive && scheduleText
+                        ? `<span class="team-meta-badge">${escapeHtml(scheduleText)}</span>`
+                        : '';
+                    const metaHtml = effectivelyLive && (livePhaseText || sessionBadge)
+                        ? `<div class="team-meta">${`<span class="team-meta-badge live-phase">${escapeHtml(livePhaseText)}</span>`}${sessionBadge}</div>`
+                        : (canonicalDateBadge || scheduleMetaBadge ? `<div class="team-meta">${canonicalDateBadge}${scheduleMetaBadge}</div>` : '');
+
+                    const statusCell = effectivelyLive
+                        ? `<div class="event-status-slot">${liveStatusChip}</div>`
+                        : (countdownBadge ? `<div class="event-status-slot">${countdownBadge}</div>` : '<div class="event-status-slot"></div>');
+
+                    // Generate title html with inline flags
+                    let matchTitleHtml = '';
+                    const titlePair = isRacingEvent ? { away: primaryTitle, home: '', raw: primaryTitle } : (secondaryTitle ? { away: primaryTitle, home: secondaryTitle, raw: matchupTitle } : parseTeamPair(primaryTitle));
+                    if (isRacingEvent) {
+                        const flag = awayLogoUrl ? `<img class="team-flag" src="${escapeHtml(awayLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
+                        matchTitleHtml = `<div class="team-name-wrap">${flag}${escapeHtml(primaryTitle)}</div>`;
+                    } else if (titlePair.home) {
+                        const flagAway = awayLogoUrl ? `<img class="team-flag" src="${escapeHtml(awayLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
+                        const flagHome = homeLogoUrl ? `<img class="team-flag" src="${escapeHtml(homeLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
+                        matchTitleHtml = `<div class="team-name-wrap">${flagAway}${escapeHtml(titlePair.away)}</div> <span style="color:var(--muted);font-weight:700;font-size:0.8rem;margin:0 4px;">vs</span> <div class="team-name-wrap">${flagHome}${escapeHtml(titlePair.home)}</div>`;
+                    } else if (secondaryTitle) {
+                        const flagAway = awayLogoUrl ? `<img class="team-flag" src="${escapeHtml(awayLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
+                        const flagHome = homeLogoUrl ? `<img class="team-flag" src="${escapeHtml(homeLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
+                        matchTitleHtml = `<div class="team-name-wrap">${flagAway}${escapeHtml(primaryTitle)}</div> <span style="color:var(--muted);font-weight:700;font-size:0.8rem;margin:0 4px;">vs</span> <div class="team-name-wrap">${flagHome}${escapeHtml(secondaryTitle)}</div>`;
+                    } else {
+                        matchTitleHtml = escapeHtml(primaryTitle);
+                    }
                     return `
-                        <div class="event-row">
+                        <div class="event-row" data-stream-key="${escapeHtml(stream.id || stream.url || '')}"${isLiveLocked ? ' data-live-locked="true"' : ''}>
                             <div class="team-wrap">
-                                <div class="team away">${escapeHtml(primaryTitle)}</div>
+                                <div class="match-title-line">
+                                    <div class="match-title">${matchTitleHtml}</div>
+                                    ${titleLiveBadge}
+                                </div>
                                 ${metaHtml}
                             </div>
                             ${statusCell}
-                            <div class="team home">${escapeHtml(secondaryTitle)}</div>
                             <div class="row-actions">
-                                ${liveBadge}
                                 ${actionButton}
                             </div>
                         </div>
@@ -1348,83 +3162,230 @@
                 return `
                     <section class="event-card glass">
                         <div class="event-header">
-                            <img class="event-header-logo" src="${logo}" alt="${escapeHtml(sectionTitle)}">
+                            <img class="event-header-logo" src="${logo}" alt="${escapeHtml(sectionTitle)}" loading="lazy" decoding="async">
                             <div class="event-header-title">${escapeHtml(sectionTitle)}</div>
                         </div>
                         <div class="event-list">${rows}</div>
                     </section>
                 `;
             }).join('');
+            if (nextHtml !== lastRenderedStreamsHtml || !categoryLayerCache.has(getCategoryLayerKey())) {
+                renderHtmlProgressively(getCategoryLayerKey(), nextHtml, ++renderGeneration);
+            } else {
+                showCategoryLayer(getCategoryLayerKey());
+            }
         }
 
         async function loadAvailability() {
-            if (!availabilityEndpointEnabled) return;
-            try {
-                const response = await fetch('/api/stream-statuses', { cache: 'no-store' });
-                if (!response.ok) {
-                    availabilityEndpointEnabled = false;
-                    availability = {};
-                    return;
+            availability = {};
+            return;
+        }
+
+        const liveLockedStreams = new Set();
+
+        function preserveLiveLocks(newStreams) {
+            return newStreams.map((stream) => {
+                const key = stream.id || stream.url;
+                if (!key) return stream;
+                if (liveLockedStreams.has(key)) {
+                    return { ...stream, isLive: true, hasActiveStream: true, isLocked: false };
                 }
-                const result = await response.json();
-                if (result.success) availability = result.data || {};
+                if (stream.isLive === true || stream.hasActiveStream === true) {
+                    liveLockedStreams.add(key);
+                    return { ...stream, isLive: true, hasActiveStream: true, isLocked: false };
+                }
+                return stream;
+            });
+        }
+
+        let streamsLoadTime = Date.now();
+        let livesportDirectory = [];
+
+        function getCatalogCacheKey(query = getBuffstreamsCatalogQuery(), dateKey = getCatalogDateKey()) {
+            return CATALOG_CACHE_PREFIX + `${query}:${dateKey}`;
+        }
+
+        function readCatalogCache(query = getBuffstreamsCatalogQuery(), dateKey = getCatalogDateKey()) {
+            const key = getCatalogCacheKey(query, dateKey);
+            for (const store of [sessionStorage, localStorage]) {
+                try {
+                    const raw = store.getItem(key);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    if (!parsed || !Array.isArray(parsed.data) || Date.now() - Number(parsed.savedAt || 0) > CATALOG_CACHE_TTL_MS) continue;
+                    return parsed.data;
+                } catch {
+                    // Storage can be unavailable/private; cache is only a speed boost.
+                }
+            }
+            return null;
+        }
+
+        function writeCatalogCache(query, dateKey, data) {
+            try {
+                if (!Array.isArray(data) || !data.length) return;
+                const payload = JSON.stringify({ savedAt: Date.now(), data });
+                const key = getCatalogCacheKey(query, dateKey);
+                sessionStorage.setItem(key, payload);
+                localStorage.setItem(key, payload);
             } catch {
-                availabilityEndpointEnabled = false;
-                availability = {};
+                // Storage can be unavailable/private; cache is only a speed boost.
             }
         }
 
-        async function loadStreams() {
-            const response = await fetch('/api/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: '' }),
-                cache: 'no-store'
-            });
-            const result = await response.json();
-            if (!result.success) throw new Error('Failed to load streams');
-            allStreams = result.data || [];
+        function hydrateFromCatalogCache() {
+            const cached = readCatalogCache();
+            if (!cached || !cached.length) return false;
+            allStreams = cached.filter(isBuffStreamsCatalogStream);
+            streamsLoadTime = Date.now();
+            scheduleRenderStreams({ force: true });
+            return true;
+        }
+
+        function getCatalogDateKey(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
+
+        function isFinishedOrOldStream(stream) {
+            return getScheduleDrivenState(stream).stale;
+        }
+        function getBuffstreamsCatalogQuery() {
+            return activeFilter === 'boxing' ? 'category:fighting' : (activeFilter ? `category:${activeFilter}` : 'all');
+        }
+
+        async function refreshLiveSportDirectory(expectedSeq = homepageRefreshSeq) {
+            try {
+                const response = await fetch('/api/livesport-directory', { cache: 'no-store' });
+                const result = await response.json();
+                if (expectedSeq !== homepageRefreshSeq) return;
+                const matches = result?.data?.matches || result?.matches || [];
+                if (Array.isArray(matches)) {
+                    livesportDirectory = matches;
+                    allStreams.forEach(applyLiveSportScheduleData);
+                    if (Date.now() - lastUserScrollAt > 2500) scheduleRenderStreams();
+                }
+            } catch (e) {
+                console.error('Failed to load livesport directory:', e);
+            }
+        }
+
+        async function loadStreams(expectedSeq = homepageRefreshSeq, options = {}) {
+            const catalogDate = getCatalogDateKey();
+            const catalogQuery = getBuffstreamsCatalogQuery();
+            const allowCache = options.allowCache !== false;
+            const background = options.background === true;
+            if (allowCache && !allStreams.length) {
+                hydrateFromCatalogCache();
+            }
+            const requestKey = `${catalogQuery}:${catalogDate}`;
+            if (catalogRequestInFlight?.key === requestKey) return catalogRequestInFlight.promise;
+            const promise = (async () => {
+                try {
+                    const response = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: catalogQuery, date: catalogDate }),
+                        cache: 'no-store'
+                    });
+                    const result = await response.json();
+                    if (expectedSeq !== homepageRefreshSeq) return;
+                    const nextStreams = (Array.isArray(result?.data) ? result.data : []).filter(isBuffStreamsCatalogStream);
+                    if (!nextStreams.length && allStreams.length) return;
+                    allStreams = preserveLiveLocks(nextStreams);
+                    writeCatalogCache(catalogQuery, catalogDate, nextStreams);
+                    streamsLoadTime = Date.now();
+                    scheduleRenderStreams({ force: true });
+                    setTimeout(() => refreshLiveSportDirectory(expectedSeq), background ? 2500 : 600);
+                } catch (e) {
+                    console.error('Failed to load streams:', e);
+                    if (!allStreams.length) hydrateFromCatalogCache();
+                    if (!allStreams.length) scheduleRenderStreams({ force: true });
+                } finally {
+                    if (catalogRequestInFlight?.key === requestKey) catalogRequestInFlight = null;
+                }
+            })();
+            catalogRequestInFlight = { key: requestKey, promise };
+            return promise;
         }
 
         async function verifyLikelyLiveStreams() {
-            if (verificationInFlight || document.hidden) return;
-            const candidates = getVerificationCandidates();
-            if (!candidates.length) return;
-            verificationInFlight = true;
+            // Homepage rows must not flip between locked/live while the user scrolls.
+            // The watch page resolves real sources; the homepage uses catalog schedule state only.
+            return;
+        }
+
+        function extractSlugTitle(streamUrl) {
             try {
-                await Promise.allSettled(candidates.map((stream) => {
-                    verificationCooldowns.set(stream.id, Date.now());
-                    verifiedEvents.add(stream.id);
-                    return fetch('/api/fetchSources', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ eventUrl: stream.id, background: true }),
-                            cache: 'no-store'
-                    });
-                }));
-                await loadAvailability();
-                renderStreams();
-            } finally {
-                verificationInFlight = false;
+                const sid = String(streamUrl || '');
+                if (!sid.startsWith('http')) return null;
+                const pathParts = new URL(sid).pathname.replace(/\/+$/, '').split('/').filter(Boolean);
+                let slug = pathParts[pathParts.length - 1] || '';
+                // If last segment is purely numeric, use the second-to-last
+                if (/^\d+$/.test(slug) && pathParts.length >= 2) {
+                    slug = pathParts[pathParts.length - 2];
+                }
+                if (!slug || /^\d+$/.test(slug)) return null;
+                // Return slug with hyphens as-is — the backend fuzzy-matches it directly
+                // e.g. "cincinnati-reds-milwaukee-brewers" → backend finds the right match
+                return slug.replace(/-/g, ' ');
+            } catch { return null; }
+        }
+
+        async function settleInBatches(items, limit, worker) {
+            const safeLimit = Math.max(1, limit || 1);
+            for (let index = 0; index < items.length; index += safeLimit) {
+                await Promise.allSettled(items.slice(index, index + safeLimit).map(worker));
+                if (Date.now() - lastUserScrollAt < 700) {
+                    await new Promise((resolve) => setTimeout(resolve, 250));
+                }
             }
         }
 
+        async function enrichLiveStreams() {
+            // Disabled on the homepage: post-render match-details polling caused visible state flips.
+            // Logos/schedules are already enriched once through applyLiveSportScheduleData().
+            return;
+        }
+
         async function refreshHomepageData() {
+            if (homepageRefreshInFlight) {
+                pendingHomepageRefresh = true;
+                return;
+            }
+            if (!document.hidden && Date.now() - lastUserScrollAt < 4000) {
+                scheduleNextRefresh(15000);
+                return;
+            }
+            homepageRefreshInFlight = true;
+            pendingHomepageRefresh = false;
+            const refreshSeq = ++homepageRefreshSeq;
             try {
-                await loadStreams();
-                await loadAvailability();
-                renderStreams();
-                await verifyLikelyLiveStreams();
+                await loadStreams(refreshSeq, { background: true });
+                if (refreshSeq !== homepageRefreshSeq) return;
                 refreshBackoffStep = 0;
             } catch {
                 refreshBackoffStep = Math.min(refreshBackoffStep + 1, 4);
             } finally {
-                scheduleNextRefresh();
+                homepageRefreshInFlight = false;
+                if (pendingHomepageRefresh) {
+                    pendingHomepageRefresh = false;
+                    setTimeout(refreshHomepageData, 0);
+                } else {
+                    scheduleNextRefresh();
+                }
             }
         }
 
+        function hasLiveStreamsNow() {
+            return allStreams.some((stream) => getScheduleDrivenState(stream).effectivelyLive);
+        }
         function getRefreshDelay() {
-            const baseDelay = document.hidden ? HIDDEN_REFRESH_MS : ACTIVE_REFRESH_MS;
+            const baseDelay = document.hidden
+                ? HIDDEN_REFRESH_MS
+                : ACTIVE_REFRESH_MS;
             return baseDelay * Math.pow(2, refreshBackoffStep);
         }
 
@@ -1435,13 +3396,45 @@
 
         function startCountdownTimer() {
             if (countdownTimer) return;
+            updateCountdownChips();
             countdownTimer = setInterval(() => {
-                if (document.hidden || !allStreams.length) return;
-                renderStreams();
+                if (document.hidden) return;
+                updateCountdownChips();
             }, 1000);
         }
 
-        document.addEventListener('click', (event) => {
+        const activateCategory = (element, event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const nextFilter = element.dataset.filter || null;
+            if (activeFilter === nextFilter) return;
+            activeFilter = nextFilter;
+            liveLockedStreams.clear();
+            homepageRefreshSeq += 1;
+            allStreams = [];
+            lastRenderedStreamsHtml = '';
+            setActiveNav();
+            if (!showCategoryLayer(getCategoryLayerKey())) {
+                clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
+            }
+            const hadCache = hydrateFromCatalogCache();
+            if (!hadCache && !showCategoryLayer(getCategoryLayerKey())) {
+                clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
+            }
+            syncCategoryPath(activeFilter);
+            loadStreams(homepageRefreshSeq, { background: true }).catch((error) => console.error('Category stream load failed:', error));
+            scheduleNextRefresh(ACTIVE_REFRESH_MS);
+        };
+
+        const activateWatch = (element, event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const id = decodeURIComponent(element.dataset.streamId || '');
+            const title = decodeURIComponent(element.dataset.streamTitle || '');
+            if (id) goToWatchPage(id, title);
+        };
+
+        document.addEventListener('pointerdown', (event) => {
             const openPolicyButton = event.target.closest('[data-open-policy]');
             if (openPolicyButton) {
                 event.preventDefault();
@@ -1472,31 +3465,52 @@
 
             const filterLink = event.target.closest('[data-filter]');
             if (filterLink) {
-                event.preventDefault();
-                activeFilter = filterLink.dataset.filter || null;
-                setActiveNav();
-                renderStreams();
+                activateCategory(filterLink, event);
                 return;
             }
             const watchButton = event.target.closest('.watch-btn:not(.locked)');
             if (watchButton) {
-                const id = decodeURIComponent(watchButton.dataset.streamId || '');
-                const title = decodeURIComponent(watchButton.dataset.streamTitle || '');
-                if (id) goToWatchPage(id, title);
+                activateWatch(watchButton, event);
+                return;
             }
-        });
 
-        window.addEventListener('load', async () => {
+            const watchRecapsButton = event.target.closest('[data-watch-recaps]');
+            if (watchRecapsButton) {
+                event.preventDefault();
+                event.stopPropagation();
+                window.location.href = getRecapsPath();
+            }
+        }, { passive: false });
+
+        window.addEventListener('load', () => {
             try {
-                await loadStreams();
-                await loadAvailability();
+                const pathToFilter = {
+                    '/': '',
+                    '/all': '',
+                    '/football': 'soccer',
+                    '/nfl': 'nfl',
+                    '/boxing': 'boxing',
+                    '/formula-1': 'f1',
+                    '/nba': 'nba',
+                    '/wnba': 'wnba',
+                    '/mlb': 'mlb'
+                };
+                const initialFilter = pathToFilter[window.location.pathname] ?? '';
+                activeFilter = initialFilter || null;
                 setActiveNav();
-                renderStreams();
+                syncCategoryPath(activeFilter, true);
                 startCountdownTimer();
-                await verifyLikelyLiveStreams();
-                scheduleNextRefresh();
-            } catch {
-                document.getElementById('streamsContainer').innerHTML = '<div class="glass empty">Error loading streams.</div>';
+                const hadCache = hydrateFromCatalogCache();
+                if (!hadCache && !showCategoryLayer(getCategoryLayerKey())) {
+                    clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
+                }
+                loadStreams(homepageRefreshSeq, { background: true }).catch((error) => console.error('Initial stream load failed:', error));
+                scheduleNextRefresh(ACTIVE_REFRESH_MS);
+            } catch (error) {
+                console.error('Homepage startup failed:', error);
+                if (!showCategoryLayer(getCategoryLayerKey())) {
+                    clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
+                }
                 scheduleNextRefresh(HIDDEN_REFRESH_MS);
             }
         });
@@ -1508,16 +3522,20 @@
             }
             refreshBackoffStep = 0;
             startCountdownTimer();
-            scheduleNextRefresh(1000);
+            scheduleNextRefresh(ACTIVE_REFRESH_MS);
         });
 
         let logoResizeTimer = null;
+        window.addEventListener('scroll', () => {
+            lastUserScrollAt = Date.now();
+        }, { passive: true });
+
         window.addEventListener('resize', () => {
             if (!allStreams.length) return;
             if (logoResizeTimer) clearTimeout(logoResizeTimer);
             logoResizeTimer = setTimeout(() => {
-                renderStreams();
-            }, 120);
+                scheduleRenderStreams();
+            }, 220);
         });
 
         window.addEventListener('keydown', (event) => {
@@ -1526,7 +3544,15 @@
                 event.preventDefault();
                 activeFilter = logoFilter.dataset.filter || null;
                 setActiveNav();
-                renderStreams();
+                scheduleRenderStreams({ force: true });
+                syncCategoryPath(activeFilter);
+                return;
+            }
+
+            const navFilter = event.target && event.target.closest ? event.target.closest('.nav-link[data-filter]') : null;
+            if (navFilter && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                navFilter.click();
                 return;
             }
 
@@ -1538,9 +3564,54 @@
                 closeTermsModal();
             }
         });
+
+        window.addEventListener('popstate', () => {
+            const pathToFilter = {
+                '/': '',
+                '/all': '',
+                '/football': 'soccer',
+                '/nfl': 'nfl',
+                '/boxing': 'boxing',
+                '/formula-1': 'f1',
+                '/nba': 'nba',
+                '/wnba': 'wnba',
+                '/mlb': 'mlb'
+            };
+            activeFilter = pathToFilter[window.location.pathname] || null;
+            liveLockedStreams.clear();
+            homepageRefreshSeq += 1;
+            allStreams = [];
+            lastRenderedStreamsHtml = '';
+            setActiveNav();
+            if (!showCategoryLayer(getCategoryLayerKey())) {
+                clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
+            }
+            hydrateFromCatalogCache();
+            loadStreams(homepageRefreshSeq, { background: true }).catch((error) => console.error('History stream load failed:', error));
+        });
     </script>
 </body>
+
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

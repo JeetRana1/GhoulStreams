@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recaps | GhoulStreams</title>
+  <link rel="icon" href="/Logo.svg?v=1" />
+  <style>
+    :root {
+      --bg:#05070c;
+      --panel:rgba(8,10,16,.72);
+      --line:rgba(255,255,255,.08);
+      --text:#eef2f8;
+      --muted:#8a97ad;
+      --accent:#ff4a5d;
+      --accent2:#19c89d;
+      --shadow:0 10px 40px rgba(0,0,0,.45);
+      --r-xl:24px;
+      --r-lg:18px;
+      --r-md:14px;
+    }
+    * { box-sizing:border-box; }
+    * {
+      scrollbar-width:thin;
+      scrollbar-color:rgba(132, 178, 225, 0.55) transparent;
+    }
+    *::-webkit-scrollbar { width:8px; height:8px; }
+    *::-webkit-scrollbar-track {
+      background:transparent;
+    }
+    *::-webkit-scrollbar-thumb {
+      background:rgba(132, 178, 225, 0.46);
+      border:2px solid transparent;
+      border-radius:999px;
+      background-clip:content-box;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background:rgba(155, 200, 240, 0.68);
+      background-clip:content-box;
+    }
+    *::-webkit-scrollbar-corner { background:transparent; }
+    body {
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+    }
+    a { color:inherit; text-decoration:none; }
+    .shell { max-width:1320px; margin:0 auto; padding:24px; }
+    .topbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      margin-bottom:24px;
+      padding:14px 16px;
+      border:1px solid rgba(255,255,255,.055);
+      border-radius:var(--r-xl);
+      background:rgba(8,10,16,.72);
+      backdrop-filter:blur(26px) saturate(150%);
+      box-shadow:0 10px 36px rgba(0,0,0,.32), 0 1px 0 rgba(255,255,255,.02) inset;
+    }
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:12px 16px;
+      border-radius:12px;
+      text-decoration:none;
+      font-weight:800;
+      transition:transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .btn:hover { transform:translateY(-1px); border-color:rgba(255,255,255,.2); background:rgba(255,255,255,.06); }
+    .btn.primary { background:rgba(255,74,93,.14); border-color:rgba(255,74,93,.58); }
+    .hero {
+      margin-bottom:18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:18px;
+      flex-wrap:wrap;
+      padding:4px 2px 0;
+    }
+    .hero h1 { margin:0; font-size:clamp(1.4rem, 2.5vw, 2.2rem); line-height:1.1; letter-spacing:-0.03em; }
+    .hero p { margin:6px 0 0; color:var(--muted); max-width:64ch; }
+    .sections { display:grid; gap:18px; }
+    .section {
+      border:1px solid rgba(255,255,255,.055);
+      border-radius:var(--r-xl);
+      background:rgba(8,10,16,.96);
+      box-shadow:0 10px 40px rgba(0,0,0,.32), 0 1px 0 rgba(255,255,255,.03) inset;
+      overflow:hidden;
+      backdrop-filter:blur(30px) saturate(170%);
+      animation:fadeUp .45s ease both;
+      position:relative;
+    }
+    .section-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:15px 18px 14px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:rgba(7,9,14,.92);
+    }
+    .section-head h2 {
+      margin:0;
+      font-size:.98rem;
+      font-weight:850;
+      letter-spacing:-0.01em;
+      text-transform:capitalize;
+      color:#e7edf8;
+    }
+    .section-count {
+      color:var(--muted);
+      font-size:.78rem;
+      font-weight:700;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.03);
+    }
+    .grid {
+      display:flex;
+      gap:14px;
+      overflow-x:auto;
+      padding:18px 24px 18px 24px;
+      scroll-padding-left:24px;
+      scroll-padding-right:24px;
+      scroll-snap-type:x proximity;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      scroll-behavior:smooth;
+    }
+    .grid::-webkit-scrollbar { display:none; }
+    .grid .card {
+      flex:0 0 232px;
+      scroll-snap-align:start;
+      transform-origin:center bottom;
+      animation:fadeUp .5s ease both;
+    }
+    .rail-controls {
+      position:absolute;
+      top:50%;
+      left:14px;
+      right:14px;
+      transform:translateY(-50%);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      z-index:2;
+      pointer-events:none;
+    }
+    .rail-btn {
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(10,12,18,.78);
+      color:var(--text);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 8px 20px rgba(0,0,0,.35);
+      backdrop-filter:blur(18px) saturate(140%);
+      transition:transform .18s ease, background .18s ease, border-color .18s ease, opacity .18s ease, box-shadow .18s ease;
+      pointer-events:auto;
+      opacity:.9;
+    }
+    .rail-btn:hover { transform:translateY(-1px) scale(1.03); background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2); box-shadow:0 12px 24px rgba(0,0,0,.4); }
+    .rail-btn:disabled { opacity:.35; cursor:default; transform:none; }
+    .rail-btn.is-hidden { opacity:0; pointer-events:none; transform:scale(.92); }
+    .section::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      border-radius:inherit;
+      background:rgba(255,255,255,.01);
+    }
+    .section:hover .rail-btn { opacity:1; }
+    .card {
+      background:rgba(12,14,20,.94);
+      border:1px solid rgba(255,255,255,.055);
+      border-radius:var(--r-xl);
+      overflow:hidden;
+      box-shadow:0 10px 32px rgba(0,0,0,.26), 0 1px 0 rgba(255,255,255,.02) inset;
+      backdrop-filter:blur(22px) saturate(150%);
+      transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    }
+    .card:hover {
+      transform:translateY(-4px);
+      border-color:rgba(255,255,255,.12);
+      box-shadow:0 16px 48px rgba(0,0,0,.52);
+    }
+    .section-head h2::before {
+      content:'';
+      display:inline-block;
+      width:8px;
+      height:8px;
+      margin-right:8px;
+      border-radius:50%;
+      background:var(--accent2);
+      box-shadow:0 0 8px rgba(25,200,157,.35);
+      vertical-align:middle;
+    }
+    .thumb {
+      position:relative;
+      display:block;
+      aspect-ratio:16/10;
+      background:rgba(255,255,255,.02);
+      overflow:hidden;
+    }
+    .thumb::after {
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,.04) 18%, rgba(0,0,0,.68) 100%);
+      pointer-events:none;
+    }
+    .thumb img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      transform:scale(1.01);
+    }
+    .thumb-badges {
+      position:absolute;
+      left:12px;
+      right:12px;
+      top:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      z-index:1;
+    }
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 9px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(16,18,24,.68);
+      color:#fff;
+      font-size:.7rem;
+      font-weight:750;
+      backdrop-filter:blur(12px);
+    }
+    .badge::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--accent2); box-shadow:0 0 8px rgba(25,200,157,.35); }
+    .meta {
+      padding:12px 12px 14px;
+      display:grid;
+      gap:9px;
+    }
+    .title {
+      font-weight:850;
+      line-height:1.25;
+      font-size:.95rem;
+      letter-spacing:-0.015em;
+      display:-webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+      min-height:2.5em;
+    }
+    .sub {
+      color:var(--muted);
+      font-size:.78rem;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+    }
+    .sub span:last-child { color:#b9c6db; }
+    .empty {
+      padding:20px;
+      border:1px dashed rgba(255,255,255,.12);
+      border-radius:var(--r-xl);
+      color:var(--muted);
+      background:rgba(255,255,255,.02);
+    }
+    .section-head h2,
+    .section-count {
+      position:relative;
+      z-index:1;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(10px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+    @media (max-width:720px) {
+      .shell { padding:12px; }
+      .topbar { padding:12px; }
+      .sections { gap:12px; }
+      .grid { gap:12px; padding:12px 22px; scroll-padding-left:22px; scroll-padding-right:22px; }
+      .grid .card { flex-basis:180px; }
+      .rail-controls { left:8px; right:8px; }
+    }
+    .category-tabs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 8px 4px 16px 4px;
+      margin-bottom: 20px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .category-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover {
+      border-color: rgba(255,255,255,.15);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+    }
+    .tab-btn.active {
+      border-color: var(--accent);
+      background: rgba(255,74,93,.14);
+      color: var(--text);
+      box-shadow: 0 0 12px rgba(255,74,93,.2);
+    }
+    .pagination-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-top: 32px;
+      margin-bottom: 16px;
+    }
+    .page-indicator {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <a class="btn" href="/formula-1" aria-label="Back to events" title="Back to events">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" style="width:18px;height:18px;display:block">
+          <path d="M15 18 9 12l6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 12h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </a>
+      <button class="btn primary" type="button" id="refreshRecapsBtn" aria-label="Refresh recaps" title="Refresh recaps">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" style="width:18px;height:18px;display:block">
+          <path d="M20 12a8 8 0 0 1-13.7 5.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 12a8 8 0 0 1 13.7-5.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M15 4h3v3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 20H6v-3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="hero">
+      <div>
+        <h1>Race Recaps</h1>
+        <p>Browse older and current race recaps. Switch categories to view historical replays across seasons.</p>
+      </div>
+    </div>
+    <div id="categoryTabs" class="category-tabs"></div>
+    <div id="recapsGrid" class="sections"></div>
+  </div>
+  <script type="module">
+    const grid = document.getElementById('recapsGrid');
+    const tabsContainer = document.getElementById('categoryTabs');
+    let currentCategory = 'racing';
+
+    const categoriesList = [
+      { id: 'racing', label: 'All / Latest' },
+      { id: 'formula-1', label: 'Formula 1' },
+      { id: 'formula-2', label: 'Formula 2' },
+      { id: 'formula-3', label: 'Formula 3' },
+      { id: 'formula-e', label: 'Formula E' },
+      { id: 'nascar', label: 'NASCAR' },
+      { id: 'indycar', label: 'IndyCar' },
+      { id: 'wsbk', label: 'WSBK' },
+      { id: 'rally', label: 'WRC / Rally' },
+      { id: 'f1-academy', label: 'F1 Academy' }
+    ];
+
+    // render tabs
+    tabsContainer.innerHTML = categoriesList.map(cat => `
+      <button class="tab-btn ${cat.id === currentCategory ? 'active' : ''}" data-category="${cat.id}">
+        ${cat.label}
+      </button>
+    `).join('');
+
+    // tab click handler
+    tabsContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCategory = btn.dataset.category;
+      loadRecaps();
+    });
+
+    const prettifyTitle = (value = '') => {
+      const raw = String(value || '').trim();
+      if (!raw) return 'Untitled recap';
+      return raw
+        .replace(/^\/+|\/+$/g, '')
+        .replace(/[_\-]+/g, ' ')
+        .replace(/[\/]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (ch) => ch.toUpperCase());
+    };
+    const parseDateScore = (item) => {
+      const candidate = item?.date || item?.publishedAt || item?.createdAt || item?.updatedAt || '';
+      const ts = Date.parse(candidate);
+      return Number.isFinite(ts) ? ts : 0;
+    };
+    const normalizeCategory = (item) => {
+      const raw = String(item?.category || item?.sport || item?.league || 'Racing').trim();
+      return raw ? raw.toLowerCase() : 'racing';
+    };
+    const categoryPath = (value = '') => {
+      const raw = String(value || '').trim().toLowerCase();
+      if (/formula\s*1|f1|grand prix|racing/.test(raw)) return 'formula-1';
+      const map = {
+        'f1': 'formula-1',
+        'formula 1': 'formula-1',
+        'formula-1': 'formula-1',
+        'football': 'football',
+        'soccer': 'football',
+        'nfl': 'nfl',
+        'nba': 'nba',
+        'mma': 'mma',
+        'boxing': 'boxing',
+        'racing': 'formula-1'
+      };
+      return map[raw] || raw.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-?\d{4}$/, '');
+    };
+    const prettyCategory = (value = '') => {
+      const raw = String(value || '').trim();
+      if (!raw) return 'Racing';
+      return raw.replace(/\b\w/g, (ch) => ch.toUpperCase());
+    };
+    const railScroll = (btn, direction) => {
+      const rail = btn?.closest('.section')?.querySelector('.grid');
+      if (!rail) return;
+      const card = rail.querySelector('.card');
+      const cardWidth = card?.getBoundingClientRect().width || 232;
+      const gap = parseFloat(getComputedStyle(rail).gap || '14') || 14;
+      const amount = (cardWidth + gap) * 2;
+      rail.scrollBy({ left: direction * amount, behavior: 'smooth' });
+    };
+    const syncRailControls = (section) => {
+      const rail = section?.querySelector('.grid');
+      const controls = section?.querySelector('.rail-controls');
+      const buttons = controls ? [...controls.querySelectorAll('.rail-btn')] : [];
+      if (!rail || !controls || !buttons.length) return;
+      const maxScrollLeft = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      const canScroll = maxScrollLeft > 4;
+      const leftBtn = buttons.find((button) => Number(button.dataset.railScroll) < 0);
+      const rightBtn = buttons.find((button) => Number(button.dataset.railScroll) > 0);
+      if (!canScroll) {
+        controls.style.display = 'none';
+        return;
+      }
+      controls.style.display = 'flex';
+      const atStart = rail.scrollLeft <= 4;
+      const atEnd = rail.scrollLeft >= maxScrollLeft - 4;
+      if (leftBtn) leftBtn.classList.toggle('is-hidden', atStart);
+      if (rightBtn) rightBtn.classList.toggle('is-hidden', atEnd);
+    };
+    const syncAllRailControls = () => {
+      document.querySelectorAll('.section').forEach(syncRailControls);
+    };
+    const bindRailEvents = () => {
+      document.querySelectorAll('.section .grid').forEach((rail) => {
+        if (rail.dataset.bound === 'true') return;
+        rail.dataset.bound = 'true';
+        rail.addEventListener('scroll', () => {
+          syncRailControls(rail.closest('.section'));
+        }, { passive: true });
+      });
+    };
+    const groupItems = (items) => {
+      const groups = new Map();
+      for (const item of items) {
+        const key = normalizeCategory(item);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+      }
+      return [...groups.entries()].map(([category, list]) => ({
+        category,
+        items: list.sort((a, b) => parseDateScore(b) - parseDateScore(a))
+      }));
+    };
+
+    const renderCardHtml = (item) => {
+      const image = item.image || item.thumbnail || '';
+      const title = prettifyTitle(item.title || 'Untitled recap');
+      const category = prettyCategory(item.category || currentCategory);
+      const duration = item.duration || '';
+      const details = item.date || item.subtitle || item.season || '';
+      const titleSlug = encodeURIComponent(title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''));
+      const sectionPath = categoryPath(item.category || currentCategory);
+      const watchHref = item.id ? `/${sectionPath}/recaps/test-player/${encodeURIComponent(item.id)}/${titleSlug}` : '#';
+      return `
+        <article class="card" style="${currentCategory === 'racing' ? 'flex: 0 0 232px;' : ''}">
+          <a class="thumb" href="${watchHref}">
+            <div class="thumb-badges">
+              <span class="badge">${category}</span>
+              ${duration ? `<span class="badge">${duration}</span>` : ''}
+            </div>
+            ${image ? `<img src="${image}" alt="${title.replace(/"/g, '&quot;')}">` : ''}
+          </a>
+          <div class="meta">
+            <div class="title">${title}</div>
+            <div class="sub">
+              <span>${details || 'Replay available'}</span>
+              <span>Open recap</span>
+            </div>
+          </div>
+        </article>
+      `;
+    };
+
+    async function loadRecaps() {
+      grid.innerHTML = '<div class="empty">Loading recaps...</div>';
+      try {
+        const response = await fetch(`/api/racing/catalog?category=${currentCategory}`, {
+          method: 'GET',
+          cache: 'no-store'
+        });
+        if (!response.ok) {
+          throw new Error(`Catalog request failed: ${response.status}`);
+        }
+        const result = await response.json();
+        const items = Array.isArray(result) ? result : (Array.isArray(result?.data) ? result.data : []);
+        const safeItems = items.filter((item) => item && (item.id || item.title));
+        
+        if (!safeItems.length) {
+          grid.innerHTML = '<div class="empty">No recaps found.</div>';
+          return;
+        }
+
+        if (currentCategory === 'racing') {
+          const groups = groupItems(safeItems);
+          grid.innerHTML = groups.length ? groups.map((group) => {
+            const sectionCategory = prettyCategory(group.category || 'Racing');
+            const cards = group.items.map(renderCardHtml).join('');
+            return `
+              <section class="section">
+                <div class="section-head">
+                  <h2>${sectionCategory}</h2>
+                  <div class="section-count">${group.items.length} recap${group.items.length === 1 ? '' : 's'}</div>
+                </div>
+                <div class="rail-controls">
+                  <button class="rail-btn" type="button" data-rail-scroll="-1" aria-label="Scroll left" title="Scroll left">
+                    <svg viewBox="0 0 24 24" fill="none" style="width:16px;height:16px;display:block">
+                      <path d="M14 18 8 12l6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <button class="rail-btn" type="button" data-rail-scroll="1" aria-label="Scroll right" title="Scroll right">
+                    <svg viewBox="0 0 24 24" fill="none" style="width:16px;height:16px;display:block">
+                      <path d="M10 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="grid">${cards}</div>
+              </section>
+            `;
+          }).join('') : '<div class="empty">No recaps found.</div>';
+          bindRailEvents();
+          syncAllRailControls();
+        } else {
+          const cards = safeItems.map(renderCardHtml).join('');
+          const catLabel = categoriesList.find(c => c.id === currentCategory)?.label || 'Racing';
+          grid.innerHTML = `
+            <section class="section" style="padding: 20px 24px;">
+              <div class="section-head" style="border: none; background: transparent; padding: 0 0 16px 0;">
+                <h2 style="font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent2);"></span>
+                  ${catLabel}
+                </h2>
+                <div class="section-count">${safeItems.length} recap${safeItems.length === 1 ? '' : 's'}</div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+                ${cards}
+              </div>
+            </section>
+          `;
+        }
+      } catch (error) {
+        console.error('[recaps] load failed:', error);
+        grid.innerHTML = '<div class="empty">No recaps found.</div>';
+      }
+    }
+
+    loadRecaps();
+    grid.addEventListener('click', (event) => {
+      const btn = event.target.closest('[data-rail-scroll]');
+      if (!btn) return;
+      railScroll(btn, Number(btn.dataset.railScroll || '0'));
+    });
+    window.addEventListener('resize', () => syncAllRailControls(), { passive: true });
+    const observeImages = () => {
+      document.querySelectorAll('.grid img').forEach((img) => {
+        if (img.complete) return;
+        img.addEventListener('load', syncAllRailControls, { once: true });
+        img.addEventListener('error', syncAllRailControls, { once: true });
+      });
+    };
+    const mo = new MutationObserver(() => {
+      observeImages();
+      syncAllRailControls();
+    });
+    mo.observe(grid, { childList: true, subtree: true });
+    document.getElementById('refreshRecapsBtn')?.addEventListener('click', () => {
+      window.location.reload();
+    });
+    const startControlSync = () => {
+      observeImages();
+      bindRailEvents();
+      syncAllRailControls();
+    };
+    const waitForContent = () => {
+      if (grid.children.length) {
+        startControlSync();
+        return;
+      }
+      requestAnimationFrame(waitForContent);
+    };
+    waitForContent();
+  </script>
+</body>
+</html>
