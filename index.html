@@ -1656,7 +1656,7 @@
         const ENRICHABLE_SPORTS = new Set(['nba', 'wnba', 'nhl', 'mlb', 'nfl', 'cfl', 'soccer']);
         const ENRICH_LIMIT_ALL = 18;
         const ENRICH_LIMIT_FILTERED = 30;
-        const PRODUCTION_API_ORIGIN = 'https://streamverse-api.duckdns.org';
+        const PRODUCTION_API_ORIGIN = 'https://ghoulstreams-api.duckdns.org';
         const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? 'http://127.0.0.1:3002' : PRODUCTION_API_ORIGIN;
         const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
 

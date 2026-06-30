@@ -382,7 +382,7 @@
   <script type="module">
     const grid = document.getElementById('recapsGrid');
     const tabsContainer = document.getElementById('categoryTabs');
-    const PRODUCTION_API_ORIGIN = 'https://streamverse-api.duckdns.org';
+    const PRODUCTION_API_ORIGIN = 'https://ghoulstreams-api.duckdns.org';
     const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? 'http://127.0.0.1:3002' : PRODUCTION_API_ORIGIN;
     const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
     let currentCategory = 'racing';
