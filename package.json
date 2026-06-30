@@ -1,14 +1,8 @@
 {
-  "name": "ghoulstreams-platform",
-  "version": "1.0.0",
-  "description": "Live sports streaming platform",
-  "type": "module",
-  "main": "server.js",
+  "name": "ghoulstreams-frontend",
+  "private": true,
+  "description": "Static frontend for GhoulStreams",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2"
+    "dev": "node dev-server.mjs"
   }
 }

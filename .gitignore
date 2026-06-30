@@ -55,6 +55,9 @@ $RECYCLE.BIN/
 
 # Environment
 .env
+.env.vercel
+cfl_debug.json
+test_streams.json
 .env.local
 .env.*.local
 

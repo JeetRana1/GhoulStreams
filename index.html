@@ -1657,7 +1657,7 @@
         const ENRICH_LIMIT_ALL = 18;
         const ENRICH_LIMIT_FILTERED = 30;
         const PRODUCTION_API_ORIGIN = 'https://streamverse-api.duckdns.org';
-        const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? window.location.origin : PRODUCTION_API_ORIGIN;
+        const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? 'http://127.0.0.1:3002' : PRODUCTION_API_ORIGIN;
         const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
 
         // GhoulStreams disables the old PWA cache locally so stale heavy pages cannot keep controlling localhost.
@@ -2304,7 +2304,7 @@
             const meridiem = match[3].toUpperCase();
             if (meridiem === 'PM') hours += 12;
 
-            const zoneToken = String(match[4] || 'ET').toUpperCase();
+            const zoneToken = String(match[4] || 'UTC').toUpperCase();
             const sourceTimeZone = zoneToken.startsWith('CT') ? 'America/Chicago'
                 : zoneToken.startsWith('MT') ? 'America/Denver'
                     : zoneToken.startsWith('PT') ? 'America/Los_Angeles'
