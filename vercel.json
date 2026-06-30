@@ -1,5 +1,15 @@
 {
-  "cleanUrls": true,
+  "version": 2,
+  "builds": [
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.{svg,png,jpg,jpeg,webp,gif,ico,json,webmanifest,js,mjs,css,txt}",
+      "use": "@vercel/static"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)\\.(js|mjs|css|json|webmanifest|svg|png|jpg|jpeg|webp|gif|ico|woff|woff2|ttf|otf|txt)",
@@ -20,58 +30,65 @@
       ]
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/all",
-      "destination": "/index.html"
+      "src": "/all",
+      "dest": "/index.html"
     },
     {
-      "source": "/football",
-      "destination": "/index.html"
+      "src": "/football",
+      "dest": "/index.html"
     },
     {
-      "source": "/nfl",
-      "destination": "/index.html"
+      "src": "/nfl",
+      "dest": "/index.html"
     },
     {
-      "source": "/mma",
-      "destination": "/index.html"
+      "src": "/mma",
+      "dest": "/index.html"
     },
     {
-      "source": "/boxing",
-      "destination": "/index.html"
+      "src": "/boxing",
+      "dest": "/index.html"
     },
     {
-      "source": "/formula-1",
-      "destination": "/index.html"
+      "src": "/formula-1",
+      "dest": "/index.html"
     },
     {
-      "source": "/nba",
-      "destination": "/index.html"
+      "src": "/nba",
+      "dest": "/index.html"
     },
     {
-      "source": "/wnba",
-      "destination": "/index.html"
+      "src": "/wnba",
+      "dest": "/index.html"
     },
     {
-      "source": "/mlb",
-      "destination": "/index.html"
+      "src": "/mlb",
+      "dest": "/index.html"
     },
     {
-      "source": "/watch/:slug",
-      "destination": "/watch.html"
+      "src": "/watch/([^/]+)",
+      "dest": "/watch.html"
     },
     {
-      "source": "/recaps",
-      "destination": "/recaps.html"
+      "src": "/recaps",
+      "dest": "/recaps.html"
     },
     {
-      "source": "/:category/recaps",
-      "destination": "/recaps.html"
+      "src": "/([^/]+)/recaps",
+      "dest": "/recaps.html"
     },
     {
-      "source": "/:category/recaps/test-player/:path*",
-      "destination": "/test-player.html"
+      "src": "/([^/]+)/recaps/test-player/(.*)",
+      "dest": "/test-player.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
     }
   ]
 }
