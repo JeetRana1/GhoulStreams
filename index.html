@@ -1656,6 +1656,9 @@
         const ENRICHABLE_SPORTS = new Set(['nba', 'wnba', 'nhl', 'mlb', 'nfl', 'cfl', 'soccer']);
         const ENRICH_LIMIT_ALL = 18;
         const ENRICH_LIMIT_FILTERED = 30;
+        const PRODUCTION_API_ORIGIN = 'https://streamverse-api.duckdns.org';
+        const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? window.location.origin : PRODUCTION_API_ORIGIN;
+        const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
 
         // GhoulStreams disables the old PWA cache locally so stale heavy pages cannot keep controlling localhost.
         if ('serviceWorker' in navigator) {
@@ -3258,7 +3261,7 @@
 
         async function refreshLiveSportDirectory(expectedSeq = homepageRefreshSeq) {
             try {
-                const response = await fetch('/api/livesport-directory', { cache: 'no-store' });
+                const response = await fetch(apiUrl('/api/livesport-directory'), { cache: 'no-store' });
                 const result = await response.json();
                 if (expectedSeq !== homepageRefreshSeq) return;
                 const matches = result?.data?.matches || result?.matches || [];
@@ -3284,7 +3287,7 @@
             if (catalogRequestInFlight?.key === requestKey) return catalogRequestInFlight.promise;
             const promise = (async () => {
                 try {
-                    const response = await fetch('/api/search', {
+                    const response = await fetch(apiUrl('/api/search'), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ query: catalogQuery, date: catalogDate }),

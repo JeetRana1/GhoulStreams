@@ -3727,6 +3727,11 @@
                     return '';
                 }
             })();
+            const PRODUCTION_API_ORIGIN = 'https://streamverse-api.duckdns.org';
+            const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
+                ? window.location.origin
+                : PRODUCTION_API_ORIGIN;
+            const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
             const sourceFailureMap = new Map();
             let hlsBackoffTimer = null;
             const PLAYER_STATE_KEY = 'watch_player_state';
@@ -3807,8 +3812,8 @@
             }
             function proxyLogo(url) {
                 if (!url) return '';
-                if (url.startsWith('/api/image-proxy')) return url;
-                if (url.startsWith('http')) return '/api/image-proxy?url=' + encodeURIComponent(url);
+                if (url.startsWith(apiUrl('/api/image-proxy')) || url.startsWith('/api/image-proxy')) return url;
+                if (url.startsWith('http')) return apiUrl('/api/image-proxy') + '?url=' + encodeURIComponent(url);
                 return '';
             }
             function withLiveSportTeamsForDisplay(info, md) {
@@ -5051,7 +5056,7 @@
                 if (nextState === lastReportedState) return;
                 lastReportedState = nextState;
                 try {
-                    await fetch('/api/report-stream-status', {
+                    await fetch(apiUrl('/api/report-stream-status'), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: streamId, isLive: Boolean(isLive), reason: reason || '' })
@@ -5115,7 +5120,7 @@
                 // /api/media-proxy, reuse it as-is instead of wrapping again.
                 const raw = String(sourceUrl || '').trim();
                 if (!raw) return '';
-                if (raw.startsWith('/api/media-proxy') || raw.includes('/api/media-proxy?')) {
+                if (raw.startsWith(apiUrl('/api/media-proxy')) || raw.startsWith('/api/media-proxy') || raw.includes('/api/media-proxy?')) {
                     return raw;
                 }
                 if (!/^https?:\/\//i.test(raw)) {
@@ -5129,7 +5134,7 @@
                     }
                     if (origin) q.set('origin', origin);
                     if (userAgent) q.set('user_agent', userAgent);
-                    return `/api/media-proxy?${q.toString()}`;
+                    return `${apiUrl('/api/media-proxy')}?${q.toString()}`;
                 } catch {
                     return raw;
                 }
@@ -5483,7 +5488,7 @@
                         try {
                             document.getElementById('liveStatus').textContent = 'Refreshing live source';
                             document.getElementById('liveLatency').textContent = reason || 'Renewing signed stream';
-                            const response = await fetch('/api/fetchSources', {
+                            const response = await fetch(apiUrl('/api/fetchSources'), {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ eventUrl: streamId })
@@ -5818,7 +5823,7 @@
                 if (!watchId || scoreRefreshInFlight) return;
                 scoreRefreshInFlight = true;
                 try {
-                    const infoResponse = await fetch('/api/fetchInfo', {
+                    const infoResponse = await fetch(apiUrl('/api/fetchInfo'), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: watchId }),
@@ -5853,7 +5858,7 @@
                     if (mdTitle) {
                         const inferredSport = inferSport([mdTitle, slugSearchTitle, info.title, initialStreamTitle, streamTitle].filter(Boolean).join(' '), watchId || streamId || PAGE_SESSION_LOCK_ID) || (info.sport || '').toLowerCase();
                         try {
-                            const mdResponse = await fetch('/api/matchDetails', {
+                            const mdResponse = await fetch(apiUrl('/api/matchDetails'), {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ title: mdTitle, sport: inferredSport, lockId: PAGE_SESSION_LOCK_ID }),
@@ -7626,7 +7631,7 @@
                     else if (title.includes('ncaa') || title.includes('college')) category = 'ncaa';
 
                     // Fetch related events from this category
-                    const response = await fetch('/api/search', {
+                    const response = await fetch(apiUrl('/api/search'), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ query: category })
@@ -7718,7 +7723,7 @@
                 try {
                     console.log('[watch] loadWatchPage', { streamId, streamTitle });
                     const watchId = lockedWatchId || streamId;
-                    const infoResponse = await fetch('/api/fetchInfo', {
+                    const infoResponse = await fetch(apiUrl('/api/fetchInfo'), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: watchId, lockId: PAGE_SESSION_LOCK_ID })
@@ -7732,7 +7737,7 @@
                     }
 
                     const fetchSourcesWith = async (payload) => {
-                        const response = await fetch('/api/fetchSources', {
+                        const response = await fetch(apiUrl('/api/fetchSources'), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
@@ -7804,7 +7809,7 @@
                         let initialMd = null;
                         if (mdTitle) {
                             try {
-                                const mdResp = await fetch('/api/matchDetails', {
+                                const mdResp = await fetch(apiUrl('/api/matchDetails'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ title: mdTitle, sport: inferredSport, lockId: PAGE_SESSION_LOCK_ID }),
