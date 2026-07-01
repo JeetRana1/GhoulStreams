@@ -3695,6 +3695,7 @@
         <script>
             const PAGE_SESSION_LOCK_ID = new URLSearchParams(window.location.search).get('g') || window.location.pathname;
             let hlsInstance = null;
+            let _directCdnMode = true;
             let lastReportedState = null;
             let scoreRefreshTimer = null;
             let scoreRefreshInFlight = false;
@@ -5362,6 +5363,13 @@
                 video.load();
                 setPlayerMode('video');
                 if (isM3U8 && Hls.isSupported()) {
+                    const playbackUrl = _directCdnMode
+                        ? (() => {
+                            const raw = String(url || '').trim();
+                            const m = raw.match(/[?&]url=([^&]+)/);
+                            return m ? decodeURIComponent(m[1]) : raw;
+                        })()
+                        : url;
                     let releaseStartupLevelCap = null;
                     const hls = new Hls({
                         // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Latency / Live edge ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
@@ -5421,14 +5429,16 @@
                         fragLoadingMaxRetryTimeout: 10000,
                         startPosition: -1,
                     });
-                    const safeUrl = /^\/api\/media-proxy(\?|$)/i.test(String(url || '').trim())
-                        ? url
-                        : buildHlsProxyUrl(
-                            url,
-                            sourceHeaders.Referer || sourceHeaders.referer || 'https://fullraces.com/',
-                            sourceHeaders.Origin || sourceHeaders.origin || 'https://fullraces.com',
-                            sourceHeaders['User-Agent'] || sourceHeaders['user-agent'] || navigator.userAgent
-                        ) || url;
+                    const safeUrl = _directCdnMode
+                        ? playbackUrl
+                        : (/^\/api\/media-proxy(\?|$)/i.test(String(playbackUrl || '').trim())
+                            ? playbackUrl
+                            : buildHlsProxyUrl(
+                                playbackUrl,
+                                sourceHeaders.Referer || sourceHeaders.referer || 'https://fullraces.com/',
+                                sourceHeaders.Origin || sourceHeaders.origin || 'https://fullraces.com',
+                                sourceHeaders['User-Agent'] || sourceHeaders['user-agent'] || navigator.userAgent
+                            ) || playbackUrl);
                     hls.loadSource(safeUrl);
                     hls.attachMedia(video);
                     releaseStartupLevelCap = () => {
@@ -5448,6 +5458,7 @@
                     const loadTimeout = setTimeout(async () => {
                         if (hlsInstance !== hls) return;
                         try { hls.destroy(); } catch { }
+                        _directCdnMode = false;
                         const proxiedFallback = /^\/api\/media-proxy(\?|$)/i.test(String(url || '').trim())
                             ? url
                             : (/^https?:\/\//i.test(url)
@@ -5707,6 +5718,26 @@
                         }
 
                         if (!data.fatal) return;
+                        if (_directCdnMode) {
+                            _directCdnMode = false;
+                            clearTimeout(loadTimeout);
+                            try { hls.destroy(); } catch { }
+                            document.getElementById('liveStatus').textContent = 'Retrying source';
+                            document.getElementById('liveLatency').textContent = 'Using proxy fallback';
+                            const proxyUrl = buildHlsProxyUrl(
+                                url,
+                                sourceHeaders.Referer || sourceHeaders.referer || 'https://fullraces.com/',
+                                sourceHeaders.Origin || sourceHeaders.origin || 'https://fullraces.com',
+                                sourceHeaders['User-Agent'] || sourceHeaders['user-agent'] || navigator.userAgent
+                            ) || url;
+                            await playSource(proxyUrl, isM3U8, {
+                                preserveSourceQualityOptions: true,
+                                subtitleCandidates: backendSubtitles,
+                                resumeTime: getVideoElement().currentTime || 0,
+                                headers: sourceHeaders
+                            });
+                            return;
+                        }
                         if (fallbackUrl && fallbackUrl !== url) {
                             clearTimeout(loadTimeout);
                             document.getElementById('liveStatus').textContent = 'Retrying source';
