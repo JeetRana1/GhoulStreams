@@ -5448,9 +5448,12 @@
                         }
                         ensurePlayback(video);
                     });
-                    const loadTimeoutMs = 2000;
+                    // Some live proxies take a few seconds to return the first playlist/segment.
+                    // Keep this long enough to avoid tearing down a healthy stream before playback starts.
+                    const loadTimeoutMs = 9000;
                     const loadTimeout = setTimeout(async () => {
                         if (hlsInstance !== hls) return;
+                        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA || video.currentTime > 0) return;
                         try { hls.destroy(); } catch { }
                         _directCdnMode = false;
                         const proxiedFallback = /^\/api\/media-proxy(\?|$)/i.test(String(url || '').trim())
