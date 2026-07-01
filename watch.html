@@ -3944,14 +3944,21 @@
                 video.playsInline = true;
                 video.setAttribute('playsinline', '');
                 video.setAttribute('webkit-playsinline', 'true');
+                let forcedMutedForPlayback = false;
                 try { await video.play(); }
                 catch {
                     video.muted = true;
                     video.defaultMuted = true;
-                    savePlayerState({ muted: true });
+                    forcedMutedForPlayback = true;
                     try { await video.play(); } catch { }
                 }
+                if (forcedMutedForPlayback) {
+                    video.muted = false;
+                    video.defaultMuted = false;
+                    savePlayerState({ muted: false });
+                }
                 updatePlayButton();
+                updateMuteButton();
             }
             function syncToLiveEdge(video, hls) {
                 const livePos = Number(hls && hls.liveSyncPosition);
@@ -3988,7 +3995,8 @@
             function applySavedPlayerState() {
                 const video = getVideoElement();
                 const state = readPlayerState();
-                video.muted = Boolean(state.muted);
+                video.muted = false;
+                video.defaultMuted = false;
                 const v = Number(state.volume);
                 if (Number.isFinite(v) && v >= 0 && v <= 1) {
                     try { video.volume = v; } catch { }
@@ -5338,9 +5346,7 @@
                 video.setAttribute('playsinline', '');
                 video.setAttribute('webkit-playsinline', 'true');
                 if (isM3U8) {
-                    // Live HLS startup is more reliable when muted before the first play attempt.
-                    video.muted = true;
-                    video.defaultMuted = true;
+                    video.defaultMuted = false;
                 }
                 savePlayerState({ lastUrl: url, isM3U8: Boolean(isM3U8) });
                 qualityCycleOptions = [];
