@@ -5608,7 +5608,8 @@
                             'Live', 'Adaptive HLS live'
                         );
                         await reportStreamStatus(true, 'playing');
-                        const started = await waitForPlaybackStart(video, 2500);
+                        await ensurePlayback(video);
+                        const started = await waitForPlaybackStart(video, 6000);
                         if (!started && fallbackUrl && fallbackUrl !== url) {
                             const directFallback = /^https?:\/\//i.test(fallbackUrl)
                                 ? fallbackUrl
@@ -5623,7 +5624,6 @@
                                 return;
                             }
                         }
-                        await ensurePlayback(video);
                         video.addEventListener('playing', () => { releaseStartupLevelCap?.(); }, { once: true });
                         updateSeekUi();
                         updateDvrMode();
