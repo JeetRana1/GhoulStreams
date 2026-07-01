@@ -7809,15 +7809,10 @@
                             sourcesResult = await fetchSourcesWith({ eventUrl: retryTarget, title: streamTitle });
                         }
                     }
-                    const embedFallback = String(sourcesResult?.data?.embedURL || info?.url || '').trim();
-                    if ((!sourcesResult?.success || !Array.isArray(sourcesResult.data?.sources) || sourcesResult.data.sources.length === 0) && embedFallback) {
-                        const embedRetry = await fetchSourcesWith({ embedUrl: embedFallback, eventUrl: embedFallback, title: streamTitle });
-                        if (embedRetry?.success) sourcesResult = embedRetry;
-                    }
                     if (!sourcesResult?.success) throw new Error(sourcesResult?.error || 'Failed to load sources');
                     const prepared = preparePlayableSources(sourcesResult.data.sources || [], sourcesResult.data.headers || {});
-                    if (!prepared.length && embedFallback) {
-                        document.getElementById('sourcesList').innerHTML = '<div class="empty">Backend resolved the event but returned no direct source list. Embed URL: ' + escapeHtml(embedFallback) + '</div>';
+                    if (!prepared.length) {
+                        document.getElementById('sourcesList').innerHTML = '<div class="empty">Backend resolved the event but returned no direct media source for the HTML5 player.</div>';
                     }
                     displaySources(prepared);
                     normalizeSourceQualityOptions(prepared);
