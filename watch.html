@@ -5379,8 +5379,8 @@
                         maxBufferHole: 0.5,
 
                         // ABR / Quality selection
-                        abrEwmaDefaultEstimate: 4_000_000,  // seed at 4 Mbps
-                        startLevel: 1,                      // start around 720p when available
+                        abrEwmaDefaultEstimate: 2_500_000,  // let startup settle before climbing
+                        startLevel: -1,                     // let HLS choose the startup level
                         capLevelToPlayerSize: true,
                         enableWorker: false,
                         testBandwidth: true,
@@ -5561,16 +5561,10 @@
                         }
                         if (Array.isArray(hls.levels) && hls.levels.length > 0) {
                             try {
-                                const forcedLevel = getHighestHlsLevelIndex(hls);
-                                if (forcedLevel >= 0) {
-                                    hls.autoLevelEnabled = false;
-                                    hls.currentLevel = forcedLevel;
-                                    hls.nextLevel = forcedLevel;
-                                    hls.loadLevel = forcedLevel;
-                                    hls.startLevel = forcedLevel;
-                                    selectedQualityLevel = forcedLevel;
-                                    updateQualityButton();
-                                }
+                                hls.autoLevelEnabled = true;
+                                hls.startLevel = -1;
+                                selectedQualityLevel = -1;
+                                updateQualityButton();
                             } catch { }
                         }
                         initializeQualityControl(hls);
