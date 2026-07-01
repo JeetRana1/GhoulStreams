@@ -3715,10 +3715,10 @@
             let selectedSubtitleTrack = -1;
             let currentSubtitleCandidates = [];
             let seekResyncTimer = null;
-            const SOURCE_FAILURE_COOLDOWN_MS = 45000;
+            const SOURCE_FAILURE_COOLDOWN_MS = 15000;
             const SOURCE_SWITCH_MIN_INTERVAL_MS = 1500;
-            const HLS_BACKOFF_429_MS = 60000;
-            const HLS_BACKOFF_OTHER_MS = 30000;
+            const HLS_BACKOFF_429_MS = 8000;
+            const HLS_BACKOFF_OTHER_MS = 4000;
             const ENABLE_VERCEL_STREAM_FALLBACK = false;
             const EXTERNAL_MEDIA_PROXY_BASE = (() => {
                 try {
@@ -5411,13 +5411,13 @@
 
                         // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Retry / error resilience ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
                         appendErrorMaxRetry: 4,
-                        manifestLoadingMaxRetry: 1,
-                        levelLoadingMaxRetry: 1,
-                        fragLoadingMaxRetry: 2,
-                        manifestLoadingRetryDelay: 1000,
-                        levelLoadingRetryDelay: 1000,
-                        fragLoadingRetryDelay: 750,
-                        fragLoadingMaxRetryTimeout: 4000,
+                        manifestLoadingMaxRetry: 3,
+                        levelLoadingMaxRetry: 3,
+                        fragLoadingMaxRetry: 6,
+                        manifestLoadingRetryDelay: 1500,
+                        levelLoadingRetryDelay: 1500,
+                        fragLoadingRetryDelay: 1000,
+                        fragLoadingMaxRetryTimeout: 10000,
                         startPosition: -1,
                     });
                     const safeUrl = /^\/api\/media-proxy(\?|$)/i.test(String(url || '').trim())
@@ -5637,7 +5637,9 @@
                         const statusCode = Number(data?.response?.code || data?.response?.status || 0);
                         const details = String(data.details || '');
                         const isRetryFloodCandidate = statusCode === 429 || statusCode === 404 || statusCode === 410;
-                        const isNetworkLoadIssue = data.type === 'networkError' || /fragLoadError|levelLoadError|manifestLoadError/i.test(details);
+                        const isFragmentIssue = /fragLoadError|keyLoadError/i.test(details);
+                        const isManifestOrLevelIssue = /levelLoadError|manifestLoadError/i.test(details);
+                        const isNetworkLoadIssue = data.type === 'networkError' || isFragmentIssue || isManifestOrLevelIssue;
 
                         // Media-error / buffer-stall recovery — let HLS.js
                         // attempt its built-in recovery before falling through
@@ -5672,18 +5674,20 @@
                             const expiredHeader = (() => {
                                 try { return Number(data?.context?.xhr?.getResponseHeader?.('X-Stream-Expired')) === 1; } catch { return false; }
                             })();
-                            const shouldRefreshSignedSource = (statusCode === 404 || statusCode === 410 || expiredHeader) && /fragLoadError|keyLoadError|levelLoadError|manifestLoadError/i.test(details);
+                            const shouldRefreshSignedSource = (statusCode === 404 || statusCode === 410 || expiredHeader) && isManifestOrLevelIssue;
                             if (shouldRefreshSignedSource) {
                                 const refreshed = await refreshSignedSource(`renewing_${statusCode || 'expired'}`);
                                 if (refreshed) return;
                             }
 
                             markSourceFailure(url, statusCode, details || data.type);
-                            const switched = await trySwitchToNextSource(`upstream_${statusCode}`);
-                            if (switched) return;
+                            if (data.fatal || isManifestOrLevelIssue) {
+                                const switched = await trySwitchToNextSource(`upstream_${statusCode}`);
+                                if (switched) return;
+                            }
 
                             const floodCount = noteFloodError();
-                            const shouldBackoff = statusCode === 429 || floodCount >= 3;
+                            const shouldBackoff = statusCode === 429 || isFragmentIssue || floodCount >= 4;
                             if (shouldBackoff) {
                                 scheduleBackoffRetry(statusCode);
                                 return;
