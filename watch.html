@@ -5637,7 +5637,7 @@
                     });
                     // Some live proxies take a few seconds to return the first playlist/segment.
                     // Keep this long enough to avoid tearing down a healthy stream before playback starts.
-                    const loadTimeoutMs = 12000;
+                    const loadTimeoutMs = 20000;
                     const loadTimeout = setTimeout(async () => {
                         if (hlsInstance !== hls) return;
                         if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA || video.currentTime > 0) return;
@@ -5992,11 +5992,9 @@
                                 }
                             }
                             if (bufferedAhead < 1.5) {
-                                // Less than 1.5 s buffered ahead ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â kick HLS.js into loading
-                                console.log('[stall-recovery] Buffer low (' + bufferedAhead.toFixed(1) + 's), restarting load at', pos.toFixed(1));
-                                try { hls.startLoad(Math.max(0, pos)); } catch { }
+                                console.log('[stall-recovery] Buffer low (' + bufferedAhead.toFixed(1) + 's), letting HLS.js recover');
                             }
-                        }, 1500); // trigger after 1.5 s of freeze
+                        }, 8000); // trigger after 8 s of freeze - increased from 1.5s to avoid cancelling in-flight segment downloads through the proxy
                     });
                     video.addEventListener('playing', clearStallWatchdog);
                     video.addEventListener('pause', clearStallWatchdog);
