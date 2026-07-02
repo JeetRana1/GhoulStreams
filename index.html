@@ -126,6 +126,151 @@
             z-index: -1;
         }
 
+        .page-loader-card,
+        .stream-loader-card {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 18px;
+            border-radius: var(--r-pill);
+            background: rgba(8, 10, 16, 0.62);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stream-loader-shell {
+            min-height: 110px;
+            display: grid;
+            place-items: center;
+            padding: 10px;
+        }
+
+        .streams-panel {
+            position: relative;
+            min-height: 220px;
+        }
+
+        .streams-loader-overlay {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 12px;
+            background: rgba(8, 10, 16, 0.22);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            border-radius: inherit;
+            transition: opacity 280ms ease, visibility 280ms ease;
+            z-index: 5;
+            min-height: 220px;
+        }
+
+        .streams-loader-overlay.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .streams-loader-overlay.is-entering {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loader {
+            --color-1: #e8eef8;
+            --color-2: var(--accent);
+            --size: 1px;
+            position: relative;
+            display: inline-block;
+            transform: rotateZ(45deg);
+            perspective: calc(1000 * var(--size));
+            border-radius: 50%;
+            width: calc(48 * var(--size));
+            height: calc(48 * var(--size));
+            color: var(--color-1);
+        }
+
+        .loader:before,
+        .loader:after {
+            content: '';
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: inherit;
+            height: inherit;
+            border-radius: 50%;
+            transform: rotateX(70deg);
+            animation: 1s spin linear infinite;
+        }
+
+        .loader:after {
+            color: var(--color-2);
+            transform: rotateY(70deg);
+            animation-delay: 0.4s;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: translate(-50%, -50%) rotateZ(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotateZ(360deg);
+            }
+        }
+
+        @keyframes rotateccw {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(-360deg);
+            }
+        }
+
+        .page-loader-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            color: var(--text);
+        }
+
+        .page-loader-subtitle {
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+
+        @keyframes spin {
+            0%,
+            100% {
+                box-shadow: 0.2em 0 0 0 currentcolor;
+            }
+            12% {
+                box-shadow: 0.2em 0.2em 0 0 currentcolor;
+            }
+            25% {
+                box-shadow: 0 0.2em 0 0 currentcolor;
+            }
+            37% {
+                box-shadow: -0.2em 0.2em 0 0 currentcolor;
+            }
+            50% {
+                box-shadow: -0.2em 0 0 0 currentcolor;
+            }
+            62% {
+                box-shadow: -0.2em -0.2em 0 0 currentcolor;
+            }
+            75% {
+                box-shadow: 0 -0.2em 0 0 currentcolor;
+            }
+            87% {
+                box-shadow: 0.2em -0.2em 0 0 currentcolor;
+            }
+        }
+
         a {
             color: inherit;
             text-decoration: none;
@@ -1452,6 +1597,12 @@
                 transition-duration: 0.01ms !important;
                 animation-duration: 0.01ms !important;
             }
+
+            .loader,
+            .loader::before,
+            .loader::after {
+                animation-duration: 1s !important;
+            }
         }
     </style>
 </head>
@@ -1505,9 +1656,13 @@
         </section>
 
         <div class="content">
-            <section>
-                <div id="streamsContainer" class="column-stack">
-                    <div class="glass loading">Loading streams...</div>
+            <section class="streams-panel">
+                <div id="streamsContainer" class="column-stack"></div>
+                <div id="streamsLoaderOverlay" class="streams-loader-overlay" aria-live="polite" aria-busy="true">
+                    <div class="stream-loader-card" role="status" aria-live="polite" aria-label="Loading streams">
+                        <span class="loader" aria-hidden="true"></span>
+                        <span>Loading streams</span>
+                    </div>
                 </div>
             </section>
 
@@ -2383,7 +2538,7 @@
         function isEventStarted(stream, scheduleInfo, providerStatus) {
             if (stream?.liveState?.isLive === true || availability[stream?.id]?.isLive === true) return true;
             const statusText = String(providerStatus || '').trim();
-            if (/\b(live|in progress|on air|ongoing|started|kickoff|first half|second half|halftime|ht|overtime|quarter|period|match live)\b/i.test(statusText)) {
+            if (/\b(live|in progress|on air|ongoing|started|kickoff|first half|second half|halftime|half time|ht|break time|break|intermission|overtime|ot|quarter|period|match live|stoppage)\b/i.test(statusText)) {
                 return true;
             }
             if (/^\d{1,3}(?:\+\d+)?'\s*$/.test(statusText)) {
@@ -2657,6 +2812,36 @@
                 renderStreams();
             });
         }
+
+        function showStreamsLoader() {
+            let overlay = document.getElementById('streamsLoaderOverlay');
+            if (!overlay) {
+                const container = document.querySelector('.streams-panel');
+                if (!container) return null;
+                container.insertAdjacentHTML('beforeend', `
+                <div id="streamsLoaderOverlay" class="streams-loader-overlay" aria-live="polite" aria-busy="true">
+                    <div class="stream-loader-card" role="status" aria-live="polite" aria-label="Loading streams">
+                        <span class="loader" aria-hidden="true"></span>
+                        <span>Loading streams</span>
+                    </div>
+                </div>`);
+                overlay = document.getElementById('streamsLoaderOverlay');
+            }
+            overlay.classList.remove('is-hidden');
+            overlay.classList.add('is-entering');
+            return overlay;
+        }
+
+        function hideStreamsLoader(overlay, minimumMs = 2500) {
+            if (!overlay) return;
+            overlay.classList.remove('is-entering');
+            const startedAt = Number(overlay.dataset.startedAt || Date.now());
+            const elapsed = Date.now() - startedAt;
+            const waitMs = Math.max(0, minimumMs - elapsed);
+            window.setTimeout(() => overlay.classList.add('is-hidden'), waitMs);
+            window.setTimeout(() => overlay.remove(), waitMs + 320);
+        }
+
         function getCategoryLayerKey() {
             return activeFilter || 'all';
         }
@@ -2907,9 +3092,8 @@
                         }
                     }
 
-                    const scoreDisplay = escapeHtml(displayCenterText);
                     const liveStatusChip = effectivelyLive
-                        ? `<div class="event-status-live">${scoreDisplay}</div>`
+                        ? `<div class="event-status-live">${escapeHtml(displayCenterText)}</div>`
                         : '';
                     const livePhaseText = '';
                     // Badge: green "IN PROGRESS" if truly live, yellow "UPCOMING" if has
@@ -2970,6 +3154,7 @@
                         'australia': 'au', 'colombia': 'co', 'netherlands': 'nl', 'belgium': 'be',
                         'switzerland': 'ch', 'austria': 'at', 'portugal': 'pt', 'turkey': 'tr', 'turkiye': 'tr', 't rkiye': 'tr', 't�rkiye': 'tr',
                         'russia': 'ru', 'ukraine': 'ua', 'poland': 'pl', 'china': 'cn', 'taiwan': 'tw',
+                        'bosnia and herzegovina': 'ba', 'bosnia': 'ba', 'herzegovina': 'ba',
                         'ecuador': 'ec', 'peru': 'pe', 'chile': 'cl', 'bolivia': 'bo', 'paraguay': 'py',
                         'uruguay': 'uy', 'morocco': 'ma', 'croatia': 'hr', 'senegal': 'sn',
                         'tunisia': 'tn', 'japan': 'jp', 'saudi arabia': 'sa', 'costa rica': 'cr',
@@ -3411,21 +3596,22 @@
             event.stopPropagation();
             const nextFilter = element.dataset.filter || null;
             if (activeFilter === nextFilter) return;
+            const loaderOverlay = showStreamsLoader();
+            if (loaderOverlay) loaderOverlay.dataset.startedAt = String(Date.now());
             activeFilter = nextFilter;
             liveLockedStreams.clear();
             homepageRefreshSeq += 1;
             allStreams = [];
             lastRenderedStreamsHtml = '';
             setActiveNav();
-            if (!showCategoryLayer(getCategoryLayerKey())) {
-                clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
-            }
+            clearCategoryLayer(getCategoryLayerKey());
             const hadCache = hydrateFromCatalogCache();
-            if (!hadCache && !showCategoryLayer(getCategoryLayerKey())) {
-                clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
-            }
             syncCategoryPath(activeFilter);
-            loadStreams(homepageRefreshSeq, { background: true }).catch((error) => console.error('Category stream load failed:', error));
+            window.requestAnimationFrame(() => {
+                loadStreams(homepageRefreshSeq, { background: true })
+                    .catch((error) => console.error('Category stream load failed:', error))
+                    .finally(() => hideStreamsLoader(loaderOverlay, hadCache ? 3500 : 5000));
+            });
             scheduleNextRefresh(ACTIVE_REFRESH_MS);
         };
 
@@ -3486,6 +3672,8 @@
         }, { passive: false });
 
         window.addEventListener('load', () => {
+            const loaderOverlay = showStreamsLoader();
+            if (loaderOverlay) loaderOverlay.dataset.startedAt = String(Date.now());
             try {
                 const pathToFilter = {
                     '/': '',
@@ -3504,17 +3692,14 @@
                 syncCategoryPath(activeFilter, true);
                 startCountdownTimer();
                 const hadCache = hydrateFromCatalogCache();
-                if (!hadCache && !showCategoryLayer(getCategoryLayerKey())) {
-                    clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
-                }
-                loadStreams(homepageRefreshSeq, { background: true }).catch((error) => console.error('Initial stream load failed:', error));
+                loadStreams(homepageRefreshSeq, { background: true })
+                    .catch((error) => console.error('Initial stream load failed:', error))
+                    .finally(() => hideStreamsLoader(loaderOverlay, hadCache ? 1200 : 7000));
                 scheduleNextRefresh(ACTIVE_REFRESH_MS);
             } catch (error) {
                 console.error('Homepage startup failed:', error);
-                if (!showCategoryLayer(getCategoryLayerKey())) {
-                    clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
-                }
                 scheduleNextRefresh(HIDDEN_REFRESH_MS);
+                hideStreamsLoader(loaderOverlay, 1200);
             }
         });
 
@@ -3586,11 +3771,15 @@
             allStreams = [];
             lastRenderedStreamsHtml = '';
             setActiveNav();
-            if (!showCategoryLayer(getCategoryLayerKey())) {
-                clearCategoryLayer(getCategoryLayerKey()).innerHTML = '<div class="glass loading">Loading streams...</div>';
-            }
+            const loaderOverlay = showStreamsLoader();
+            if (loaderOverlay) loaderOverlay.dataset.startedAt = String(Date.now());
+            clearCategoryLayer(getCategoryLayerKey());
             hydrateFromCatalogCache();
-            loadStreams(homepageRefreshSeq, { background: true }).catch((error) => console.error('History stream load failed:', error));
+            window.requestAnimationFrame(() => {
+                loadStreams(homepageRefreshSeq, { background: true })
+                    .catch((error) => console.error('History stream load failed:', error))
+                    .finally(() => hideStreamsLoader(loaderOverlay, 3500));
+            });
         });
     </script>
 </body>

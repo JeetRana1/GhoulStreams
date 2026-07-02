@@ -1412,6 +1412,63 @@
             box-shadow: none;
         }
 
+        .server-btn {
+            width: 100%;
+            min-height: 48px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 11px;
+            color: var(--text);
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.04);
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+        .server-btn:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
+        }
+        .server-btn.active {
+            border-color: #ff1f3e;
+            background: rgba(255, 31, 62, 0.15);
+            box-shadow: 0 0 18px rgba(255, 31, 62, 0.15);
+        }
+        .server-btn .server-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+        .server-btn .server-meta {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.55);
+        }
+        .server-btn .server-engine {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 2px;
+            display: inline-block;
+        }
+        .server-btn .server-engine.hls {
+            background: rgba(0, 200, 255, 0.18);
+            color: #4dc9f6;
+        }
+        .server-btn .server-engine.iframe {
+            background: rgba(255, 200, 0, 0.18);
+            color: #f6c84d;
+        }
+
         .loading,
         .empty {
             color: var(--muted);
@@ -2991,6 +3048,15 @@
                 padding: 9px;
             }
 
+            .server-btn {
+                padding: 10px 12px;
+                min-height: 44px;
+                font-size: 0.8rem;
+            }
+            .server-btn .server-name {
+                font-size: 0.82rem;
+            }
+
             .scoreboard {
                 padding: 12px 14px;
                 gap: 10px;
@@ -3461,9 +3527,12 @@
                         </div>
                         <div class="live-badge" id="playerLiveBadge" style="display:none">Live</div>
                     </div>
-                    <div class="player-shell">
+                        <div class="player-shell">
                         <div class="player-frame is-paused" id="playerFrame">
                             <video id="videoPlayer" autoplay playsinline webkit-playsinline></video>
+                            <div class="iframe-container" id="iframeContainer" style="display:none;width:100%;height:100%;position:absolute;top:0;left:0;z-index:5;background:#000;">
+                                <iframe id="embedFrame" style="width:100%;height:100%;border:none;background:#000;" allowfullscreen allow="autoplay;encrypted-media;picture-in-picture"></iframe>
+                            </div>
                             <div class="player-gradient" id="playerGradient"></div>
                             <div class="video-hud" id="videoHud">
                                 <div class="overlay-row top-info">
@@ -3702,6 +3771,7 @@
             let shouldSnapToLiveEdge = true;
             let isDvrMode = false;
             let isLivePlaying = false;
+            let streamEnded = false;
             // Remember the last known session label to keep it visible while streaming
             let currentSessionLabel = '';
             let currentEventStartUtc = null;
@@ -3915,9 +3985,11 @@
             function getVideoElement() { return document.getElementById('videoPlayer'); }
             function setPlayerMode(mode) {
                 const video = getVideoElement();
+                const iframeContainer = document.getElementById('iframeContainer');
                 if (!video) return;
-                const videoMode = mode !== 'embed';
+                const videoMode = mode !== 'embed' && mode !== 'iframe';
                 video.style.display = videoMode ? 'block' : 'none';
+                if (iframeContainer) iframeContainer.style.display = mode === 'iframe' ? 'block' : 'none';
                 document.getElementById('controlSurface')?.style.setProperty('display', videoMode ? '' : 'none');
                 document.getElementById('videoHud')?.style.setProperty('display', videoMode ? '' : 'none');
                 document.getElementById('playerGradient')?.style.setProperty('display', videoMode ? '' : 'none');
@@ -4063,7 +4135,7 @@
                 const raw = Array.isArray(preparedSources) ? preparedSources : [];
                 const hlsSources = raw.filter((source) => source && source.isM3U8 && source.playUrl);
                 const filtered1080 = hlsSources.filter((source) => /1080p\b/i.test(String(source.quality || '')));
-                const filtered = filtered1080.length ? filtered1080 : hlsSources.slice(0, 1);
+                const filtered = filtered1080.length ? filtered1080 : hlsSources;
                 if (!filtered.length) {
                     qualitySourceOptions = [];
                     selectedQualitySourceUrl = '';
@@ -4875,8 +4947,11 @@
                     ? (apiStatus || detailStatus || (liveSb?.isLive ? 'In Progress' : null) || fallbackStatus)
                     : (detailStatus || apiStatus || (liveSb?.isLive ? 'In Progress' : null) || fallbackStatus);
 
-                const isFinished = /^(finished|completed|ended|ft|aet|ap)$/i.test(String(rawStatus || '').trim())
-                    || (liveSb?.isLive === false && scorePairIsUseful(rawHome, rawAway));
+                const statusToken = String(rawStatus || '').trim().toLowerCase();
+                const hasExplicitSoccerLivePhase = /\b(in progress|live|on air|ongoing|started|kickoff|first half|second half|halftime|half time|ht|break time|break|intermission|stoppage|added time|extra time|et|et1|et2|90\+|90\+[\d']*)\b/i.test(statusToken);
+                const isFinished = /^(finished|completed|ended)$/i.test(statusToken)
+                    || (!isSoccer && /^(ft|aet|ap)$/i.test(statusToken))
+                    || (liveSb?.isLive === false && scorePairIsUseful(rawHome, rawAway) && !hasExplicitSoccerLivePhase);
                 const getCarriedTimerSeconds = (incomingSecs) => {
                     const existingTimer = el.querySelector('.sb-status[data-timer-seconds]');
                     if (!existingTimer) return incomingSecs;
@@ -4898,10 +4973,10 @@
                 if (isSoccer) {
                     const soccerStatus = String(rawStatus || '').trim();
                     isLive = (liveSb?.isLive !== false) && (Boolean(liveSb?.isLive)
-                        || /(in progress|live|1st\s*half|2nd\s*half|\d+[']|\d+["]|\d+:\d+|\d+\s*\+\s*\d+|\d+:\d+\s*\+\s*\d+)/i.test(soccerStatus)
-                        || (scorePairIsUseful(rawHome, rawAway) && !isFinished && !/halftime|half time|ht\b|break|intermission/i.test(soccerStatus)));
+                        || hasExplicitSoccerLivePhase
+                        || (scorePairIsUseful(rawHome, rawAway) && !isFinished && !/finished|completed|ended/i.test(soccerStatus)));
                 } else {
-                    isLive = (liveSb?.isLive !== false) && (/(in progress|live|inning|quarter|period|halftime|half time|ht|break|intermission|delay|\d+[']|\d+["]|\d+:\d+|ot|overtime)/i.test(String(rawStatus || '').trim()) || (scorePairIsUseful(rawHome, rawAway) && !isFinished));
+                    isLive = (liveSb?.isLive !== false) && (/(in progress|live|inning|quarter|period|halftime|half time|ht|break time|break|intermission|delay|stoppage|\d+[']|\d+["]|\d+:\d+|ot|overtime)/i.test(String(rawStatus || '').trim()) || (scorePairIsUseful(rawHome, rawAway) && !isFinished));
                 }
 
                 if (isFinished) {
@@ -5076,6 +5151,26 @@
                     });
                 } catch { }
             }
+
+            function markStreamEnded(reason = 'Stream ended', finalLine = '') {
+                if (streamEnded) return;
+                streamEnded = true;
+                isLivePlaying = false;
+                try { getVideoElement().pause(); } catch { }
+                const liveStatus = document.getElementById('liveStatus');
+                const liveLatency = document.getElementById('liveLatency');
+                if (liveStatus) liveStatus.textContent = 'Stream ended';
+                if (liveLatency) liveLatency.textContent = finalLine || 'Final';
+                const sourcesList = document.getElementById('sourcesList');
+                if (sourcesList) sourcesList.innerHTML = '<div class="empty">This stream has ended.</div>';
+                setMeta(
+                    document.getElementById('pageTitle')?.textContent || streamTitle,
+                    reason,
+                    'Ended',
+                    finalLine || 'Final'
+                );
+                reportStreamStatus(false, 'ended');
+            }
             function preparePlayableSources(sources, parentHeaders = {}) {
                 const parsed = (sources || []).map((source) => {
                     const headers = { ...(parentHeaders || {}), ...(source.headers || {}) };
@@ -5087,7 +5182,7 @@
                     // the backend has explicitly flagged it.  Non-adaptive streams
                     // (MP4, direct rtmp, etc.) must NOT go through the HLS proxy ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
                     // they load much faster when the browser hits the CDN directly.
-                    const isHls = Boolean(source.isM3U8) || /\.m3u8(\?|$)/i.test(rawUrl);
+                    const isHls = Boolean(source.isM3U8) || /\.m3u8(\?|$)/i.test(rawUrl) || source.engine === 'hls' || /load-playlist|\/playlist\//i.test(rawUrl);
 
                     // Only proxy real HLS manifests/segments.
                     const proxiedUrl = (isHls && rawUrl) ? (buildHlsProxyUrl(rawUrl, referer, origin, userAgent) || rawUrl) : rawUrl;
@@ -5178,17 +5273,101 @@
                     video.addEventListener('error', onError);
                 });
             }
+            let _activeIframeUrl = '';
+
+            function destroyHlsInstance() {
+                if (hlsInstance) {
+                    try {
+                        hlsInstance.stopLoad();
+                        hlsInstance.detachMedia();
+                    } catch { }
+                    try { hlsInstance.destroy(); } catch { }
+                    hlsInstance = null;
+                }
+                const video = getVideoElement();
+                if (!video) return;
+                video.pause();
+                video.muted = true;
+                video.volume = 0;
+                video.removeAttribute('src');
+                video.innerHTML = '';
+                try { video.load(); } catch { }
+            }
+
+            function clearIframePlayer() {
+                const frame = document.getElementById('embedFrame');
+                if (frame) frame.src = '';
+                _activeIframeUrl = '';
+                const container = document.getElementById('iframeContainer');
+                if (container) container.style.display = 'none';
+            }
+
+            async function loadIframePlayer(url) {
+                destroyHlsInstance();
+                const frame = document.getElementById('embedFrame');
+                if (!frame) return;
+                let targetUrl = url;
+                try {
+                    const resp = await fetch(apiUrl('/api/resolve-server-embed'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: url })
+                    });
+                    const data = await resp.json();
+                    if (data.success && data.embedUrl) {
+                        targetUrl = data.embedUrl;
+                    }
+                } catch (e) {
+                    // fallback to original url
+                }
+                _activeIframeUrl = targetUrl;
+                const proxyUrl = apiUrl('/api/iframe-proxy') + '?url=' + encodeURIComponent(targetUrl) + '&referer=' + encodeURIComponent(url);
+                frame.src = proxyUrl;
+                setPlayerMode('iframe');
+                const video = getVideoElement();
+                video.style.display = 'none';
+            }
+
+            async function selectServer(source) {
+                const playUrl = source.playUrl || source.url;
+                const engine = source.engine || (source.isM3U8 ? 'hls' : 'iframe');
+                if (engine === 'iframe') {
+                    await loadIframePlayer(playUrl);
+                    document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
+                    const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(playUrl)}"]`);
+                    if (activeBtn) activeBtn.classList.add('active');
+                } else {
+                    clearIframePlayer();
+                    playSource(playUrl, Boolean(source.isM3U8), {
+                        preserveSourceQualityOptions: true,
+                        subtitleCandidates: currentSubtitleCandidates,
+                        fallbackUrl: source.fallbackPlayUrl || '',
+                        headers: source.headers || {}
+                    });
+                    document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
+                    const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(playUrl)}"]`);
+                    if (activeBtn) activeBtn.classList.add('active');
+                }
+            }
+
             function displaySources(sources) {
                 const el = document.getElementById('sourcesList');
                 if (!sources.length) {
                     el.innerHTML = '<div class="empty">No sources available</div>';
                     return;
                 }
-                el.innerHTML = sources.map((source, index) => {
+                const serverHtml = sources.map((source, index) => {
                     const playUrl = source.playUrl || source.url;
                     const fallbackUrl = source.fallbackPlayUrl || '';
-                    return '<div class="source-item"><div class="source-item-head"><strong>Source ' + (index + 1) + '</strong><span class="source-quality">' + escapeHtml(source.quality) + ' ' + (source.isM3U8 ? '(HLS)' : '(MP4)') + '</span></div><div class="source-item-actions"><button class="source-btn" data-url="' + escapeHtml(playUrl) + '" data-fallback-url="' + escapeHtml(fallbackUrl) + '" data-hls="' + (source.isM3U8 ? '1' : '0') + '">Play Source</button></div></div>';
+                    const serverLabel = String(source.server || source.label || source.name || '').trim();
+                    const qualityLabel = String(source.quality || '').trim() || (source.isM3U8 ? 'auto' : 'direct');
+                    const engine = source.engine || (source.isM3U8 ? 'hls' : 'iframe');
+                    const engineLabel = engine === 'iframe' ? 'Embed' : 'HLS';
+                    const titleLabel = serverLabel ? escapeHtml(serverLabel) : 'Server ' + (index + 1);
+                    const metaLabel = (serverLabel ? escapeHtml(serverLabel) + ' ' : '') + escapeHtml(qualityLabel) + ' (' + engineLabel + ')';
+                    return '<div class="source-item"><div class="server-btn" data-url="' + escapeHtml(playUrl) + '" data-fallback="' + escapeHtml(fallbackUrl) + '" data-engine="' + escapeHtml(engine) + '" data-hls="' + (source.isM3U8 ? '1' : '0') + '" role="button" tabindex="0"><span class="server-name">' + titleLabel + '</span><span class="server-meta">' + metaLabel + '</span><span class="server-engine ' + escapeHtml(engine) + '">' + engineLabel + '</span></div></div>';
                 }).join('');
+                el.innerHTML = serverHtml;
             }
             function updatePlayButton() {
                 const video = getVideoElement();
@@ -5384,21 +5563,21 @@
                         autoStartLoad: true,
                         startFragPrefetch: false,
                         progressive: false,
-                        liveSyncDurationCount: 3,
-                        liveMaxLatencyDurationCount: 6,
-                        maxLiveSyncPlaybackRate: 1.05,
+                        liveSyncDurationCount: 4,
+                        liveMaxLatencyDurationCount: 10,
+                        maxLiveSyncPlaybackRate: 1.0,
 
                         // Audio/Video alignment
                         maxAudioFramesDrift: 1.5,
                         forceKeyFrameOnDiscontinuity: true,
 
                         // Buffer health
-                        maxBufferSize: 60 * 1000 * 1000,
+                        maxBufferSize: 80 * 1000 * 1000,
                         maxMaxBufferLength: 60,
-                        maxBufferLength: 30,
-                        backBufferLength: isReplayMode ? 60 : 30,
-                        liveBackBufferLength: 15,
-                        maxBufferHole: 0.5,
+                        maxBufferLength: 45,
+                        backBufferLength: isReplayMode ? 90 : 45,
+                        liveBackBufferLength: 25,
+                        maxBufferHole: 1.0,
 
                         // ABR / Quality selection
                         abrEwmaDefaultEstimate: 900_000,
@@ -5419,14 +5598,15 @@
                         },
 
                         // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Retry / error resilience ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
-                        appendErrorMaxRetry: 4,
-                        manifestLoadingMaxRetry: 3,
-                        levelLoadingMaxRetry: 3,
-                        fragLoadingMaxRetry: 6,
-                        manifestLoadingRetryDelay: 1500,
-                        levelLoadingRetryDelay: 1500,
-                        fragLoadingRetryDelay: 1000,
-                        fragLoadingMaxRetryTimeout: 10000,
+                        appendErrorMaxRetry: 6,
+                        manifestLoadingMaxRetry: 5,
+                        manifestLoadingMaxRetryTimeout: 20000,
+                        levelLoadingMaxRetry: 5,
+                        fragLoadingMaxRetry: 12,
+                        manifestLoadingRetryDelay: 1000,
+                        levelLoadingRetryDelay: 1000,
+                        fragLoadingRetryDelay: 800,
+                        fragLoadingMaxRetryTimeout: 20000,
                         startPosition: -1,
                     });
                     const safeUrl = _directCdnMode
@@ -5441,6 +5621,7 @@
                             ) || playbackUrl);
                     hls.loadSource(safeUrl);
                     hls.attachMedia(video);
+                    hlsInstance = hls;
                     releaseStartupLevelCap = () => {
                         try {
                             hls.autoLevelCapping = -1;
@@ -5456,35 +5637,22 @@
                     });
                     // Some live proxies take a few seconds to return the first playlist/segment.
                     // Keep this long enough to avoid tearing down a healthy stream before playback starts.
-                    const loadTimeoutMs = 9000;
+                    const loadTimeoutMs = 12000;
                     const loadTimeout = setTimeout(async () => {
                         if (hlsInstance !== hls) return;
                         if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA || video.currentTime > 0) return;
-                        try { hls.destroy(); } catch { }
-                        _directCdnMode = false;
-                        const proxiedFallback = /^\/api\/media-proxy(\?|$)/i.test(String(url || '').trim())
-                            ? url
-                            : (/^https?:\/\//i.test(url)
-                                ? buildHlsProxyUrl(
-                                    url,
-                                    sourceHeaders.Referer || sourceHeaders.referer || 'https://fullraces.com/',
-                                    sourceHeaders.Origin || sourceHeaders.origin || 'https://fullraces.com',
-                                    sourceHeaders['User-Agent'] || sourceHeaders['user-agent'] || navigator.userAgent
-                                ) || fallbackUrl || url
-                                : fallbackUrl || url);
-                        if (proxiedFallback && proxiedFallback !== url) {
-                            await playSource(proxiedFallback, isM3U8, {
-                                preserveSourceQualityOptions: true,
-                                subtitleCandidates: backendSubtitles,
-                                resumeTime,
-                                headers: sourceHeaders
-                            });
-                        }
+                        try { hls.startLoad(Math.max(0, video.currentTime || 0)); } catch { }
+                        setTimeout(() => {
+                            if (hlsInstance !== hls) return;
+                            if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA || video.currentTime > 0) return;
+                            try { hls.recoverMediaError(); } catch { }
+                        }, 1200);
                     }, loadTimeoutMs);
                     let switchInProgress = false;
                     let lastSwitchAt = 0;
                     let recentFloodErrors = 0;
                     let recentFloodWindowStart = 0;
+                    let deadManifestErrors = 0;
 
                     const noteFloodError = () => {
                         const now = Date.now();
@@ -5694,6 +5862,11 @@
                         }
 
                         if (isNetworkLoadIssue && isRetryFloodCandidate) {
+                            if (statusCode === 404 || statusCode === 410 || statusCode === 403) {
+                                deadManifestErrors += 1;
+                            } else {
+                                deadManifestErrors = 0;
+                            }
                             // Also refresh the signed source when the proxy
                             // server reports X-Stream-Expired: 1 (signed m3u8
                             // returned 404 even though the request was fresh).
@@ -5707,15 +5880,21 @@
                             }
 
                             markSourceFailure(url, statusCode, details || data.type);
-                            if (data.fatal || isManifestOrLevelIssue) {
+                            if (data.fatal && (isManifestOrLevelIssue || deadManifestErrors >= 2)) {
                                 const switched = await trySwitchToNextSource(`upstream_${statusCode}`);
                                 if (switched) return;
                             }
 
                             const floodCount = noteFloodError();
-                            const shouldBackoff = statusCode === 429 || isFragmentIssue || floodCount >= 4;
+                            const shouldBackoff = statusCode === 429 || isFragmentIssue || floodCount >= 6;
                             if (shouldBackoff) {
                                 scheduleBackoffRetry(statusCode);
+                                return;
+                            }
+
+                            if (deadManifestErrors >= 5 && (isManifestOrLevelIssue || isFragmentIssue)) {
+                                const finalLine = String(document.getElementById('liveLatency')?.textContent || 'Final').trim();
+                                markStreamEnded('The stream has ended.', finalLine || 'Final');
                                 return;
                             }
                         }
@@ -5811,7 +5990,7 @@
                             if (bufferedAhead < 1.5) {
                                 // Less than 1.5 s buffered ahead ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â kick HLS.js into loading
                                 console.log('[stall-recovery] Buffer low (' + bufferedAhead.toFixed(1) + 's), restarting load at', pos.toFixed(1));
-                                try { hls.stopLoad(); hls.startLoad(Math.max(0, pos)); } catch { }
+                                try { hls.startLoad(Math.max(0, pos)); } catch { }
                             }
                         }, 1500); // trigger after 1.5 s of freeze
                     });
@@ -6279,13 +6458,23 @@
                         seekResyncTimer = null;
                     }
                 });
-                sourcesList.addEventListener('click', (event) => {
-                    const button = event.target.closest('.source-btn');
+                sourcesList.addEventListener('click', async (event) => {
+                    const button = event.target.closest('.server-btn');
                     if (!button) return;
                     const url = button.getAttribute('data-url') || '';
-                    const fallbackUrl = button.getAttribute('data-fallback-url') || '';
+                    const fallbackUrl = button.getAttribute('data-fallback') || '';
+                    const engine = button.getAttribute('data-engine') || 'hls';
                     const isHls = button.getAttribute('data-hls') === '1';
-                    playSource(url, isHls, { subtitleCandidates: currentSubtitleCandidates, fallbackUrl });
+                    if (engine === 'iframe') {
+                        await loadIframePlayer(url);
+                        document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
+                        button.classList.add('active');
+                    } else {
+                        clearIframePlayer();
+                        playSource(url, isHls, { subtitleCandidates: currentSubtitleCandidates, fallbackUrl });
+                        document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
+                        button.classList.add('active');
+                    }
                 });
                 document.addEventListener('fullscreenchange', () => {
                     updateFullscreenButton();
@@ -7822,7 +8011,12 @@
                     const preferredQualityUrl = String(state.preferredQualityUrl || '').trim();
                     const preferredQuality = preferredQualityUrl && prepared.find((source) => source.playUrl === preferredQualityUrl);
                     const preferred720 = prepared.find((source) => /720p\b/i.test(String(source.quality || '')) && source.isM3U8) || prepared.find((source) => /720p\b/i.test(String(source.quality || '')));
-                    const initialSource = preferredQuality || preferred720 || prepared[0];
+                    const initialSource = preferredQuality || preferred720 || prepared.find((s) => s.isM3U8) || prepared[0];
+                    if (initialSource) {
+                        document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
+                        const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(initialSource.playUrl || initialSource.url)}"]`);
+                        if (activeBtn) activeBtn.classList.add('active');
+                    }
                     if (prepared[0]) {
                         await reportStreamStatus(true, 'source_available');
                         if (preferredQuality) selectedQualitySourceUrl = preferredQuality.playUrl;
@@ -7903,15 +8097,22 @@
                         const localEventTime = formatLocalDateTime(eventStartUtc);
                         const sessionStatus = countdownText ? 'Starts in ' + countdownText : normalizeStatus(activeSession?.status || info.status, activeSession?.startsAt || activeSession?.when || info.eventDate);
                         const sessionTime = localEventTime || activeSession?.startsAt || activeSession?.when || info.eventDate;
+                        const liveFlag = Boolean(info?.isLive || initialMd?.isLive || mergedForRender?.isLive);
+                        const endedFlag = /^(finished|completed|ended|ft|final|aet|ap)$/i.test(String(info?.status || sessionStatus || '').trim());
+                        if (!streamEnded && (!liveFlag || endedFlag)) {
+                            markStreamEnded(endedFlag ? 'The stream has ended.' : 'The live event is no longer active.');
+                        }
 
                         // Build display title using fresh matchDetails team names when available
                         const freshNames = getScoreboardNames(mergedForRender, initialMd || undefined);
                         const displayTitle = (freshNames.homeName && freshNames.awayName && freshNames.homeName !== 'Home' && freshNames.awayName !== 'Away')
                             ? `${freshNames.homeName} vs ${freshNames.awayName}`
                             : baseTitle;
-                        const displaySubtitle = sessionTime || info.status || 'Dedicated live watch page';
-                        const displayStatus = sessionStatus || 'Connecting to live feed';
-                        const displayLatency = countdownText || sessionTime || 'Syncing stream';
+                        const displaySubtitle = streamEnded
+                            ? `${sessionStatus || info.status || 'Final'} • Stream ended`
+                            : (sessionTime || info.status || 'Dedicated live watch page');
+                        const displayStatus = streamEnded ? 'Ended' : (sessionStatus || 'Connecting to live feed');
+                        const displayLatency = streamEnded ? (info.status || 'Final') : (countdownText || sessionTime || 'Syncing stream');
                         setMeta(displayTitle, displaySubtitle, displayStatus, displayLatency, sessionLabel);
                         if (scoreRefreshTimer) clearInterval(scoreRefreshTimer);
                         // pinnedMatchIdentity is already set above from the initial matchDetails fetch.
