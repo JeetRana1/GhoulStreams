@@ -3764,7 +3764,7 @@
         <script>
             const PAGE_SESSION_LOCK_ID = new URLSearchParams(window.location.search).get('g') || window.location.pathname;
             let hlsInstance = null;
-            let _directCdnMode = true;
+            let _directCdnMode = false;
             let lastReportedState = null;
             let scoreRefreshTimer = null;
             let scoreRefreshInFlight = false;
@@ -5228,7 +5228,7 @@
                 // /api/media-proxy, reuse it as-is instead of wrapping again.
                 const raw = String(sourceUrl || '').trim();
                 if (!raw) return '';
-                if (raw.startsWith(apiUrl('/api/media-proxy')) || raw.startsWith('/api/media-proxy') || raw.includes('/api/media-proxy?')) {
+                if (raw.startsWith(apiUrl('/api/media-proxy')) || raw.startsWith('/api/media-proxy') || raw.includes('/api/media-proxy')) {
                     return raw;
                 }
                 if (!/^https?:\/\//i.test(raw)) {
@@ -5611,7 +5611,7 @@
                     });
                     const safeUrl = _directCdnMode
                         ? playbackUrl
-                        : (/^\/api\/media-proxy(\?|$)/i.test(String(playbackUrl || '').trim())
+                        : (/\/api\/media-proxy(\?|$)/i.test(String(playbackUrl || '').trim())
                             ? playbackUrl
                             : buildHlsProxyUrl(
                                 playbackUrl,
@@ -5691,11 +5691,15 @@
                         try {
                             document.getElementById('liveStatus').textContent = 'Refreshing live source';
                             document.getElementById('liveLatency').textContent = reason || 'Renewing signed stream';
+                            const controller = new AbortController();
+                            const to = setTimeout(() => controller.abort(), 15000);
                             const response = await fetch(apiUrl('/api/fetchSources'), {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ eventUrl: streamId })
+                                body: JSON.stringify({ eventUrl: streamId }),
+                                signal: controller.signal
                             });
+                            clearTimeout(to);
                             const result = await response.json();
                             const freshSources = preparePlayableSources(result?.data?.sources || [], result?.data?.headers || {});
                             if (!freshSources.length) return false;
@@ -7982,13 +7986,25 @@
                         streamTitle = canonicalTitle;
                     }
 
-                    const fetchSourcesWith = async (payload) => {
-                        const response = await fetch(apiUrl('/api/fetchSources'), {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        return response.json();
+                    const fetchSourcesWith = async (payload, timeoutMs = 25000) => {
+                        const controller = new AbortController();
+                        const timeout = setTimeout(() => controller.abort(), timeoutMs);
+                        try {
+                            const response = await fetch(apiUrl('/api/fetchSources'), {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload),
+                                signal: controller.signal
+                            });
+                            clearTimeout(timeout);
+                            return response.json();
+                        } catch (err) {
+                            clearTimeout(timeout);
+                            if (err.name === 'AbortError') {
+                                return { success: false, error: 'Source fetch timed out' };
+                            }
+                            throw err;
+                        }
                     };
 
                     let sourcesResult = await fetchSourcesWith({ eventUrl: watchId, title: streamTitle });
