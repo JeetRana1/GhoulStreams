@@ -15,6 +15,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>Watch | GhoulStreams</title>
     <link rel="icon" type="image/svg+xml" href="/Logo.svg?v=1">
+    <link rel="preconnect" href="https://ghoulstreams-api.duckdns.org">
     <style>
         /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Tokens ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
         :root {
@@ -5559,28 +5560,28 @@
                     const hls = new Hls({
                         // Live edge & latency
                         liveDurationInfinity: false,
-                        lowLatencyMode: true,
+                        lowLatencyMode: false,
                         autoStartLoad: true,
-                        startFragPrefetch: false,
+                        startFragPrefetch: true,
                         progressive: false,
-                        liveSyncDurationCount: 4,
-                        liveMaxLatencyDurationCount: 10,
-                        maxLiveSyncPlaybackRate: 1.0,
+                        liveSyncDurationCount: 8,
+                        liveMaxLatencyDurationCount: 15,
+                        maxLiveSyncPlaybackRate: 1.5,
 
                         // Audio/Video alignment
                         maxAudioFramesDrift: 1.5,
                         forceKeyFrameOnDiscontinuity: true,
 
-                        // Buffer health
-                        maxBufferSize: 80 * 1000 * 1000,
-                        maxMaxBufferLength: 60,
-                        maxBufferLength: 45,
+                        // Buffer health — larger buffer to mask slow proxy downloads
+                        maxBufferSize: 150 * 1000 * 1000,
+                        maxMaxBufferLength: 120,
+                        maxBufferLength: 60,
                         backBufferLength: isReplayMode ? 90 : 45,
-                        liveBackBufferLength: 25,
-                        maxBufferHole: 1.0,
+                        liveBackBufferLength: 30,
+                        maxBufferHole: 2.0,
 
-                        // ABR / Quality selection
-                        abrEwmaDefaultEstimate: 900_000,
+                        // ABR / Quality selection — start conservatively given ~5 Mbps budget
+                        abrEwmaDefaultEstimate: 500_000,
                         startLevel: -1,
                         capLevelToPlayerSize: true,
                         enableWorker: true,
