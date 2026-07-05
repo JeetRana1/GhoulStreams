@@ -1650,7 +1650,7 @@
                 <span class="nav-link active" data-filter="" role="tab" aria-selected="true" tabindex="0">All</span>
                 <span class="nav-link" data-filter="nfl" role="tab" aria-selected="false" tabindex="0">NFL/CFL</span>
                 <span class="nav-link" data-filter="soccer" role="tab" aria-selected="false" tabindex="0">Football</span>
-                <span class="nav-link" data-filter="boxing" role="tab" aria-selected="false" tabindex="0">Boxing</span>
+                <span class="nav-link" data-filter="boxing" role="tab" aria-selected="false" tabindex="0">Boxing/MMA</span>
                 <span class="nav-link" data-filter="f1" role="tab" aria-selected="false" tabindex="0">Formula 1</span>
                 <span class="nav-link" data-filter="nba" role="tab" aria-selected="false" tabindex="0">NBA/WNBA</span>
                 <span class="nav-link" data-filter="mlb" role="tab" aria-selected="false" tabindex="0">MLB</span>
@@ -1748,7 +1748,7 @@
             soccer: { label: 'Football', icon: 'https://buffstreams.plus/images/soccer.webp?v3e32' },
             nhl: { label: 'NHL', icon: 'https://buffstreams.plus/images/nhl.webp?v3e32' },
             mlb: { label: 'MLB', icon: 'https://buffstreams.plus/images/mlb.webp?v3e32' },
-            boxing: { label: 'Boxing', icon: 'https://buffstreams.plus/images/boxing.webp?v3e32' },
+            boxing: { label: 'Boxing/MMA', icon: 'https://buffstreams.plus/images/boxing.webp?v3e32' },
             mma: { label: 'MMA', icon: 'https://buffstreams.plus/images/ufc.webp?v3e32' },
             wwe: { label: 'WWE', icon: 'https://buffstreams.plus/images/wwe.webp?v3e32' },
             f1: { label: 'Formula 1', icon: 'https://buffstreams.plus/images/f1.webp?v3e32' },
@@ -3193,10 +3193,12 @@
                         'washington wizards': 'wsh'
                     };
                     const CFL_LOGO_CODES = {
-                        'bc lions': 'bc', 'calgary stampeders': 'cal', 'edmonton elks': 'edm', 'edmonton eskimos': 'edm',
-                        'hamilton tiger cats': 'ham', 'hamilton ticats': 'ham', 'montreal alouettes': 'mtl',
-                        'ottawa redblacks': 'ott', 'saskatchewan roughriders': 'ssk', 'toronto argonauts': 'tor',
-                        'winnipeg blue bombers': 'wpg'
+                        'bc lions': 'bc-lions', 'calgary stampeders': 'calgary-stampeders',
+                        'edmonton elks': 'edmonton-elks', 'edmonton eskimos': 'edmonton-elks',
+                        'hamilton tiger cats': 'hamilton-tiger-cats', 'hamilton ticats': 'hamilton-tiger-cats',
+                        'montreal alouettes': 'montreal-alouettes', 'ottawa redblacks': 'ottawa-redblacks',
+                        'saskatchewan roughriders': 'saskatchewan-roughriders', 'toronto argonauts': 'toronto-argonauts',
+                        'winnipeg blue bombers': 'winnipeg-blue-bombers'
                     };
                     const WNBA_LOGO_CODES = {
                         'atlanta dream': 'atl', 'chicago sky': 'chi', 'connecticut sun': 'conn', 'dallas wings': 'dal',
@@ -3268,7 +3270,7 @@
                         }
                         const cflCode = CFL_LOGO_CODES[cleanT];
                         if (cflCode) {
-                            return rememberLogo(`https://a.espncdn.com/i/teamlogos/cfl/500/${cflCode}.png`);
+                            return rememberLogo(`https://news.sportsinteraction.com/images/team-logos/cfl/${cflCode}-60x60.png`);
                         }
                         // 1. Try matching country flags
                         if (COUNTRY_FLAGS[cleanT]) {
