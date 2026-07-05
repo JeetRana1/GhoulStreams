@@ -68,6 +68,10 @@
       "dest": "/index.html"
     },
     {
+      "src": "/cfl",
+      "dest": "/index.html"
+    },
+    {
       "src": "/watch/([^/]+)",
       "dest": "/watch.html"
     },

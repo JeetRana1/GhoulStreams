@@ -24,7 +24,7 @@ const MIME_TYPES = {
 };
 
 function resolveRoute(urlPath) {
-  if (urlPath === '/' || urlPath === '/all' || urlPath === '/football' || urlPath === '/nfl' || urlPath === '/mma' || urlPath === '/boxing' || urlPath === '/formula-1' || urlPath === '/nba' || urlPath === '/wnba' || urlPath === '/mlb') {
+  if (urlPath === '/' || urlPath === '/all' || urlPath === '/football' || urlPath === '/nfl' || urlPath === '/mma' || urlPath === '/boxing' || urlPath === '/formula-1' || urlPath === '/nba' || urlPath === '/wnba' || urlPath === '/mlb' || urlPath === '/cfl') {
     return 'index.html';
   }
   if (/^\/watch\/[^/]+$/i.test(urlPath)) return 'watch.html';

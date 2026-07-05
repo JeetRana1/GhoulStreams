@@ -3719,25 +3719,9 @@
 
                 <div class="card stats-card" id="matchStatsContainer" style="display:none"></div>
 
-                <div class="card side-card" id="eventCardSection">
-                    <h3>Event Card</h3>
-                    <div id="eventSessionsContainer" style="display:none; margin-bottom: 16px;">
-                        <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--accent);">Sessions</h4>
-                        <div class="session-list" id="eventSessionsList"></div>
-                    </div>
-                    <div id="eventCardContainer" style="display:none">
-                        <div id="mainCardSection">
-                            <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--accent);">Main Card</h4>
-                            <div id="mainCardMatches" style="display: flex; flex-direction: column; gap: 10px;"></div>
-                        </div>
-                        <div id="prelimsSection" style="margin-top: 16px; display:none">
-                            <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--muted);">Prelims</h4>
-                            <div id="prelimMatches" style="display: flex; flex-direction: column; gap: 10px;"></div>
-                        </div>
-                    </div>
-                    <div id="noCardMessage" class="empty"
-                        style="padding: 24px 12px; text-align: center; color: var(--muted); font-size: 0.88rem;">No card
-                        information available</div>
+                <div id="eventSessionsContainer" style="display:none; margin-bottom: 16px;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--accent);">Sessions</h4>
+                    <div class="session-list" id="eventSessionsList"></div>
                 </div>
             </div> <!-- End of main-content -->
 
@@ -4597,7 +4581,7 @@
                     }
                     return 'Not started';
                 }
-                if (s === 'FINISHED' || s === 'COMPLETED') return 'Finished';
+                if (s === 'FINISHED' || s === 'COMPLETED') return 'Final';
                 return status;
             }
 
@@ -4977,13 +4961,18 @@
                         || hasExplicitSoccerLivePhase
                         || (scorePairIsUseful(rawHome, rawAway) && !isFinished && !/finished|completed|ended/i.test(soccerStatus)));
                 } else {
-                    isLive = (liveSb?.isLive !== false) && (/(in progress|live|inning|quarter|period|halftime|half time|ht|break time|break|intermission|delay|stoppage|\d+[']|\d+["]|\d+:\d+|ot|overtime)/i.test(String(rawStatus || '').trim()) || (scorePairIsUseful(rawHome, rawAway) && !isFinished));
+                    isLive = (liveSb?.isLive !== false) && (/(in progress|live|inning|quarter|period|halftime|half time|ht|break time|break|intermission|delay|stoppage|\d+[']|\d+["]|\d+:\d+|ot|overtime|^Q[1-4]$)/i.test(String(rawStatus || '').trim()) || (scorePairIsUseful(rawHome, rawAway) && !isFinished));
                 }
 
                 if (isFinished) {
-                    statusText = 'Finished';
+                    statusText = isSoccer ? 'Full Time' : 'Final';
                 } else if (isLive) {
-                    statusText = 'In Progress';
+                    const liveStatusRaw = String(rawStatus || '').trim();
+                    if (/^(halftime|overtime)$/i.test(liveStatusRaw)) {
+                        statusText = liveStatusRaw.charAt(0).toUpperCase() + liveStatusRaw.slice(1).toLowerCase();
+                    } else {
+                        statusText = 'In Progress';
+                    }
                     const statusForTimer = String(rawStatus || '').trim();
                     const timeMatch = statusForTimer.match(/^(\d+):(\d+)$/);
                     const minMatch = statusForTimer.match(/^(\d+)'?$/);
@@ -5013,9 +5002,7 @@
                         const totalSecs = getCarriedTimerSeconds(mins * 60);
                         timerSecondsAttr = ` data-timer-seconds="${totalSecs}" data-timer-updated="${Date.now()}" data-base-minute="${mins}" data-added-minutes="${addedMins}"`;
                         timerText = `${formatTimerSeconds(totalSecs)} +${addedMins}`;
-                    } else if (/\d+['"]/.test(rawStatus) || /\d+:\d+/.test(rawStatus) || /halftime|half|ht\b|ot\b|overtime|break|intermission|delay|postpon|cancel/i.test(rawStatus)) {
-                        timerText = rawStatus;
-                    } else if (/\d+(st|nd|rd|th)\s+(inning|quarter|period)/i.test(rawStatus)) {
+                    } else if (/\d+['"]/.test(rawStatus) || /\d+:\d+/.test(rawStatus) || /^Q[1-4]$|halftime|half|ht\b|ot\b|overtime|break|intermission|delay|postpon|cancel/i.test(rawStatus) || /\d+(st|nd|rd|th)\s+(inning|quarter|period)/i.test(rawStatus)) {
                         timerText = rawStatus;
                     }
                 } else {
@@ -5073,9 +5060,9 @@
 
                 let statusBadgeHtml = '';
                 if (isLive) {
-                    statusBadgeHtml = `<div class="sb-status-badge live">In Progress</div>`;
+                    statusBadgeHtml = `<div class="sb-status-badge live">${escapeHtml(statusText)}</div>`;
                 } else if (isFinished) {
-                    statusBadgeHtml = `<div class="sb-status-badge finished">Finished</div>`;
+                    statusBadgeHtml = `<div class="sb-status-badge finished">${escapeHtml(statusText)}</div>`;
                 } else {
                     statusBadgeHtml = `<div class="sb-status-badge upcoming">${escapeHtml(statusText)}</div>`;
                 }
@@ -5795,6 +5782,13 @@
                         }
 
                         if (isNetworkLoadIssue && isRetryFloodCandidate) {
+                            const currentLatency = document.getElementById('liveLatency')?.textContent || '';
+                            const isPauseStatus = /\b(ht|halftime|half.?time|break|intermission|pause|delay|ot|overtime)\b/i.test(currentLatency);
+                            if (isPauseStatus) {
+                                deadManifestErrors = 0;
+                                scheduleBackoffRetry(statusCode);
+                                return;
+                            }
                             if (statusCode === 404 || statusCode === 410 || statusCode === 403) {
                                 deadManifestErrors += 1;
                             } else {
@@ -6056,10 +6050,6 @@
                     }
                     renderScoreboard(mergedInfo, mdData);
                     displayEventSessions(info.eventSessions || []);
-                    displayEventCard({
-                        mainCard: (info.fightCard && info.fightCard.length) ? info.fightCard : (info.cards?.mainCard || []),
-                        prelims: info.cards?.prelims || []
-                    });
                     displaySoccerStats(mergedInfo);
                     
                     const baseTitle = getMainTitle((hasMatchupTitle(info.title) ? info.title : '') || lockedSlugTitle || document.getElementById('pageTitle').textContent || initialStreamTitle || streamTitle);
@@ -6895,6 +6885,8 @@
 
                         const renderH2HRow = (g) => {
                             const outcomeClass = 'outcome-' + String(g.outcome || 'D').toLowerCase();
+                            const logoSrc = g.opponentLogo ? proxyLogo(g.opponentLogo) : '';
+                            const logoImg = logoSrc ? `<img src="${escapeHtml(logoSrc)}" alt="" style="width:18px;height:18px;flex-shrink:0;border-radius:3px;" loading="lazy">` : '';
                             return `
                             <div class="team-form-row">
                                 <div class="team-form-meta">
@@ -6902,7 +6894,10 @@
                                     <span>${escapeHtml(g.date)}</span>
                                 </div>
                                 <div class="team-form-teams-wrap" style="margin-top: 4px;">
-                                    <span class="team-form-team-name" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis;">vs ${escapeHtml(g.opponent)}</span>
+                                    <span class="team-form-team-name" style="display:inline-flex;align-items:center;gap:6px;overflow:hidden;font-size:0.85rem;">
+                                        ${logoImg}
+                                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(g.opponent)}</span>
+                                    </span>
                                     <div class="team-form-badge-wrap">
                                         <div class="team-form-score-badge ${outcomeClass}">${escapeHtml(g.score)}</div>
                                     </div>
@@ -6970,6 +6965,8 @@
 
                     const renderH2HRow = (g) => {
                         const outcomeClass = 'outcome-' + String(g.outcome || 'D').toLowerCase();
+                        const logoSrc = g.opponentLogo ? proxyLogo(g.opponentLogo) : '';
+                        const logoImg = logoSrc ? `<img src="${escapeHtml(logoSrc)}" alt="" style="width:18px;height:18px;flex-shrink:0;border-radius:3px;" loading="lazy">` : '';
                         return `
                         <div class="team-form-row">
                             <div class="team-form-meta">
@@ -6977,7 +6974,10 @@
                                 <span>${escapeHtml(g.date)}</span>
                             </div>
                             <div class="team-form-teams-wrap" style="margin-top: 4px;">
-                                <span class="team-form-team-name" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis;">vs ${escapeHtml(g.opponent)}</span>
+                                <span class="team-form-team-name" style="display:inline-flex;align-items:center;gap:6px;overflow:hidden;font-size:0.85rem;">
+                                    ${logoImg}
+                                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(g.opponent)}</span>
+                                </span>
                                 <div class="team-form-badge-wrap">
                                     <div class="team-form-score-badge ${outcomeClass}">${escapeHtml(g.score)}</div>
                                 </div>
@@ -7661,79 +7661,6 @@
 
 
 
-            function displayEventCard(cardData) {
-                const container = document.getElementById('eventCardContainer');
-                const noCardMsg = document.getElementById('noCardMessage');
-                const mainCardMatches = document.getElementById('mainCardMatches');
-                const prelimMatches = document.getElementById('prelimMatches');
-                const prelimsSection = document.getElementById('prelimsSection');
-                const hasSessions = document.getElementById('eventSessionsContainer')?.style.display === 'block';
-
-                if (!cardData || (!cardData.mainCard?.length && !cardData.prelims?.length)) {
-                    container.style.display = 'none';
-                    noCardMsg.style.display = hasSessions ? 'none' : 'block';
-                    return;
-                }
-
-                noCardMsg.style.display = 'none';
-                container.style.display = 'block';
-
-                // Render main card matches
-                mainCardMatches.innerHTML = '';
-                if (cardData.mainCard && cardData.mainCard.length > 0) {
-                    cardData.mainCard.forEach(match => {
-                        const image1Url = proxyCardImageUrl(match.image1);
-                        const image2Url = proxyCardImageUrl(match.image2);
-                        const matchEl = document.createElement('div');
-                        matchEl.className = 'match-card';
-                        matchEl.innerHTML = `
-                        <div class="match-fighter">
-                            ${match.sequenceLabel ? `<div class="match-sequence">${escapeHtml(match.sequenceLabel)}</div>` : ''}
-                            ${image1Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image1Url)}" alt="${escapeHtml(match.fighter1 || 'Competitor 1')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
-                            <div class="match-fighter-name">${escapeHtml(match.fighter1 || 'Fighter 1')}</div>
-                            ${match.record1 ? `<div class="match-fighter-record">${escapeHtml(match.record1)}</div>` : ''}
-                        </div>
-                        <div class="match-vs">VS</div>
-                        <div class="match-fighter">
-                            ${image2Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image2Url)}" alt="${escapeHtml(match.fighter2 || 'Competitor 2')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
-                            <div class="match-fighter-name">${escapeHtml(match.fighter2 || 'Fighter 2')}</div>
-                            ${match.record2 ? `<div class="match-fighter-record">${escapeHtml(match.record2)}</div>` : ''}
-                        </div>
-                    `;
-                        mainCardMatches.appendChild(matchEl);
-                    });
-                }
-
-                // Render prelims matches
-                if (cardData.prelims && cardData.prelims.length > 0) {
-                    prelimsSection.style.display = 'block';
-                    prelimMatches.innerHTML = '';
-                    cardData.prelims.forEach(match => {
-                        const image1Url = proxyCardImageUrl(match.image1);
-                        const image2Url = proxyCardImageUrl(match.image2);
-                        const matchEl = document.createElement('div');
-                        matchEl.className = 'match-card';
-                        matchEl.innerHTML = `
-                        <div class="match-fighter">
-                            ${match.sequenceLabel ? `<div class="match-sequence">${escapeHtml(match.sequenceLabel)}</div>` : ''}
-                            ${image1Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image1Url)}" alt="${escapeHtml(match.fighter1 || 'Competitor 1')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
-                            <div class="match-fighter-name">${escapeHtml(match.fighter1 || 'Fighter 1')}</div>
-                            ${match.record1 ? `<div class="match-fighter-record">${escapeHtml(match.record1)}</div>` : ''}
-                        </div>
-                        <div class="match-vs">VS</div>
-                        <div class="match-fighter">
-                            ${image2Url ? `<img class="match-fighter-avatar" src="${escapeHtml(image2Url)}" alt="${escapeHtml(match.fighter2 || 'Competitor 2')}" loading="lazy" referrerpolicy="no-referrer">` : ''}
-                            <div class="match-fighter-name">${escapeHtml(match.fighter2 || 'Fighter 2')}</div>
-                            ${match.record2 ? `<div class="match-fighter-record">${escapeHtml(match.record2)}</div>` : ''}
-                        </div>
-                    `;
-                        prelimMatches.appendChild(matchEl);
-                    });
-                } else {
-                    prelimsSection.style.display = 'none';
-                }
-            }
-
             async function loadRelatedEvents(currentEventInfo) {
                 try {
                     const relatedContainer = document.getElementById('relatedEventsList');
@@ -7788,9 +7715,11 @@
                         const statusLabel = String(event.liveState?.periodText || event.liveState?.exactTime || event.statusText || event.status || '')
                             .replace(/\blive streams?(?:\s+links)?\b/ig, '')
                             .trim();
-                        const isLive = Boolean(event.liveState?.isLive) ||
+                        const relatedAgoText = `${event.title || ''} ${event.statusText || ''} ${event.status || ''} ${statusLabel}`;
+                        const hasRelatedAgo = /\b(\d+)\s+(second|seconds|sec|secs|minute|minutes|min|mins|hour|hours|hr|hrs|day|days|week|weeks|month|months|year|years)\s+ago\b/i.test(relatedAgoText);
+                        const isLive = !hasRelatedAgo && (Boolean(event.liveState?.isLive) ||
                             String(statusLabel).toLowerCase().includes('live') ||
-                            String(statusLabel).toLowerCase().includes('in progress');
+                            String(statusLabel).toLowerCase().includes('in progress'));
                         const relatedImageRaw = String(event.image || event.logo || '').trim();
                         const relatedImageUrl = /^https?:\/\//i.test(relatedImageRaw) ? relatedImageRaw : '/Logo.svg?v=1';
 
@@ -7975,10 +7904,6 @@
                         const mergedForRender = initialMd ? withLiveSportTeamsForDisplay({ ...withoutBuffStreamsLiveData(info), ...initialMd }, initialMd) : withLiveSportTeamsForDisplay({ ...info }, info);
                         renderScoreboard(mergedForRender, initialMd || undefined);
                         displayEventSessions(info.eventSessions || []);
-                        displayEventCard({
-                            mainCard: (info.fightCard && info.fightCard.length) ? info.fightCard : (info.cards?.mainCard || []),
-                            prelims: info.cards?.prelims || []
-                        });
                         displaySoccerStats(mergedForRender);
 
                         const baseTitle = getMainTitle((hasMatchupTitle(info.title) ? info.title : '') || lockedSlugTitle || initialStreamTitle || streamTitle);
@@ -7992,8 +7917,10 @@
                         const sessionStatus = countdownText ? 'Starts in ' + countdownText : normalizeStatus(activeSession?.status || info.status, activeSession?.startsAt || activeSession?.when || info.eventDate);
                         const sessionTime = localEventTime || activeSession?.startsAt || activeSession?.when || info.eventDate;
                         const liveFlag = Boolean(info?.isLive || initialMd?.isLive || mergedForRender?.isLive);
-                        const endedFlag = /^(finished|completed|ended|ft|final|aet|ap)$/i.test(String(info?.status || sessionStatus || '').trim());
-                        if (!streamEnded && (!liveFlag || endedFlag)) {
+                        const endStatus = String(info?.status || sessionStatus || '').trim().toLowerCase();
+                        const endedFlag = /^(finished|completed|ended|ft|final|aet|ap)$/i.test(endStatus);
+                        const isPauseStatus = /\b(ht|halftime|half.?time|break|intermission|pause|delay|ot|overtime)\b/i.test(endStatus);
+                        if (!streamEnded && (!liveFlag || endedFlag) && !isPauseStatus) {
                             markStreamEnded(endedFlag ? 'The stream has ended.' : 'The live event is no longer active.');
                         }
 

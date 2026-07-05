@@ -388,6 +388,38 @@
             box-shadow: 0 0 12px rgba(77, 159, 255, 0.14);
         }
 
+        .hard-refresh-btn {
+            flex-shrink: 0;
+            width: 34px;
+            height: 34px;
+            border-radius: var(--r-pill);
+            border: 1px solid rgba(255, 31, 62, 0.72);
+            background: rgba(255, 74, 93, 0.14);
+            color: #ff727e;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-left: 8px;
+            box-shadow: 0 0 18px rgba(255, 31, 62, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .hard-refresh-btn:hover {
+            background: rgba(255, 74, 93, 0.2);
+            border-color: rgba(255, 64, 88, 0.92);
+            box-shadow: 0 0 22px rgba(255, 31, 62, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            color: #ff8a94;
+        }
+        .hard-refresh-btn:active {
+            transform: scale(0.97);
+        }
+        .hard-refresh-btn.spinning svg {
+            animation: hardRefreshSpin 0.6s linear;
+        }
+        @keyframes hardRefreshSpin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Pulsating live badge dot animation — applied to .live-dot elements
            rendered inside event cards when isLive === true. */
         @keyframes pulse-live {
@@ -1616,14 +1648,16 @@
             </a>
             <nav class="nav" role="tablist" aria-label="Sport category filter">
                 <span class="nav-link active" data-filter="" role="tab" aria-selected="true" tabindex="0">All</span>
-                <span class="nav-link" data-filter="nfl" role="tab" aria-selected="false" tabindex="0">NFL</span>
+                <span class="nav-link" data-filter="nfl" role="tab" aria-selected="false" tabindex="0">NFL/CFL</span>
                 <span class="nav-link" data-filter="soccer" role="tab" aria-selected="false" tabindex="0">Football</span>
-                <span class="nav-link" data-filter="mma" role="tab" aria-selected="false" tabindex="0">MMA</span>
                 <span class="nav-link" data-filter="boxing" role="tab" aria-selected="false" tabindex="0">Boxing</span>
                 <span class="nav-link" data-filter="f1" role="tab" aria-selected="false" tabindex="0">Formula 1</span>
-                <span class="nav-link" data-filter="nba" role="tab" aria-selected="false" tabindex="0">NBA</span>
+                <span class="nav-link" data-filter="nba" role="tab" aria-selected="false" tabindex="0">NBA/WNBA</span>
                 <span class="nav-link" data-filter="mlb" role="tab" aria-selected="false" tabindex="0">MLB</span>
             </nav>
+            <button id="hardRefreshBtn" class="hard-refresh-btn" type="button" aria-label="Refresh all streams" title="Refresh &amp; clear cache">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
         </header>
 
         <section class="hero glass">
@@ -1710,7 +1744,7 @@
             nba: { label: 'NBA', icon: 'https://buffstreams.plus/images/nba.webp?v3e32' },
             wnba: { label: 'WNBA', icon: 'https://buffstreams.plus/images/wnba.webp?v3e32' },
             nfl: { label: 'NFL', icon: 'https://buffstreams.plus/images/nfl.webp?v3e32' },
-            cfl: { label: 'CFL', icon: 'https://buffstreams.plus/images/nfl.webp?v3e32' },
+            cfl: { label: 'CFL', icon: 'https://scdnmain.net/assets/tournament/41257.png' },
             soccer: { label: 'Football', icon: 'https://buffstreams.plus/images/soccer.webp?v3e32' },
             nhl: { label: 'NHL', icon: 'https://buffstreams.plus/images/nhl.webp?v3e32' },
             mlb: { label: 'MLB', icon: 'https://buffstreams.plus/images/mlb.webp?v3e32' },
@@ -1952,7 +1986,7 @@
             if (/\bnascar\b|\bcup series\b|\bxfinity\b|\btruck series\b/.test(key)) {
                 return 'https://1000logos.net/wp-content/uploads/2017/03/Nascar-Logo.png';
             }
-            return fallback;
+            return 'https://buffstreams.plus/images/f1.webp?v3e32';
         }
         function getMainTitle(value) {
             const clean = cleanDisplayTitle(value);
@@ -2046,12 +2080,17 @@
             return 0;
         }
 
+        function hasAgoText(stream) {
+            const text = cleanDisplayTitle(`${stream?.title || ''} ${stream?.statusText || ''} ${stream?.relativeTime || ''} ${stream?.date || ''}`);
+            return /\b(\d+)\s+(second|seconds|sec|secs|minute|minutes|min|mins|hour|hours|hr|hrs|day|days|week|weeks|month|months|year|years)\s+ago\b/i.test(text);
+        }
         function hasStaleProviderAge(stream) {
             return getProviderAgeMs(stream) >= (6 * 60 * 60 * 1000);
         }
 
         function hasExplicitLivePhaseText(value) {
             const text = cleanDisplayTitle(value || '').replace(/\blive streams?(?:\s+links)?\b/ig, ' ');
+            if (/\b(?:finished|final|ended|full\s*time|ft\b|cancelled|postponed|walkover|after\s+(?:penalties|extra))\b/i.test(text)) return false;
             return /\b(?:in progress|on air|ongoing|started|kickoff|first half|second half|halftime|ht|overtime|quarter|period|inning|top\s+\d+|bottom\s+\d+|match live|live now)\b/i.test(text)
                 || /^\d{1,3}(?:\+\d+)?'\s*$/i.test(text);
         }
@@ -2067,8 +2106,8 @@
             if (hasFutureScheduleSignal(stream, scheduleInfo)) return false;
 
             const haystack = `${stream.title || ''} ${stream.statusText || ''} ${stream.liveSportStatus || ''} ${stream.liveState?.periodText || ''}`;
+            if (hasAgoText(stream)) return false;
             const explicitPhase = hasExplicitLivePhaseText(haystack);
-            if (hasStaleProviderAge(stream) && !explicitPhase) return false;
             if (explicitPhase) return true;
 
             if (typeof stream.isLive === 'boolean') return stream.isLive && !hasStaleProviderAge(stream) && hasExplicitLivePhaseText(haystack);
@@ -2156,7 +2195,8 @@
                 f1: '/formula-1',
                 nba: '/nba',
                 wnba: '/wnba',
-                mlb: '/mlb'
+                mlb: '/mlb',
+                cfl: '/cfl'
             };
             return map[filter] || `/${encodeURIComponent(filter)}`;
         }
@@ -2580,7 +2620,7 @@
             if (sportType === 'mlb') return !/\b(?:quarter|q[1-4]|half|period)\b/.test(status);
             if (sportType === 'nba' || sportType === 'wnba') return !/\b(?:inning|top|bottom|half)\b/.test(status);
             if (sportType === 'nhl') return !/\b(?:inning|top|bottom|quarter|q[1-4]|half)\b/.test(status);
-            if (sportType === 'nfl') return !/\b(?:inning|top|bottom|period)\b/.test(status);
+            if (sportType === 'nfl' || sportType === 'cfl') return !/\b(?:inning|top|bottom|period)\b/.test(status);
             return true;
         }
 
@@ -2639,6 +2679,7 @@
             if ((sportType === 'nba' || sportType === 'wnba') && matchSport && !/basketball|nba|wnba/.test(matchSport)) continue;
             if (sportType === 'nhl' && matchSport && !/hockey|nhl/.test(matchSport)) continue;
             if (sportType === 'nfl' && matchSport && !/american/.test(matchSport)) continue;
+            if (sportType === 'cfl' && matchSport && !/american|cfl/.test(matchSport)) continue;
             if (sportType === 'soccer' && matchSport && !/soccer|association|world cup/.test(matchSport)) continue;
             if (!isSportPhaseCompatible(sportType, match?.status || match?.statusText || match?.periodText || '')) continue;
             if (mAwayKey === awayKey && mHomeKey === homeKey) return { match, reversed: false };
@@ -2708,7 +2749,9 @@
             const staleByProvider = providerAgeMs >= (90 * 60 * 1000);
             const staleBySchedule = Number.isFinite(startsAt) && startsAt < now - liveWindowMs;
             const staleByFuture = Number.isFinite(startsAt) && startsAt > now + (7 * 24 * 60 * 60 * 1000) && startsAt < Number.MAX_SAFE_INTEGER;
-            const stale = !hasActiveStream && (staleByProvider || staleBySchedule || staleByFuture);
+            const finishedHaystack = `${stream.title || ''} ${stream.statusText || ''} ${stream.liveSportStatus || ''} ${stream.liveState?.periodText || ''}`;
+            const hasFinishedText = /\b(?:finished|final|ended|full\s*time|ft\b|cancelled|postponed|walkover|after\s+(?:penalties|extra))\b/i.test(cleanDisplayTitle(finishedHaystack));
+            const stale = !hasActiveStream && (staleByProvider || staleBySchedule || staleByFuture || hasFinishedText || hasAgoText(stream));
             const hasFutureSchedule = Number.isFinite(startsAt) && startsAt > now;
             const scheduleDue = !stale && Number.isFinite(startsAt) && startsAt !== Number.MAX_SAFE_INTEGER && startsAt <= now && now - startsAt <= liveWindowMs;
             const backendLockStillApplies = hasBackendCountdown || ((stream?.isLocked === true || (streamChecked && !hasActiveStream)) && !scheduleDue);
@@ -2802,7 +2845,7 @@
         function scheduleRenderStreams(options = {}) {
             const force = Boolean(options.force);
             if (renderFrame) return;
-            renderFrame = requestAnimationFrame(() => {
+            renderFrame = setTimeout(() => {
                 renderFrame = null;
                 if (!force && Date.now() - lastUserScrollAt < 700) {
                     if (renderRetryTimer) clearTimeout(renderRetryTimer);
@@ -2810,7 +2853,7 @@
                     return;
                 }
                 renderStreams();
-            });
+            }, 0);
         }
 
         function showStreamsLoader() {
@@ -2996,10 +3039,11 @@
         }
 
         function renderStreams() {
+            if (Date.now() - lastUserScrollAt < 700) return;
             const normalized = allStreams
                 .map((stream, index) => ({ ...stream, displayType: detectSportType(stream), stableIndex: index }))
                 .filter((stream) => !getScheduleDrivenState(stream).stale);
-            const rawFiltered = activeFilter ? normalized.filter((stream) => activeFilter === 'boxing' ? ['boxing', 'wwe'].includes(stream.displayType) : (activeFilter === 'mma' ? stream.displayType === 'mma' : (activeFilter === 'f1' ? ['f1', 'racing'].includes(stream.displayType) : stream.displayType === activeFilter))) : normalized;
+            const rawFiltered = activeFilter ? normalized.filter((stream) => activeFilter === 'boxing' || activeFilter === 'mma' ? ['boxing', 'mma', 'wwe'].includes(stream.displayType) : (activeFilter === 'f1' ? ['f1', 'racing'].includes(stream.displayType) : (activeFilter === 'nba' || activeFilter === 'wnba' ? ['nba', 'wnba'].includes(stream.displayType) : (activeFilter === 'nfl' || activeFilter === 'cfl' ? ['nfl', 'cfl'].includes(stream.displayType) : stream.displayType === activeFilter)))) : normalized;
             const filtered = dedupeStreamsForRender(rawFiltered);
             const grouped = {};
             filtered.forEach((stream) => {
@@ -3015,7 +3059,7 @@
             for (const key of Object.keys(grouped)) {
                 if (/^[A-Z]{2,3}$/.test(key) && !KNOWN_SECTIONS.has(key)) delete grouped[key];
             }
-            const types = activeFilter === 'boxing' ? ['boxing'] : (activeFilter === 'mma' ? ['mma'] : (activeFilter === 'f1' ? ['f1'] : [...new Set(normalized.map((stream) => ['boxing', 'wwe'].includes(stream.displayType) ? 'boxing' : (stream.displayType === 'mma' ? 'mma' : (['f1', 'racing'].includes(stream.displayType) ? 'f1' : stream.displayType))).filter(Boolean))]));
+            const types = activeFilter === 'boxing' || activeFilter === 'mma' ? ['boxing', 'mma'] : (activeFilter === 'f1' ? ['f1'] : (activeFilter === 'nba' || activeFilter === 'wnba' ? ['nba', 'wnba'] : (activeFilter === 'nfl' || activeFilter === 'cfl' ? ['nfl', 'cfl'] : [...new Set(normalized.map((stream) => ['boxing', 'wwe'].includes(stream.displayType) ? 'boxing' : (stream.displayType === 'mma' ? 'mma' : (['f1', 'racing'].includes(stream.displayType) ? 'f1' : stream.displayType))).filter(Boolean))])));
             renderLogos(types);
             const container = document.getElementById('streamsContainer');
             const teamLogoCache = new Map();
@@ -3024,6 +3068,14 @@
                 if (rankDiff) return rankDiff;
                 return cleanDisplayTitle(aLabel).localeCompare(cleanDisplayTitle(bLabel));
             });
+            if (!entries.length) {
+                const emptyHtml = '<div class="glass empty">No streams found for this category.</div>';
+                if (emptyHtml !== lastRenderedStreamsHtml) {
+                    container.innerHTML = emptyHtml;
+                    lastRenderedStreamsHtml = emptyHtml;
+                }
+                return;
+            }
             if (!entries.length) {
                 const emptyHtml = '<div class="glass empty">No streams found for this category.</div>';
                 if (emptyHtml !== lastRenderedStreamsHtml) {
@@ -3441,7 +3493,10 @@
             return getScheduleDrivenState(stream).stale;
         }
         function getBuffstreamsCatalogQuery() {
-            return activeFilter === 'boxing' ? 'category:fighting' : (activeFilter ? `category:${activeFilter}` : 'all');
+            if (activeFilter === 'boxing' || activeFilter === 'mma') return 'category:fighting';
+            if (activeFilter === 'nba' || activeFilter === 'wnba') return 'category:nba';
+            if (activeFilter === 'nfl' || activeFilter === 'cfl') return 'all';
+            return activeFilter ? `category:${activeFilter}` : 'all';
         }
 
         async function refreshLiveSportDirectory(expectedSeq = homepageRefreshSeq) {
@@ -3452,8 +3507,10 @@
                 const matches = result?.data?.matches || result?.matches || [];
                 if (Array.isArray(matches)) {
                     livesportDirectory = matches;
-                    allStreams.forEach(applyLiveSportScheduleData);
-                    if (Date.now() - lastUserScrollAt > 2500) scheduleRenderStreams();
+                    setTimeout(() => {
+                        allStreams.forEach(applyLiveSportScheduleData);
+                        if (Date.now() - lastUserScrollAt > 2500) scheduleRenderStreams();
+                    }, 0);
                 }
             } catch (e) {
                 console.error('Failed to load livesport directory:', e);
@@ -3591,13 +3648,35 @@
             }, 1000);
         }
 
+        function handleHardRefresh() {
+            const btn = document.getElementById('hardRefreshBtn');
+            if (btn) btn.classList.add('spinning');
+            try { Object.keys(localStorage).filter((k) => k.startsWith(CATALOG_CACHE_PREFIX)).forEach((k) => localStorage.removeItem(k)); } catch {}
+            livesportDirectory = [];
+            allStreams = [];
+            lastRenderedStreamsHtml = '';
+            homepageRefreshSeq += 1;
+            categoryLayerCache.clear();
+            const container = document.getElementById('streamsContainer');
+            if (container) container.replaceChildren();
+            if (renderFrame) { clearTimeout(renderFrame); renderFrame = null; }
+            if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+            const overlay = showStreamsLoader();
+            if (overlay) overlay.dataset.startedAt = String(Date.now());
+            loadStreams(homepageRefreshSeq, { allowCache: false })
+                .catch((error) => console.error('Hard refresh failed:', error))
+                .finally(() => {
+                    if (overlay) hideStreamsLoader(overlay, 2000);
+                    if (btn) setTimeout(() => btn.classList.remove('spinning'), 600);
+                });
+            scheduleNextRefresh(ACTIVE_REFRESH_MS);
+        }
+
         const activateCategory = (element, event) => {
             event.preventDefault();
             event.stopPropagation();
             const nextFilter = element.dataset.filter || null;
             if (activeFilter === nextFilter) return;
-            const loaderOverlay = showStreamsLoader();
-            if (loaderOverlay) loaderOverlay.dataset.startedAt = String(Date.now());
             activeFilter = nextFilter;
             liveLockedStreams.clear();
             homepageRefreshSeq += 1;
@@ -3605,12 +3684,14 @@
             lastRenderedStreamsHtml = '';
             setActiveNav();
             clearCategoryLayer(getCategoryLayerKey());
-            const hadCache = hydrateFromCatalogCache();
             syncCategoryPath(activeFilter);
+            const loaderOverlay = showStreamsLoader();
+            if (loaderOverlay) loaderOverlay.dataset.startedAt = String(Date.now());
+            if (renderFrame) { clearTimeout(renderFrame); renderFrame = null; }
             window.requestAnimationFrame(() => {
                 loadStreams(homepageRefreshSeq, { background: true })
                     .catch((error) => console.error('Category stream load failed:', error))
-                    .finally(() => hideStreamsLoader(loaderOverlay, hadCache ? 3500 : 5000));
+                    .finally(() => hideStreamsLoader(loaderOverlay, 5000));
             });
             scheduleNextRefresh(ACTIVE_REFRESH_MS);
         };
@@ -3622,6 +3703,8 @@
             const title = decodeURIComponent(element.dataset.streamTitle || '');
             if (id) goToWatchPage(id, title);
         };
+
+        document.getElementById('hardRefreshBtn')?.addEventListener('click', handleHardRefresh);
 
         document.addEventListener('pointerdown', (event) => {
             const openPolicyButton = event.target.closest('[data-open-policy]');
@@ -3684,7 +3767,8 @@
                     '/formula-1': 'f1',
                     '/nba': 'nba',
                     '/wnba': 'wnba',
-                    '/mlb': 'mlb'
+                    '/mlb': 'mlb',
+                    '/cfl': 'cfl'
                 };
                 const initialFilter = pathToFilter[window.location.pathname] ?? '';
                 activeFilter = initialFilter || null;
@@ -3763,7 +3847,8 @@
                 '/formula-1': 'f1',
                 '/nba': 'nba',
                 '/wnba': 'wnba',
-                '/mlb': 'mlb'
+                '/mlb': 'mlb',
+                '/cfl': 'cfl'
             };
             activeFilter = pathToFilter[window.location.pathname] || null;
             liveLockedStreams.clear();
@@ -3774,12 +3859,13 @@
             const loaderOverlay = showStreamsLoader();
             if (loaderOverlay) loaderOverlay.dataset.startedAt = String(Date.now());
             clearCategoryLayer(getCategoryLayerKey());
-            hydrateFromCatalogCache();
+            if (renderFrame) { clearTimeout(renderFrame); renderFrame = null; }
             window.requestAnimationFrame(() => {
                 loadStreams(homepageRefreshSeq, { background: true })
                     .catch((error) => console.error('History stream load failed:', error))
-                    .finally(() => hideStreamsLoader(loaderOverlay, 3500));
+                    .finally(() => hideStreamsLoader(loaderOverlay, 5000));
             });
+            scheduleNextRefresh(ACTIVE_REFRESH_MS);
         });
     </script>
 </body>
