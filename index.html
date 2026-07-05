@@ -3192,6 +3192,12 @@
                         'sacramento kings': 'sac', 'san antonio spurs': 'sa', 'toronto raptors': 'tor', 'utah jazz': 'utah',
                         'washington wizards': 'wsh'
                     };
+                    const CFL_LOGO_CODES = {
+                        'bc lions': 'bc', 'calgary stampeders': 'cal', 'edmonton elks': 'edm', 'edmonton eskimos': 'edm',
+                        'hamilton tiger cats': 'ham', 'hamilton ticats': 'ham', 'montreal alouettes': 'mtl',
+                        'ottawa redblacks': 'ott', 'saskatchewan roughriders': 'ssk', 'toronto argonauts': 'tor',
+                        'winnipeg blue bombers': 'wpg'
+                    };
                     const WNBA_LOGO_CODES = {
                         'atlanta dream': 'atl', 'chicago sky': 'chi', 'connecticut sun': 'conn', 'dallas wings': 'dal',
                         'golden state valkyries': 'gs', 'indiana fever': 'ind', 'las vegas aces': 'lv', 'los angeles sparks': 'la',
@@ -3259,6 +3265,10 @@
                         const mlbCode = MLB_LOGO_CODES[cleanT];
                         if (mlbCode) {
                             return rememberLogo(`https://a.espncdn.com/i/teamlogos/mlb/500/${mlbCode}.png`);
+                        }
+                        const cflCode = CFL_LOGO_CODES[cleanT];
+                        if (cflCode) {
+                            return rememberLogo(`https://a.espncdn.com/i/teamlogos/cfl/500/${cflCode}.png`);
                         }
                         // 1. Try matching country flags
                         if (COUNTRY_FLAGS[cleanT]) {
