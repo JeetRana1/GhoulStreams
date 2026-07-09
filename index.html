@@ -1741,19 +1741,19 @@
 
     <script>
         const SPORT_META = {
-            nba: { label: 'NBA', icon: 'https://buffstreams.plus/images/nba.webp?v3e32' },
-            wnba: { label: 'WNBA', icon: 'https://buffstreams.plus/images/wnba.webp?v3e32' },
-            nfl: { label: 'NFL', icon: 'https://buffstreams.plus/images/nfl.webp?v3e32' },
+            nba: { label: 'NBA', icon: 'https://ibuffstreams.app/images/nba.webp?v3e32' },
+            wnba: { label: 'WNBA', icon: 'https://ibuffstreams.app/images/wnba.webp?v3e32' },
+            nfl: { label: 'NFL', icon: 'https://ibuffstreams.app/images/nfl.webp?v3e32' },
             cfl: { label: 'CFL', icon: 'https://scdnmain.net/assets/tournament/41257.png' },
-            soccer: { label: 'Football', icon: 'https://buffstreams.plus/images/soccer.webp?v3e32' },
-            nhl: { label: 'NHL', icon: 'https://buffstreams.plus/images/nhl.webp?v3e32' },
-            mlb: { label: 'MLB', icon: 'https://buffstreams.plus/images/mlb.webp?v3e32' },
-            boxing: { label: 'Boxing/MMA', icon: 'https://buffstreams.plus/images/boxing.webp?v3e32' },
-            mma: { label: 'MMA', icon: 'https://buffstreams.plus/images/ufc.webp?v3e32' },
-            wwe: { label: 'WWE', icon: 'https://buffstreams.plus/images/wwe.webp?v3e32' },
-            f1: { label: 'Formula 1', icon: 'https://buffstreams.plus/images/f1.webp?v3e32' },
-            racing: { label: 'Racing', icon: 'https://buffstreams.plus/images/f1.webp?v3e32' },
-            ncaa: { label: 'NCAA', icon: 'https://buffstreams.plus/images/ncaa.webp?v3e32' },
+            soccer: { label: 'Football', icon: 'https://ibuffstreams.app/images/soccer.webp?v3e32' },
+            nhl: { label: 'NHL', icon: 'https://ibuffstreams.app/images/nhl.webp?v3e32' },
+            mlb: { label: 'MLB', icon: 'https://ibuffstreams.app/images/mlb.webp?v3e32' },
+            boxing: { label: 'Boxing/MMA', icon: 'https://ibuffstreams.app/images/boxing.webp?v3e32' },
+            mma: { label: 'MMA', icon: 'https://ibuffstreams.app/images/ufc.webp?v3e32' },
+            wwe: { label: 'WWE', icon: 'https://ibuffstreams.app/images/wwe.webp?v3e32' },
+            f1: { label: 'Formula 1', icon: 'https://ibuffstreams.app/images/f1.webp?v3e32' },
+            racing: { label: 'Racing', icon: 'https://ibuffstreams.app/images/f1.webp?v3e32' },
+            ncaa: { label: 'NCAA', icon: 'https://ibuffstreams.app/images/ncaa.webp?v3e32' },
             sports: { label: 'Live Sports', icon: '/Logo.svg?v=1' }
         };
         const TITLE_HINTS = [
@@ -1929,8 +1929,8 @@
         }
         function cleanDisplayTitle(value) {
             return sanitizeMojibake(decodeHtmlEntities(String(value || '')))
-                .replace(/^https?:\/\/buffstreams\.plus\/?/i, '')
-                .replace(/^buffstreams\.?plus\/?/i, '')
+                .replace(/^https?:\/\/(?:www\.)?(?:i)?buffstreams\.[a-z]+\/?/i, '')
+                .replace(/^(?:i)?buffstreams\.?[a-z]+\/?/i, '')
                 .replace(/^title game\//i, '')
                 .replace(/\blive streams?(?:\s+links)?\b/ig, ' ')
                 .replace(/\blive streams\b/ig, '')
@@ -1986,7 +1986,7 @@
             if (/\bnascar\b|\bcup series\b|\bxfinity\b|\btruck series\b/.test(key)) {
                 return 'https://1000logos.net/wp-content/uploads/2017/03/Nascar-Logo.png';
             }
-            return 'https://buffstreams.plus/images/f1.webp?v3e32';
+            return 'https://ibuffstreams.app/images/f1.webp?v3e32';
         }
         function getMainTitle(value) {
             const clean = cleanDisplayTitle(value);
@@ -2796,7 +2796,7 @@
         }
         function isBuffStreamsCatalogStream(stream) {
             const id = String(stream?.id || stream?.url || '');
-            if (/(^|\/\/)(?:www\.)?(?:buffstreams\.plus|ibuffstreams\.app)\//i.test(id)) return true;
+            if (/(^|\/\/)(?:www\.)?(?:i)?buffstreams\.[a-z]+\//i.test(id)) return true;
             return Boolean(stream?.title && stream?.url && /^https?:\/\//i.test(String(stream.url)));
         }
 

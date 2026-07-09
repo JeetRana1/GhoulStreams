@@ -878,6 +878,68 @@
             background: rgba(0, 0, 0, 0.18);
             transition: opacity 180ms ease;
         }
+        .player-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
+        .player-loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .player-loading .loader {
+            --color-1: #e8eef8;
+            --color-2: #ff1f3e;
+            --size: 1px;
+            position: relative;
+            display: inline-block;
+            transform: rotateZ(45deg);
+            perspective: calc(1000 * var(--size));
+            border-radius: 50%;
+            width: calc(48 * var(--size));
+            height: calc(48 * var(--size));
+            color: var(--color-1);
+        }
+        .player-loading .loader:before,
+        .player-loading .loader:after {
+            content: '';
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: inherit;
+            height: inherit;
+            border-radius: 50%;
+            transform: rotateX(70deg);
+            animation: 1s spin linear infinite;
+        }
+        .player-loading .loader:after {
+            color: var(--color-2);
+            transform: rotateY(70deg);
+            animation-delay: 0.4s;
+        }
+        @keyframes spin {
+            0%, 100% { box-shadow: 0.2em 0 0 0 currentcolor; }
+            12% { box-shadow: 0.2em 0.2em 0 0 currentcolor; }
+            25% { box-shadow: 0 0.2em 0 0 currentcolor; }
+            37% { box-shadow: -0.2em 0.2em 0 0 currentcolor; }
+            50% { box-shadow: -0.2em 0 0 0 currentcolor; }
+            62% { box-shadow: -0.2em -0.2em 0 0 currentcolor; }
+            75% { box-shadow: 0 -0.2em 0 0 currentcolor; }
+            87% { box-shadow: 0.2em -0.2em 0 0 currentcolor; }
+        }
+        .player-loading-text {
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: 0.02em;
+        }
 
         .player-gradient.hidden {
             opacity: 0.2;
@@ -1441,6 +1503,15 @@
             border-color: #ff1f3e;
             background: rgba(255, 31, 62, 0.15);
             box-shadow: 0 0 18px rgba(255, 31, 62, 0.15);
+        }
+        .server-btn.loading .server-name::after {
+            content: ' \2022\2022\2022';
+            animation: loadingDots 1.4s infinite;
+        }
+        @keyframes loadingDots {
+            0%, 20% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
         }
         .server-btn .server-name {
             font-weight: 700;
@@ -3304,6 +3375,12 @@
                 transition-duration: 0.01ms !important;
                 animation-duration: 0.01ms !important;
             }
+
+            .player-loading .loader,
+            .player-loading .loader::before,
+            .player-loading .loader::after {
+                animation-duration: 1s !important;
+            }
         }
 
         /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Team Form (History) Styles ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
@@ -3533,6 +3610,10 @@
                             <video id="videoPlayer" autoplay playsinline webkit-playsinline></video>
                             <div class="iframe-container" id="iframeContainer" style="display:none;width:100%;height:100%;position:absolute;top:0;left:0;z-index:5;background:#000;">
                                 <iframe id="embedFrame" style="width:100%;height:100%;border:none;background:#000;" allowfullscreen allow="autoplay;encrypted-media;picture-in-picture" sandbox="allow-scripts allow-forms" loading="eager"></iframe>
+                            </div>
+                            <div class="player-loading" id="playerLoading">
+                                <span class="loader"></span>
+                                <div class="player-loading-text">Loading stream...</div>
                             </div>
                             <div class="player-gradient" id="playerGradient"></div>
                             <div class="video-hud" id="videoHud">
@@ -3791,6 +3872,17 @@
             const sourceFailureMap = new Map();
             let hlsBackoffTimer = null;
             const PLAYER_STATE_KEY = 'watch_player_state';
+            const _embedUrlCache = new Map();
+            const SOURCES_CACHE_TTL_MS = 4 * 60 * 1000;
+            const SOURCES_CACHE_KEY_PREFIX = 'ghoul_sources_';
+            function showPlayerLoading(text) {
+                const el = document.getElementById('playerLoading');
+                if (el) { el.classList.remove('hidden'); if (text) el.querySelector('.player-loading-text').textContent = text; }
+            }
+            function hidePlayerLoading() {
+                const el = document.getElementById('playerLoading');
+                if (el) el.classList.add('hidden');
+            }
             const VIDEO_FIT_MODES = [
                 {
                     key: 'stretch',
@@ -4418,8 +4510,8 @@
             }
             function cleanDisplayTitle(value) {
                 const clean = sanitizeMojibake(String(value || ''))
-                    .replace(/^https?:\/\/buffstreams\.plus\/?/i, '')
-                    .replace(/^buffstreams\.?:?plus\/?/i, '')
+                    .replace(/^https?:\/\/(?:www\.)?(?:i)?buffstreams\.[a-z]+\/?/i, '')
+                    .replace(/^(?:i)?buffstreams\.?[a-z]+\/?/i, '')
                     .replace(/^title game\//i, '')
                     .replace(/\blive streams links\b/ig, '')
                     .replace(/\s+/g, ' ')
@@ -5211,8 +5303,14 @@
                 });
             }
 
-            function buildHlsProxyUrl(sourceUrl) {
-                return String(sourceUrl || '').trim();
+            function buildHlsProxyUrl(sourceUrl, referer) {
+                const raw = String(sourceUrl || '').trim();
+                if (!raw) return '';
+                if (raw.includes('/api/media-proxy')) return raw;
+                const params = new URLSearchParams({ url: raw });
+                if (referer) params.set('referer', referer);
+                params.set('root_referer', window.location.href);
+                return apiUrl('/api/media-proxy') + '?' + params.toString();
             }
             function waitForPlaybackStart(video, timeoutMs = 6500) {
                 return new Promise((resolve) => {
@@ -5241,6 +5339,7 @@
                 });
             }
             let _activeIframeUrl = '';
+            let _lastPlayedUrl = '';
 
             function destroyHlsInstance() {
                 if (hlsInstance) {
@@ -5270,51 +5369,60 @@
             }
 
             async function loadIframePlayer(url) {
+                _lastPlayedUrl = url;
                 destroyHlsInstance();
                 const frame = document.getElementById('embedFrame');
                 if (!frame) return;
                 const sourcePageUrl = String(window.location.href || url || '').trim();
-                let targetUrl = url;
-                try {
-                    const resp = await fetch(apiUrl('/api/resolve-server-embed'), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: url })
-                    });
-                    const data = await resp.json();
-                    if (data.success && data.embedUrl) {
-                        targetUrl = data.embedUrl;
+                let targetUrl = _embedUrlCache.get(url) || url;
+                if (targetUrl === url) {
+                    try {
+                        const resp = await fetch(apiUrl('/api/resolve-server-embed'), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: url })
+                        });
+                        const data = await resp.json();
+                        if (data.success && data.embedUrl) {
+                            targetUrl = data.embedUrl;
+                            _embedUrlCache.set(url, targetUrl);
+                        }
+                    } catch (e) {
+                        // fallback to original url
                     }
-                } catch (e) {
-                    // fallback to original url
                 }
                 _activeIframeUrl = targetUrl;
                 const proxyUrl = apiUrl('/api/iframe-proxy') + '?url=' + encodeURIComponent(targetUrl) + '&referer=' + encodeURIComponent(sourcePageUrl) + '&root_referer=' + encodeURIComponent(sourcePageUrl);
                 frame.src = proxyUrl;
                 setPlayerMode('iframe');
+                hidePlayerLoading();
                 const video = getVideoElement();
                 video.style.display = 'none';
             }
 
             async function selectServer(source) {
                 const playUrl = source.playUrl || source.url;
+                _lastPlayedUrl = playUrl;
                 const engine = source.engine || (source.isM3U8 ? 'hls' : 'iframe');
+                hidePlayerLoading();
+                document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
+                const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(playUrl)}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                    activeBtn.classList.add('loading');
+                }
                 if (engine === 'iframe') {
                     await loadIframePlayer(playUrl);
-                    document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
-                    const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(playUrl)}"]`);
-                    if (activeBtn) activeBtn.classList.add('active');
+                    if (activeBtn) activeBtn.classList.remove('loading');
                 } else {
                     clearIframePlayer();
-                    playSource(playUrl, Boolean(source.isM3U8), {
+                    await playSource(playUrl, Boolean(source.isM3U8), {
                         preserveSourceQualityOptions: true,
                         subtitleCandidates: currentSubtitleCandidates,
                         fallbackUrl: source.fallbackPlayUrl || '',
                         headers: source.headers || {}
                     });
-                    document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
-                    const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(playUrl)}"]`);
-                    if (activeBtn) activeBtn.classList.add('active');
+                    if (activeBtn) activeBtn.classList.remove('loading');
                 }
             }
 
@@ -5333,9 +5441,45 @@
                     const engineLabel = engine === 'iframe' ? 'Embed' : 'HLS';
                     const titleLabel = serverLabel ? escapeHtml(serverLabel) : 'Server ' + (index + 1);
                     const metaLabel = (serverLabel ? escapeHtml(serverLabel) + ' ' : '') + escapeHtml(qualityLabel) + ' (' + engineLabel + ')';
-                    return '<div class="source-item"><div class="server-btn" data-url="' + escapeHtml(playUrl) + '" data-fallback="' + escapeHtml(fallbackUrl) + '" data-engine="' + escapeHtml(engine) + '" data-hls="' + (source.isM3U8 ? '1' : '0') + '" role="button" tabindex="0"><span class="server-name">' + titleLabel + '</span><span class="server-meta">' + metaLabel + '</span><span class="server-engine ' + escapeHtml(engine) + '">' + engineLabel + '</span></div></div>';
+                    const sourceReferer = String(source.headers?.Referer || source.headers?.referer || '').trim();
+                    const sourceOrigin = String(source.headers?.Origin || source.headers?.origin || '').trim();
+                    return '<div class="source-item"><div class="server-btn" data-url="' + escapeHtml(playUrl) + '" data-fallback="' + escapeHtml(fallbackUrl) + '" data-engine="' + escapeHtml(engine) + '" data-hls="' + (source.isM3U8 ? '1' : '0') + '" data-referer="' + escapeHtml(sourceReferer) + '" data-origin="' + escapeHtml(sourceOrigin) + '" role="button" tabindex="0"><span class="server-name">' + titleLabel + '</span><span class="server-meta">' + metaLabel + '</span><span class="server-engine ' + escapeHtml(engine) + '">' + engineLabel + '</span></div></div>';
                 }).join('');
                 el.innerHTML = serverHtml;
+            }
+            function preResolveEmbedUrls(sources) {
+                sources.forEach((source) => {
+                    const playUrl = source.playUrl || source.url;
+                    if (!playUrl || _embedUrlCache.has(playUrl)) return;
+                    const engine = source.engine || (source.isM3U8 ? 'hls' : 'iframe');
+                    if (engine !== 'iframe') return;
+                    fetch(apiUrl('/api/resolve-server-embed'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: playUrl })
+                    }).then((r) => r.json()).then((data) => {
+                        if (data.success && data.embedUrl) {
+                            _embedUrlCache.set(playUrl, data.embedUrl);
+                        }
+                    }).catch(() => {});
+                });
+            }
+            function getCachedSources(watchId) {
+                try {
+                    const raw = localStorage.getItem(SOURCES_CACHE_KEY_PREFIX + watchId);
+                    if (!raw) return null;
+                    const entry = JSON.parse(raw);
+                    if (Date.now() - entry.ts > SOURCES_CACHE_TTL_MS) {
+                        localStorage.removeItem(SOURCES_CACHE_KEY_PREFIX + watchId);
+                        return null;
+                    }
+                    return entry.data;
+                } catch { return null; }
+            }
+            function setCachedSources(watchId, data) {
+                try {
+                    localStorage.setItem(SOURCES_CACHE_KEY_PREFIX + watchId, JSON.stringify({ ts: Date.now(), data }));
+                } catch {}
             }
             function updatePlayButton() {
                 const video = getVideoElement();
@@ -5475,6 +5619,7 @@
                 showControls(true);
             }
             async function playSource(url, isM3U8, options = {}) {
+                _lastPlayedUrl = url;
                 const preserveSourceQualityOptions = Boolean(options.preserveSourceQualityOptions);
                 const backendSubtitles = Array.isArray(options.subtitleCandidates) ? options.subtitleCandidates : [];
                 const resumeTime = Number.isFinite(options.resumeTime) ? Math.max(0, Number(options.resumeTime)) : 0;
@@ -5510,13 +5655,6 @@
                 }
                 updateQualityButton();
                 updateSubtitleButton();
-                if (hlsInstance) {
-                    hlsInstance.destroy();
-                    hlsInstance = null;
-                }
-                video.removeAttribute('src');
-                video.load();
-                setPlayerMode('video');
                 if (isM3U8 && Hls.isSupported()) {
                     const playbackUrl = _directCdnMode
                         ? (() => {
@@ -5525,59 +5663,58 @@
                             return m ? decodeURIComponent(m[1]) : raw;
                         })()
                         : url;
-                    let releaseStartupLevelCap = null;
-                    const hls = new Hls({
-                        // Live edge & latency — use generous seconds-based
-                        // windows to absorb CDN / proxy jitter without
-                        // aggressive catch-up seeks that cause rebuffers.
-                        liveDurationInfinity: false,
-                        lowLatencyMode: false,
-                        autoStartLoad: true,
-                        startFragPrefetch: true,
-                        progressive: false,
-                        liveSyncDuration: 45,
-                        liveMaxLatencyDuration: 90,
-                        maxLiveSyncPlaybackRate: 1.25,
+                    const proxyReferer = sourceHeaders?.Referer || sourceHeaders?.referer || '';
+                    const safeUrl = buildHlsProxyUrl(playbackUrl, proxyReferer) || playbackUrl;
 
-                        // Audio/Video alignment
-                        maxAudioFramesDrift: 1.5,
-                        forceKeyFrameOnDiscontinuity: true,
-
-                        // Buffer health — generous windows so transient
-                        // delivery stalls never drain the playable buffer.
-                        maxBufferSize: 120 * 1000 * 1000,
-                        maxMaxBufferLength: 60,
-                        maxBufferLength: 45,
-                        backBufferLength: isReplayMode ? 60 : 45,
-                        liveBackBufferLength: 30,
-                        maxBufferHole: 2.0,
-
-                        // ABR / Quality selection — start conservatively given ~5 Mbps budget
-                        abrEwmaDefaultEstimate: 500_000,
-                        startLevel: -1,
-                        capLevelToPlayerSize: true,
-                        enableWorker: true,
-                        testBandwidth: true,
-
-                        // Fragment loading
-
-                        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Retry / error resilience ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
-                        appendErrorMaxRetry: 6,
-                        manifestLoadingMaxRetry: 5,
-                        manifestLoadingMaxRetryTimeout: 20000,
-                        levelLoadingMaxRetry: 5,
-                        fragLoadingMaxRetry: 5,
-                        manifestLoadingRetryDelay: 1000,
-                        levelLoadingRetryDelay: 1000,
-                        fragLoadingRetryDelay: 800,
-                        fragLoadingMaxRetryTimeout: 20000,
-                        startPosition: -1,
-                    });
-                    const safeUrl = buildHlsProxyUrl(playbackUrl) || playbackUrl;
-                    hls.loadSource(safeUrl);
-                    hls.attachMedia(video);
-                    hlsInstance = hls;
+                    if (hlsInstance) {
+                        const eventsToClear = [Hls.Events.MEDIA_ATTACHED, Hls.Events.MANIFEST_PARSED, Hls.Events.LEVEL_LOADED, Hls.Events.SUBTITLE_TRACKS_UPDATED, Hls.Events.ERROR];
+                        eventsToClear.forEach(e => hlsInstance.off(e));
+                        try { hlsInstance.stopLoad(); } catch { }
+                        hlsInstance.loadSource(safeUrl);
+                        var hls = hlsInstance;
+                    } else {
+                        video.removeAttribute('src');
+                        video.load();
+                        setPlayerMode('video');
+                        var hls = new Hls({
+                            liveDurationInfinity: false,
+                            lowLatencyMode: false,
+                            autoStartLoad: true,
+                            startFragPrefetch: true,
+                            progressive: false,
+                            liveSyncDuration: 45,
+                            liveMaxLatencyDuration: 90,
+                            maxLiveSyncPlaybackRate: 1.25,
+                            maxAudioFramesDrift: 1.5,
+                            forceKeyFrameOnDiscontinuity: true,
+                            maxBufferSize: 120 * 1000 * 1000,
+                            maxMaxBufferLength: 60,
+                            maxBufferLength: 45,
+                            backBufferLength: isReplayMode ? 60 : 45,
+                            liveBackBufferLength: 30,
+                            maxBufferHole: 2.0,
+                            abrEwmaDefaultEstimate: 500_000,
+                            startLevel: -1,
+                            capLevelToPlayerSize: true,
+                            enableWorker: true,
+                            testBandwidth: true,
+                            appendErrorMaxRetry: 6,
+                            manifestLoadingMaxRetry: 5,
+                            manifestLoadingMaxRetryTimeout: 20000,
+                            levelLoadingMaxRetry: 5,
+                            fragLoadingMaxRetry: 5,
+                            manifestLoadingRetryDelay: 1000,
+                            levelLoadingRetryDelay: 1000,
+                            fragLoadingRetryDelay: 800,
+                            fragLoadingMaxRetryTimeout: 20000,
+                            startPosition: -1,
+                        });
+                        hls.loadSource(safeUrl);
+                        hls.attachMedia(video);
+                        hlsInstance = hls;
+                    }
                     hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                        hidePlayerLoading();
                         if (resumeTime > 0) {
                             try { video.currentTime = resumeTime; } catch { }
                         }
@@ -5693,6 +5830,7 @@
                         }
                     };
                     hls.on(Hls.Events.MANIFEST_PARSED, async () => {
+                        hidePlayerLoading();
                         console.log('MANIFEST_PARSED - Video textTracks:', video.textTracks?.length);
                         for (let i = 0; i < (video.textTracks?.length || 0); i++) {
                             const track = video.textTracks[i];
@@ -5727,7 +5865,7 @@
                         await reportStreamStatus(true, 'playing');
                         await ensurePlayback(video);
                         const started = await waitForPlaybackStart(video, 6000);
-                        video.addEventListener('playing', () => { releaseStartupLevelCap?.(); }, { once: true });
+                        
                         updateSeekUi();
                         updateDvrMode();
                         updatePlayButton();
@@ -6338,7 +6476,12 @@
                         button.classList.add('active');
                     } else {
                         clearIframePlayer();
-                        playSource(url, isHls, { subtitleCandidates: currentSubtitleCandidates, fallbackUrl });
+                        const headers = {};
+                        const btnReferer = button.getAttribute('data-referer') || '';
+                        const btnOrigin = button.getAttribute('data-origin') || '';
+                        if (btnReferer) headers.Referer = btnReferer;
+                        if (btnOrigin) headers.Origin = btnOrigin;
+                        playSource(url, isHls, { subtitleCandidates: currentSubtitleCandidates, fallbackUrl, headers });
                         document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
                         button.classList.add('active');
                     }
@@ -7809,28 +7952,66 @@
                         }
                     };
 
-                    let sourcesResult = await fetchSourcesWith({ eventUrl: watchId, title: streamTitle });
+                    let sourcesResult;
+                    const cachedSources = getCachedSources(watchId);
+                    if (cachedSources) {
+                        const preparedCache = preparePlayableSources(cachedSources.sources || [], cachedSources.headers || {});
+                        if (preparedCache.length) {
+                            displaySources(preparedCache);
+                            preResolveEmbedUrls(preparedCache);
+                            normalizeSourceQualityOptions(preparedCache);
+                            currentSubtitleCandidates = Array.isArray(cachedSources.subtitles) ? cachedSources.subtitles : [];
+                            const state = readPlayerState();
+                            const cachePreferred = state.preferredQualityUrl && preparedCache.find((s) => s.playUrl === state.preferredQualityUrl);
+                            const cacheIframe = preparedCache.find((s) => String(s.engine || '').toLowerCase() === 'iframe' || s.isM3U8 === false);
+                            const cacheInitial = cacheIframe || cachePreferred || preparedCache.find((s) => s.isM3U8) || preparedCache[0];
+                            if (cacheInitial) {
+                                document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
+                                const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(cacheInitial.playUrl || cacheInitial.url)}"]`);
+                                if (activeBtn) activeBtn.classList.add('active');
+                                setMeta(streamTitle, 'Loading cached sources...', 'Connecting to live feed', 'Syncing');
+                                if (String(cacheInitial.engine || '').toLowerCase() === 'iframe' || cacheInitial.isM3U8 === false) {
+                                    loadIframePlayer(cacheInitial.playUrl || cacheInitial.url);
+                                } else {
+                                    playSource(cacheInitial.playUrl, cacheInitial.isM3U8, {
+                                        preserveSourceQualityOptions: true,
+                                        subtitleCandidates: currentSubtitleCandidates,
+                                        fallbackUrl: cacheInitial.fallbackPlayUrl || '',
+                                        headers: cacheInitial.headers || {}
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    sourcesResult = await fetchSourcesWith({ eventUrl: watchId, title: streamTitle });
                     if (!sourcesResult?.success || !Array.isArray(sourcesResult.data?.sources) || sourcesResult.data.sources.length === 0) {
                         const retryTarget = watchId || canonicalId || streamTitle;
                         if (retryTarget) {
                             sourcesResult = await fetchSourcesWith({ eventUrl: retryTarget, title: streamTitle });
                         }
                     }
-                    if (!sourcesResult?.success) throw new Error(sourcesResult?.error || 'Failed to load sources');
+                    if (!sourcesResult?.success) {
+                        if (!cachedSources) throw new Error(sourcesResult?.error || 'Failed to load sources');
+                        return;
+                    }
                     const prepared = preparePlayableSources(sourcesResult.data.sources || [], sourcesResult.data.headers || {});
                     if (!prepared.length) {
                         document.getElementById('sourcesList').innerHTML = '<div class="empty">Backend resolved the event but returned no direct media source for the HTML5 player.</div>';
                     }
+                    setCachedSources(watchId, sourcesResult.data);
                     displaySources(prepared);
+                    preResolveEmbedUrls(prepared);
                     normalizeSourceQualityOptions(prepared);
                     currentSubtitleCandidates = Array.isArray(sourcesResult.data.subtitles) ? sourcesResult.data.subtitles : [];
 
-                    const state = readPlayerState();
+                    if (!cachedSources) {
+                        const state = readPlayerState();
                     const preferredQualityUrl = String(state.preferredQualityUrl || '').trim();
                     const preferredQuality = preferredQualityUrl && prepared.find((source) => source.playUrl === preferredQualityUrl);
                     const preferredIframe = prepared.find((source) => String(source.engine || '').toLowerCase() === 'iframe' || source.isM3U8 === false);
                     const preferred720 = prepared.find((source) => /720p\b/i.test(String(source.quality || '')) && source.isM3U8) || prepared.find((source) => /720p\b/i.test(String(source.quality || '')));
-                    const initialSource = preferredQuality || preferredIframe || preferred720 || prepared.find((s) => s.isM3U8) || prepared[0];
+                    const initialSource = preferredIframe || preferredQuality || preferred720 || prepared.find((s) => s.isM3U8) || prepared[0];
                     if (initialSource) {
                         document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
                         const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(initialSource.playUrl || initialSource.url)}"]`);
@@ -7853,6 +8034,14 @@
                         isLivePlaying = false;
                         await reportStreamStatus(false, 'no_sources');
                         setMeta(document.getElementById('pageTitle').textContent || streamTitle, 'No playable source returned', 'Live source missing', 'Unavailable');
+                    }
+                    } else {
+                        const activeUrl = _lastPlayedUrl;
+                        if (activeUrl) {
+                            document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
+                            const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(activeUrl)}"]`);
+                            if (activeBtn) activeBtn.classList.add('active');
+                        }
                     }
 
                     if (infoResult.success && info) {
