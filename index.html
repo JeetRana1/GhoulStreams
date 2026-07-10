@@ -2438,18 +2438,32 @@
         }
         function updateCountdownChips() {
             const now = Date.now();
+            let expiredCountdown = false;
             document.querySelectorAll('[data-event-start]').forEach((el) => {
                 const startsAt = Number(el.getAttribute('data-event-start'));
                 if (!Number.isFinite(startsAt)) return;
-                el.textContent = formatCountdownFromMs(startsAt - now);
+                const diff = startsAt - now;
+                if (diff <= 0) {
+                    expiredCountdown = true;
+                    return;
+                }
+                el.textContent = formatCountdownFromMs(diff);
             });
             document.querySelectorAll('[data-countdown-seconds]').forEach((el) => {
                 const seconds = Number(el.getAttribute('data-countdown-seconds'));
                 const updated = Number(el.getAttribute('data-countdown-updated'));
                 if (!Number.isFinite(seconds) || !Number.isFinite(updated)) return;
                 const remainingMs = (seconds * 1000) - (now - updated);
+                if (remainingMs <= 0) {
+                    expiredCountdown = true;
+                    return;
+                }
                 el.textContent = formatCountdownFromMs(remainingMs);
             });
+            if (expiredCountdown && !homepageRefreshInFlight) {
+                if (refreshTimer) clearTimeout(refreshTimer);
+                refreshHomepageData();
+            }
         }
         function getTimeZoneOffsetMs(timeZone, date) {
             try {

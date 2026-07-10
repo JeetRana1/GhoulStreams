@@ -6186,6 +6186,13 @@
                             };
                         }
                     }
+                    const refreshEndStatus = String(info?.status || '').trim().toLowerCase();
+                    const refreshEndedFlag = /^(finished|completed|ended|ft|final|aet|ap)$/i.test(refreshEndStatus);
+                    if (!streamEnded && refreshEndedFlag) {
+                        markStreamEnded('The stream has ended.');
+                        return;
+                    }
+
                     renderScoreboard(mergedInfo, mdData);
                     displayEventSessions(info.eventSessions || []);
                     displaySoccerStats(mergedInfo);
@@ -8105,12 +8112,11 @@
                         const localEventTime = formatLocalDateTime(eventStartUtc);
                         const sessionStatus = countdownText ? 'Starts in ' + countdownText : normalizeStatus(activeSession?.status || info.status, activeSession?.startsAt || activeSession?.when || info.eventDate);
                         const sessionTime = localEventTime || activeSession?.startsAt || activeSession?.when || info.eventDate;
-                        const liveFlag = Boolean(info?.isLive || initialMd?.isLive || mergedForRender?.isLive);
                         const endStatus = String(info?.status || sessionStatus || '').trim().toLowerCase();
                         const endedFlag = /^(finished|completed|ended|ft|final|aet|ap)$/i.test(endStatus);
                         const isPauseStatus = /\b(ht|halftime|half.?time|break|intermission|pause|delay|ot|overtime)\b/i.test(endStatus);
-                        if (!streamEnded && (!liveFlag || endedFlag) && !isPauseStatus) {
-                            markStreamEnded(endedFlag ? 'The stream has ended.' : 'The live event is no longer active.');
+                        if (!streamEnded && endedFlag && !isPauseStatus) {
+                            markStreamEnded('The stream has ended.');
                         }
 
                         // Build display title using fresh matchDetails team names when available
@@ -8141,6 +8147,7 @@
             }
             applySavedPlayerState();
             bindCustomPlayerUi();
+            unlockOrientationOnMobile();
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
             window.addEventListener('beforeunload', () => { if (scoreRefreshTimer) clearInterval(scoreRefreshTimer); });
