@@ -3,7 +3,7 @@ import { Provider } from './Provider.js';
 class BuffStreams extends Provider {
     constructor() {
         super();
-        this.baseUrl = 'https://ibuffstreams.app';
+        this.baseUrl = 'https://buffstreams.ir';
         this.homeUrl = `${this.baseUrl}/index7`;
         this.directoryUrls = [this.homeUrl, `${this.baseUrl}/index18`];
         this.name = 'BuffStreams';
@@ -257,14 +257,14 @@ class BuffStreams extends Provider {
         if (liveState.isLive) return true;
 
         const statusHaystack = `${statusText || ''} ${title || ''}`.toLowerCase();
-        if (/\bin progress\b|\blive\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\µPü\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\bwarm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(statusHaystack)) return true;
+        if (/\bin progress\b|\blive\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\ï¿½Pï¿½\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\bwarm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(statusHaystack)) return true;
 
         const scheduleHaystack = `${statusText || ''}`.toLowerCase();
         if (/from now|tomorrow|today at|am et|pm et|upcoming/.test(scheduleHaystack)) return false;
         if (/\b\d+\s+(?:second|seconds|minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\s+ago\b/i.test(scheduleHaystack)) return false;
 
         const fullHaystack = `${title || ''} ${statusText || ''} ${sectionTitle || ''}`.toLowerCase();
-        return /\bin progress\b|\blive\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\b|\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\bµPüwarm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(fullHaystack);
+        return /\bin progress\b|\blive\b|\b1st half\b|\b2nd half\b|\bhalftime\b|\bquarter\b|\bq[1-4]\b|\bperiod\b|\bovertime\b|\bot\b|\binnings?\b|\btop \d+(st|nd|rd|th)?\b|\bbottom \d+(st|nd|rd|th)?\b|\bpractice\b|\bqualifying\b|\bsprint\b|\bfp\d*\b|\bfree practice\b|\bsprint shootout\b|\bï¿½Pï¿½warm.?up\b|\bpre.?race\b|\bpost.?race\b|\bsession\b/i.test(fullHaystack);
     }
 
     parseCompetitionItem(itemHtml, fallbackImage, sectionTitle) {
@@ -1359,7 +1359,7 @@ class BuffStreams extends Provider {
             console.log(`[Stream.js] Backend RPC returned ${sourceCount} source(s) for ${eventUrl}`);
             return backendResult;
         }
-        console.warn(`[Stream.js] Backend RPC returned no sources for ${eventUrl}: ${backendResult?.error || 'empty_sources'} GÇö extracting from embed page`);
+        console.warn(`[Stream.js] Backend RPC returned no sources for ${eventUrl}: ${backendResult?.error || 'empty_sources'} Gï¿½ï¿½ extracting from embed page`);
 
         const embedFallback = backendResult?.embedUrl || '';
         if (!embedFallback) return backendResult;

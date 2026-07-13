@@ -831,6 +831,17 @@
             box-shadow: 0 0 6px rgba(255, 171, 64, 0.7) !important;
         }
 
+        .team-meta-badge.ended {
+            background: rgba(160, 160, 160, 0.13) !important;
+            border-color: rgba(160, 160, 160, 0.35) !important;
+            color: #aaa !important;
+        }
+
+        .team-meta-badge.ended::before {
+            background: #888 !important;
+            box-shadow: 0 0 6px rgba(160, 160, 160, 0.5) !important;
+        }
+
         .team-meta-badge::before {
             content: '';
             width: 5px;
@@ -1741,19 +1752,19 @@
 
     <script>
         const SPORT_META = {
-            nba: { label: 'NBA', icon: 'https://ibuffstreams.app/images/nba.webp?v3e32' },
-            wnba: { label: 'WNBA', icon: 'https://ibuffstreams.app/images/wnba.webp?v3e32' },
-            nfl: { label: 'NFL', icon: 'https://ibuffstreams.app/images/nfl.webp?v3e32' },
+            nba: { label: 'NBA', icon: 'https://buffstreams.ir/images/nba.webp?v3e32' },
+            wnba: { label: 'WNBA', icon: 'https://buffstreams.ir/images/wnba.webp?v3e32' },
+            nfl: { label: 'NFL', icon: 'https://buffstreams.ir/images/nfl.webp?v3e32' },
             cfl: { label: 'CFL', icon: 'https://scdnmain.net/assets/tournament/41257.png' },
-            soccer: { label: 'Football', icon: 'https://ibuffstreams.app/images/soccer.webp?v3e32' },
-            nhl: { label: 'NHL', icon: 'https://ibuffstreams.app/images/nhl.webp?v3e32' },
-            mlb: { label: 'MLB', icon: 'https://ibuffstreams.app/images/mlb.webp?v3e32' },
-            boxing: { label: 'Boxing/MMA', icon: 'https://ibuffstreams.app/images/boxing.webp?v3e32' },
-            mma: { label: 'MMA', icon: 'https://ibuffstreams.app/images/ufc.webp?v3e32' },
-            wwe: { label: 'WWE', icon: 'https://ibuffstreams.app/images/wwe.webp?v3e32' },
-            f1: { label: 'Formula 1', icon: 'https://ibuffstreams.app/images/f1.webp?v3e32' },
-            racing: { label: 'Racing', icon: 'https://ibuffstreams.app/images/f1.webp?v3e32' },
-            ncaa: { label: 'NCAA', icon: 'https://ibuffstreams.app/images/ncaa.webp?v3e32' },
+            soccer: { label: 'Football', icon: 'https://buffstreams.ir/images/soccer.webp?v3e32' },
+            nhl: { label: 'NHL', icon: 'https://buffstreams.ir/images/nhl.webp?v3e32' },
+            mlb: { label: 'MLB', icon: 'https://buffstreams.ir/images/mlb.webp?v3e32' },
+            boxing: { label: 'Boxing/MMA', icon: 'https://buffstreams.ir/images/boxing.webp?v3e32' },
+            mma: { label: 'MMA', icon: 'https://buffstreams.ir/images/ufc.webp?v3e32' },
+            wwe: { label: 'WWE', icon: 'https://buffstreams.ir/images/wwe.webp?v3e32' },
+            f1: { label: 'Formula 1', icon: 'https://buffstreams.ir/images/f1.webp?v3e32' },
+            racing: { label: 'Racing', icon: 'https://buffstreams.ir/images/f1.webp?v3e32' },
+            ncaa: { label: 'NCAA', icon: 'https://buffstreams.ir/images/ncaa.webp?v3e32' },
             sports: { label: 'Live Sports', icon: '/Logo.svg?v=1' }
         };
         const TITLE_HINTS = [
@@ -1846,7 +1857,7 @@
         const ENRICH_LIMIT_ALL = 18;
         const ENRICH_LIMIT_FILTERED = 30;
         const PRODUCTION_API_ORIGIN = 'https://ghoulstreams-api.duckdns.org';
-        const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? 'http://127.0.0.1:3002' : PRODUCTION_API_ORIGIN;
+        const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? 'http://127.0.0.1:3001' : PRODUCTION_API_ORIGIN;
         const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
 
         // GhoulStreams disables the old PWA cache locally so stale heavy pages cannot keep controlling localhost.
@@ -1986,7 +1997,7 @@
             if (/\bnascar\b|\bcup series\b|\bxfinity\b|\btruck series\b/.test(key)) {
                 return 'https://1000logos.net/wp-content/uploads/2017/03/Nascar-Logo.png';
             }
-            return 'https://ibuffstreams.app/images/f1.webp?v3e32';
+            return 'https://buffstreams.ir/images/f1.webp?v3e32';
         }
         function getMainTitle(value) {
             const clean = cleanDisplayTitle(value);
@@ -2048,7 +2059,7 @@
         }
 
         function detectSportType(stream) {
-            const type = stream.sportType || stream.type;
+            const type = stream.sportType || stream.type || stream.category;
             if (hasMlbEvidence(stream)) return 'mlb';
             if (type === 'boxing' && !isBoxingStream(stream)) return 'sports';
             if (type && type !== 'sports' && SPORT_META[type]) return type;
@@ -2110,7 +2121,7 @@
             const explicitPhase = hasExplicitLivePhaseText(haystack);
             if (explicitPhase) return true;
 
-            if (typeof stream.isLive === 'boolean') return stream.isLive && !hasStaleProviderAge(stream) && hasExplicitLivePhaseText(haystack);
+            if (typeof stream.isLive === 'boolean') return stream.isLive && !hasStaleProviderAge(stream);
             return false;
         }
         function detectSessionLabel(stream) {
@@ -2310,6 +2321,7 @@
                 .replace(/\bvs\.?\b/ig, ' vs ')
                 .replace(/\bv\.?\b/ig, ' vs ')
                 .replace(/\b(at|@)\b/ig, ' @ ')
+                .replace(/\b\d{1,2}:\d{2}\s*(?:AM|PM|ET|EST|EDT|CT|CST|CDT|MT|MST|MDT|PT|PST|PDT|UTC|GMT|local)\b/ig, ' vs ')
                 .replace(/\s+/g, ' ')
                 .trim();
             const separators = [/\s+vs\.?\s+/i, /\s+@\s+/i, /\s+-\s+/i, /\s+\bat\b\s+/i, /\s+\bv\s+/i];
@@ -2408,7 +2420,7 @@
             const relativeSource = /from now|ago|tomorrow|today|tonight|later/i.test(cleanStatus) ? cleanStatus : cleanTitle;
             const relativeText = liveSportEventDate ? '' : (/from now|ago|tomorrow|today|tonight|later/i.test(relativeSource) ? relativeSource.match(/(?:today|tonight|tomorrow|later|\d+\s+(?:week|weeks|day|days|hour|hours|hr|hrs|minute|minutes|min|mins)\s+(?:from now|ago))/i)?.[0] || relativeSource : '');
             const eventStartUtcMs = Number(stream.eventStartUtcMs) || 0;
-            const eventDateFromEpoch = eventStartUtcMs > Date.now() ? new Date(eventStartUtcMs) : null;
+            const eventDateFromEpoch = eventStartUtcMs > 0 ? new Date(eventStartUtcMs) : null;
             const eventDate = liveSportEventDate || eventDateFromEpoch || buildSourceUtcEventDate(exactTime, relativeText, stream.canonicalEventDate || '');
             const computedRelative = formatRelativeStart(eventDate);
             const localTimeLabel = formatLocalDateTime(eventDate);
@@ -2696,8 +2708,11 @@
             if (sportType === 'cfl' && matchSport && !/american|cfl/.test(matchSport)) continue;
             if (sportType === 'soccer' && matchSport && !/soccer|association|world cup/.test(matchSport)) continue;
             if (!isSportPhaseCompatible(sportType, match?.status || match?.statusText || match?.periodText || '')) continue;
-            if (mAwayKey === awayKey && mHomeKey === homeKey) return { match, reversed: false };
-            if (mHomeKey === awayKey && mAwayKey === homeKey) return { match, reversed: true };
+            const exactMatch = (a, b) => a === b;
+            const looseMatch = (a, b) => a === b || a.includes(b) || b.includes(a);
+            const threshold = sportType === 'mlb' ? looseMatch : exactMatch;
+            if (threshold(mAwayKey, awayKey) && threshold(mHomeKey, homeKey)) return { match, reversed: false };
+            if (threshold(mHomeKey, awayKey) && threshold(mAwayKey, homeKey)) return { match, reversed: true };
         }
         return null;
         }
@@ -2751,7 +2766,8 @@
 
         function getScheduleDrivenState(stream) {
             const scheduleInfo = extractScheduleInfo(stream);
-            const startsAt = scheduleInfo.eventDate ? scheduleInfo.eventDate.getTime() : Number.MAX_SAFE_INTEGER;
+            const rawStart = Number(stream.eventStartUtcMs) || 0;
+            const startsAt = scheduleInfo.eventDate ? scheduleInfo.eventDate.getTime() : (rawStart > 0 ? rawStart : Number.MAX_SAFE_INTEGER);
             const now = Date.now();
             const liveWindowMs = getSportLiveWindowMs(detectSportType(stream));
             const hasActiveStream = stream?.hasActiveStream === true;
@@ -2824,6 +2840,23 @@
             const isRacing = ['f1', 'racing'].includes(type);
             if (!activeFilter && isFighting) return 'Upcoming Boxing';
             if (!activeFilter && isRacing) return 'Upcoming Racing';
+
+            const rawToLabel = {
+                mlb: 'Upcoming MLB', nba: 'Upcoming NBA', wnba: 'Upcoming WNBA',
+                nfl: 'Upcoming NFL', nhl: 'Upcoming NHL', cfl: 'Upcoming CFL',
+                soccer: 'Upcoming Football', football: 'Upcoming Football',
+                'american-football': 'Upcoming NFL',
+                boxing: 'Upcoming Boxing', mma: 'Upcoming Boxing', ufc: 'Upcoming Boxing',
+                f1: 'Upcoming Racing', racing: 'Upcoming Racing',
+                'formula-1': 'Upcoming Racing',
+                baseball: 'Upcoming MLB',
+                basketball: 'Upcoming NBA',
+                hockey: 'Upcoming NHL',
+                ncaa: 'Upcoming NCAA',
+            };
+            const rawLower = (raw || '').toLowerCase().trim();
+            const mapped = rawToLabel[rawLower];
+            if (mapped) return mapped;
             if (raw && !/^other$/i.test(raw) && !/^lfc$/i.test(raw)) return raw;
 
             const labels = {
@@ -3139,9 +3172,10 @@
                     const statusOverride = availability[stream.id]?.reason || '';
                     const shouldShowOffline = Boolean(statusOverride) && !providerStatus && !scheduleInfo.exactTime;
                     const waitingForStream = renderState.scheduleDue && renderState.explicitProviderLive && !renderState.hasActiveStream;
+                    const isEnded = stream.isEnded === true;
                     const centerText = effectivelyLive
                         ? 'LIVE'
-                        : (waitingForStream ? 'Checking stream' : (shouldShowOffline ? 'OFFLINE' : (verifiedCountdownText || scheduleInfo.countdownText || liveExactTime || scheduleInfo.exactTime || 'UPCOMING')));
+                        : (isEnded ? 'ENDED' : (waitingForStream ? 'Checking stream' : (shouldShowOffline ? 'OFFLINE' : (verifiedCountdownText || scheduleInfo.countdownText || liveExactTime || scheduleInfo.exactTime || 'UPCOMING'))));
 
                     let displayCenterText = centerText;
                     const timeMatch = String(centerText || '').match(/^(\d+):(\d+)$/);
@@ -3166,11 +3200,13 @@
                     // countdown (provider incorrectly marks it live), or blue countdown chip.
                     const titleLiveBadge = effectivelyLive
                         ? `<span class="team-meta-badge in-progress">IN PROGRESS</span>`
-                        : (hasActiveCountdown
-                            ? `<span class="team-meta-badge upcoming">UPCOMING</span>`
-                            : (scheduleInfo.countdownText ? `<span class="team-meta-badge">${escapeHtml(scheduleInfo.countdownText)}</span>` : ''));
+                        : (isEnded
+                            ? `<span class="team-meta-badge ended">ENDED</span>`
+                            : (hasActiveCountdown
+                                ? `<span class="team-meta-badge upcoming">UPCOMING</span>`
+                                : (scheduleInfo.countdownText ? `<span class="team-meta-badge">${escapeHtml(scheduleInfo.countdownText)}</span>` : '')));
                     const actionButton = effectivelyLive
-                        ? `<button class="btn watch-btn" data-stream-id="${encodeURIComponent(stream.id)}" data-stream-title="${encodeURIComponent(getMainTitle(stream.title))}">Watch</button>`
+                        ? `<button class="btn watch-btn" data-stream-id="${encodeURIComponent(stream.url || stream.id)}" data-stream-title="${encodeURIComponent(getMainTitle(stream.title))}">Watch</button>`
                         : `<button class="btn watch-btn locked" type="button" disabled aria-disabled="true" title="${escapeHtml(centerText && centerText !== 'UPCOMING' ? centerText : 'Opens when live')}"><span class="lock-icon" aria-hidden="true"></span>Watch</button>`;
                     const titleText = stripLiveStatusText(isRacingEvent ? getStandaloneEventTitle(stream.title) : getMainTitle(stream.title));
                     // Buffstreams remains the source of truth for row titles. LiveSport may enrich
@@ -3296,7 +3332,18 @@
                             }
                         }
 
-                        // 2. Use LiveSport logos only for exact normalized team-name matches.
+                        // 2a. Custom team logo overrides for known event-specific teams
+                        const CUSTOM_TEAM_LOGOS = {
+                            'american league': 'https://a.espncdn.com/i/teamlogos/mlb/500/al.png',
+                            'american league all stars': 'https://a.espncdn.com/i/teamlogos/mlb/500/al.png',
+                            'national league': 'https://a.espncdn.com/i/teamlogos/mlb/500/nl.png',
+                            'national league all stars': 'https://a.espncdn.com/i/teamlogos/mlb/500/nl.png',
+                        };
+                        if (CUSTOM_TEAM_LOGOS[cleanT]) {
+                            return rememberLogo(CUSTOM_TEAM_LOGOS[cleanT]);
+                        }
+
+                        // 2b. Use LiveSport logos only for exact normalized team-name matches.
                         // Fuzzy logo matching was removed because it caused visible logo switching.
                         for (const match of livesportDirectory || []) {
                             const homeName = match?.homeTeam || match?.teams?.home || '';
@@ -3365,10 +3412,10 @@
                     const isLiveSession = effectivelyLive;
                     const sessionBadge = isLiveSession && sessionLabel && !/in progress|live|started|ongoing/i.test(sessionLabel) ? `<span class="team-meta-badge">${escapeHtml(sessionLabel)}</span>` : '';
 
-                    const upcomingLabel = waitingForStream ? 'Checking stream' : (verifiedCountdownText || (hasFutureSchedule ? (scheduleInfo.countdownText
+                    const upcomingLabel = isEnded ? 'ENDED' : (waitingForStream ? 'Checking stream' : (verifiedCountdownText || (hasFutureSchedule ? (scheduleInfo.countdownText
                         || (scheduleInfo.computedRelative && scheduleInfo.computedRelative !== 'Started' ? scheduleInfo.computedRelative : '')
                         || scheduleInfo.relativeText
-                        || 'Upcoming') : 'Upcoming'));
+                        || 'Upcoming') : 'Upcoming')));
                     const localScheduleLabel = localTimeLabel || (scheduleInfo.exactTime ? 'Your time - ' + scheduleInfo.exactTime : '');
                     const scheduleText = localScheduleLabel;
 
@@ -3376,10 +3423,10 @@
                         ? ` data-event-start="${scheduleInfo.eventDate.getTime()}"`
                         : (hasVerifiedCountdown ? ` data-countdown-seconds="${Math.floor(verifiedCountdownSeconds)}" data-countdown-updated="${Date.now()}"` : '');
                     const countdownBadge = !effectivelyLive
-                        ? `<span class="team-meta-badge upcoming"${countdownAttrs}>${escapeHtml(upcomingLabel)}</span>`
+                        ? `<span class="team-meta-badge ${isEnded ? 'ended' : 'upcoming'}"${countdownAttrs}>${escapeHtml(upcomingLabel)}</span>`
                         : '';
-                    const canonicalDateBadge = canonicalDate
-                        ? `<span class="team-meta-badge">${escapeHtml(canonicalDate)}</span>`
+                    const canonicalDateBadge = !effectivelyLive && !isEnded && canonicalDate
+                        ? `<span class="team-meta-badge">${escapeHtml(formatLocalDateTime(new Date(canonicalDate)) || canonicalDate.replace(/T.*/, ''))}</span>`
                         : '';
                     const scheduleMetaBadge = !effectivelyLive && scheduleText
                         ? `<span class="team-meta-badge">${escapeHtml(scheduleText)}</span>`

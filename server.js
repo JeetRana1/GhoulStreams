@@ -478,16 +478,15 @@ app.get('/api/racing/watch', async (req, res) => {
 
 app.get('/api/livesport-directory', async (_req, res) => {
     try {
-        const backendBase = (process.env.CONSUMET_API_BASE || process.env.SITE_API_BASE || 'http://localhost:3000').replace(/\/$/, '');
-        const response = await fetch(`${backendBase}/sports/buffstreams/directory`, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
-            signal: AbortSignal.timeout(8000),
+        const apiBase = 'http://127.0.0.1:3001';
+        const response = await fetch(`${apiBase}/api/livesport-directory`, {
+            signal: AbortSignal.timeout(10000),
         });
         if (!response.ok) {
             return res.json({ success: true, data: { matches: [] } });
         }
         const data = await response.json();
-        res.json({ success: true, data: data?.data || data || { matches: [] } });
+        res.json(data);
     } catch (error) {
         console.error('Error in /api/livesport-directory:', error?.message || error);
         res.json({ success: true, data: { matches: [] } });

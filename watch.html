@@ -3866,7 +3866,7 @@
             })();
             const PRODUCTION_API_ORIGIN = 'https://ghoulstreams-api.duckdns.org';
             const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
-                ? 'http://127.0.0.1:3002'
+                ? 'http://127.0.0.1:3001'
                 : PRODUCTION_API_ORIGIN;
             const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
             const sourceFailureMap = new Map();

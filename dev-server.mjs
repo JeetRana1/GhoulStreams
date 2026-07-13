@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const port = Number(process.env.PORT) || 3001;
+const port = Number(process.env.PORT) || 3002;
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
