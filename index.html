@@ -857,6 +857,13 @@
             font-size: 0.72rem;
         }
 
+        .record {
+            color: var(--muted);
+            font-size: 0.65rem;
+            font-weight: 500;
+            margin-left: 2px;
+        }
+
         .team-flag {
             display: inline-block;
             width: 20px;
@@ -1853,7 +1860,10 @@
         let renderGeneration = 0;
         const categoryLayerCache = new Map();
         const enrichmentMismatchWarnings = new Set();
-        const ENRICHABLE_SPORTS = new Set(['nba', 'wnba', 'nhl', 'mlb', 'nfl', 'cfl', 'soccer']);
+        const ENRICHABLE_SPORTS = new Set(['nba', 'wnba', 'nhl', 'mlb', 'nfl', 'cfl', 'soccer', 'boxing']);
+        const sessionEnrichmentCache = new Map();
+        const boxingCardCache = new Map();
+        let lastSessionEnrichment = 0;
         const ENRICH_LIMIT_ALL = 18;
         const ENRICH_LIMIT_FILTERED = 30;
         const PRODUCTION_API_ORIGIN = 'https://ghoulstreams-api.duckdns.org';
@@ -2707,6 +2717,7 @@
             if (sportType === 'nfl' && matchSport && !/american/.test(matchSport)) continue;
             if (sportType === 'cfl' && matchSport && !/american|cfl/.test(matchSport)) continue;
             if (sportType === 'soccer' && matchSport && !/soccer|association|world cup/.test(matchSport)) continue;
+            if (sportType === 'boxing' && matchSport && !/boxing/.test(matchSport)) continue;
             if (!isSportPhaseCompatible(sportType, match?.status || match?.statusText || match?.periodText || '')) continue;
             const exactMatch = (a, b) => a === b;
             const looseMatch = (a, b) => a === b || a.includes(b) || b.includes(a);
@@ -2718,7 +2729,7 @@
         }
 
         function applyLiveSportScheduleData(stream) {
-        if (!stream || stream.liveSportMatched) return stream;
+        if (!stream) return stream;
         const displayType = detectSportType(stream);
         if (!ENRICHABLE_SPORTS.has(displayType)) return stream;
         const pair = getBuffstreamsTeamPair(stream);
@@ -2731,9 +2742,10 @@
             stream.liveSportStartTime = match.startTime || match.timestamp || match.startTimestamp || stream.liveSportStartTime;
             stream.liveSportStatus = match.status || stream.liveSportStatus || '';
         }
-        stream.awayLogo = hit.reversed ? (match.homeLogo || stream.awayLogo || '') : (match.awayLogo || stream.awayLogo || '');
-        stream.homeLogo = hit.reversed ? (match.awayLogo || stream.homeLogo || '') : (match.homeLogo || stream.homeLogo || '');
-        return stream;
+            stream.awayLogo = hit.reversed ? (match.homeLogo || stream.awayLogo || '') : (match.awayLogo || stream.awayLogo || '');
+            stream.homeLogo = hit.reversed ? (match.awayLogo || stream.homeLogo || '') : (match.homeLogo || stream.homeLogo || '');
+            stream.livescoreStatus = match.status || match.liveScoreboard?.status || '';
+            return stream;
         }
 
 
@@ -3151,7 +3163,8 @@
                 const rows = orderedStreams.map((stream) => {
                     const isRacingEvent = stream.displayType === 'f1' || stream.displayType === 'racing';
                     const teams = isRacingEvent ? { away: getStandaloneEventTitle(stream.title), time: '', home: '' } : splitTeams(stream.title, stream.liveNow, stream);
-                    const sessionLabel = detectSessionLabel(stream);
+                    const enrichedSession = isRacingEvent ? (sessionEnrichmentCache.get(stream.id || stream.url)?.activeSession || null) : null;
+                    const sessionLabel = (enrichedSession?.name || '') || detectSessionLabel(stream);
                     const liveState = stream.liveState || {};
                     const renderState = getRenderableStreamState(stream);
                     const livePeriodText = renderState.livePeriodText;
@@ -3388,8 +3401,8 @@
                         if (isRacingEvent) {
                             awayLogoUrl = racingFlagUrl(titleText) || getSportMeta(stream.displayType).icon || '';
                         } else if (stream.homeLogo || stream.awayLogo) {
-                            homeLogoUrl = stream.homeLogo || '';
-                            awayLogoUrl = stream.awayLogo || '';
+                            homeLogoUrl = stream.homeLogo || (secondaryTitle ? findTeamLogo(secondaryTitle) : (titlePair.home ? findTeamLogo(titlePair.home) : ''));
+                            awayLogoUrl = stream.awayLogo || (primaryTitle ? findTeamLogo(primaryTitle) : (titlePair.away ? findTeamLogo(titlePair.away) : ''));
                         } else if (secondaryTitle) {
                             const pairLogos = findLiveSportPairLogos(primaryTitle, secondaryTitle);
                             if (pairLogos) {
@@ -3409,8 +3422,7 @@
                         console.error('Error matching logos:', e);
                     }
 
-                    const isLiveSession = effectivelyLive;
-                    const sessionBadge = isLiveSession && sessionLabel && !/in progress|live|started|ongoing/i.test(sessionLabel) ? `<span class="team-meta-badge">${escapeHtml(sessionLabel)}</span>` : '';
+                    const sessionBadge = sessionLabel && !/in progress|live|started|ongoing/i.test(sessionLabel) ? `<span class="team-meta-badge" style="background:rgba(255,77,77,0.13);border-color:rgba(255,77,77,0.3);color:#ff4d4d">${escapeHtml(sessionLabel)}</span>` : '';
 
                     const upcomingLabel = isEnded ? 'ENDED' : (waitingForStream ? 'Checking stream' : (verifiedCountdownText || (hasFutureSchedule ? (scheduleInfo.countdownText
                         || (scheduleInfo.computedRelative && scheduleInfo.computedRelative !== 'Started' ? scheduleInfo.computedRelative : '')
@@ -3425,15 +3437,12 @@
                     const countdownBadge = !effectivelyLive
                         ? `<span class="team-meta-badge ${isEnded ? 'ended' : 'upcoming'}"${countdownAttrs}>${escapeHtml(upcomingLabel)}</span>`
                         : '';
-                    const canonicalDateBadge = !effectivelyLive && !isEnded && canonicalDate
-                        ? `<span class="team-meta-badge">${escapeHtml(formatLocalDateTime(new Date(canonicalDate)) || canonicalDate.replace(/T.*/, ''))}</span>`
-                        : '';
                     const scheduleMetaBadge = !effectivelyLive && scheduleText
                         ? `<span class="team-meta-badge">${escapeHtml(scheduleText)}</span>`
                         : '';
                     const metaHtml = effectivelyLive && (livePhaseText || sessionBadge)
                         ? `<div class="team-meta">${`<span class="team-meta-badge live-phase">${escapeHtml(livePhaseText)}</span>`}${sessionBadge}</div>`
-                        : (canonicalDateBadge || scheduleMetaBadge ? `<div class="team-meta">${canonicalDateBadge}${scheduleMetaBadge}</div>` : '');
+                        : (scheduleMetaBadge ? `<div class="team-meta">${scheduleMetaBadge}</div>` : '');
 
                     const statusCell = effectivelyLive
                         ? `<div class="event-status-slot">${liveStatusChip}</div>`
@@ -3448,11 +3457,11 @@
                     } else if (titlePair.home) {
                         const flagAway = awayLogoUrl ? `<img class="team-flag" src="${escapeHtml(awayLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
                         const flagHome = homeLogoUrl ? `<img class="team-flag" src="${escapeHtml(homeLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
-                        matchTitleHtml = `<div class="team-name-wrap">${flagAway}${escapeHtml(titlePair.away)}</div> <span style="color:var(--muted);font-weight:700;font-size:0.8rem;margin:0 4px;">vs</span> <div class="team-name-wrap">${flagHome}${escapeHtml(titlePair.home)}</div>`;
+                        matchTitleHtml = `<div class="team-name-wrap">${flagAway}${escapeHtml(titlePair.away)}${stream.awayRecord ? ` <span class="record">${escapeHtml(stream.awayRecord)}</span>` : ''}</div> <span style="color:var(--muted);font-weight:700;font-size:0.8rem;margin:0 4px;">vs</span> <div class="team-name-wrap">${flagHome}${escapeHtml(titlePair.home)}${stream.homeRecord ? ` <span class="record">${escapeHtml(stream.homeRecord)}</span>` : ''}</div>`;
                     } else if (secondaryTitle) {
                         const flagAway = awayLogoUrl ? `<img class="team-flag" src="${escapeHtml(awayLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
                         const flagHome = homeLogoUrl ? `<img class="team-flag" src="${escapeHtml(homeLogoUrl)}" alt="" loading="lazy" decoding="async"> ` : '';
-                        matchTitleHtml = `<div class="team-name-wrap">${flagAway}${escapeHtml(primaryTitle)}</div> <span style="color:var(--muted);font-weight:700;font-size:0.8rem;margin:0 4px;">vs</span> <div class="team-name-wrap">${flagHome}${escapeHtml(secondaryTitle)}</div>`;
+                        matchTitleHtml = `<div class="team-name-wrap">${flagAway}${escapeHtml(primaryTitle)}${stream.awayRecord ? ` <span class="record">${escapeHtml(stream.awayRecord)}</span>` : ''}</div> <span style="color:var(--muted);font-weight:700;font-size:0.8rem;margin:0 4px;">vs</span> <div class="team-name-wrap">${flagHome}${escapeHtml(secondaryTitle)}${stream.homeRecord ? ` <span class="record">${escapeHtml(stream.homeRecord)}</span>` : ''}</div>`;
                     } else {
                         matchTitleHtml = escapeHtml(primaryTitle);
                     }
@@ -3461,7 +3470,7 @@
                             <div class="team-wrap">
                                 <div class="match-title-line">
                                     <div class="match-title">${matchTitleHtml}</div>
-                                    ${titleLiveBadge}
+                                    ${titleLiveBadge}${sessionBadge && isRacingEvent ? ' ' + sessionBadge : ''}
                                 </div>
                                 ${metaHtml}
                             </div>
@@ -3572,6 +3581,52 @@
             return activeFilter ? `category:${activeFilter}` : 'all';
         }
 
+        function makeBoxingStream(match) {
+            const mid = match.matchId || `livesport-boxing-${normalizeTeamKey(match.homeTeam || '')}-${normalizeTeamKey(match.awayTeam || '')}`;
+            const homeName = match.homeTeam || match.teams?.home || '';
+            const awayName = match.awayTeam || match.teams?.away || '';
+            const title = `${awayName} vs ${homeName}`;
+            const startTime = match.startTime || 0;
+            const status = match.status || match.liveScoreboard?.status || '';
+            const isLive = match.liveScoreboard?.isLive || /in progress|live|round|fighting|bell/i.test(status);
+            const liveState = { periodText: status, isLive };
+            if (Number.isFinite(startTime) && startTime > 0 && startTime < 100000000000) {
+                liveState.exactTime = new Date(startTime * 1000).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+            return {
+                id: mid,
+                url: match.url || '',
+                title,
+                homeTeam: homeName,
+                awayTeam: awayName,
+                homeLogo: match.homeLogo || match.liveScoreboard?.homeLogo || '',
+                awayLogo: match.awayLogo || match.liveScoreboard?.awayLogo || '',
+                displayType: 'boxing',
+                sectionTitle: 'boxing',
+                startTime,
+                liveSportStartTime: startTime,
+                liveSportStatus: status,
+                statusText: status,
+                liveState,
+                isLive,
+                liveNow: isLive,
+                category: 'boxing',
+                tournamentImage: 'https://buffstreams.ir/images/boxing.webp?v3e32',
+            };
+        }
+
+        function injectBoxingStreams(matches) {
+            if (!Array.isArray(matches)) return;
+            const boxingMatches = matches.filter(m => (m.sport || '').toLowerCase() === 'boxing' && m.homeTeam && m.awayTeam);
+            if (!boxingMatches.length) return;
+            const boxingStreams = boxingMatches.map(makeBoxingStream);
+            const existingKeys = new Set(allStreams.map(s => normalizeTeamKey(`${s.awayTeam || ''}|${s.homeTeam || ''}`)));
+            const newBoxing = boxingStreams.filter(s => !existingKeys.has(normalizeTeamKey(`${s.awayTeam}|${s.homeTeam}`)));
+            if (newBoxing.length) {
+                allStreams.push(...newBoxing);
+            }
+        }
+
         async function refreshLiveSportDirectory(expectedSeq = homepageRefreshSeq) {
             try {
                 const response = await fetch(apiUrl('/api/livesport-directory'), { cache: 'no-store' });
@@ -3580,14 +3635,16 @@
                 const matches = result?.data?.matches || result?.matches || [];
                 if (Array.isArray(matches)) {
                     livesportDirectory = matches;
-                    setTimeout(() => {
-                        allStreams.forEach(applyLiveSportScheduleData);
-                        if (Date.now() - lastUserScrollAt > 2500) scheduleRenderStreams();
-                    }, 0);
+                    allStreams.forEach(applyLiveSportScheduleData);
+                    injectBoxingStreams(matches);
+                    if (Date.now() - lastUserScrollAt > 2500) scheduleRenderStreams({ force: true });
                 }
             } catch (e) {
                 console.error('Failed to load livesport directory:', e);
             }
+            enrichLiveStreams();
+            enrichBoxingCards();
+            setTimeout(() => refreshLiveSportDirectory(expectedSeq), 1000);
         }
 
         async function loadStreams(expectedSeq = homepageRefreshSeq, options = {}) {
@@ -3663,9 +3720,142 @@
         }
 
         async function enrichLiveStreams() {
-            // Disabled on the homepage: post-render match-details polling caused visible state flips.
-            // Logos/schedules are already enriched once through applyLiveSportScheduleData().
-            return;
+            if (!allStreams.length) return;
+            if (lastSessionEnrichment && Date.now() - lastSessionEnrichment < 10000) return;
+            lastSessionEnrichment = Date.now();
+            const racing = allStreams.filter(s => ['f1', 'racing'].includes(s.displayType || detectSportType(s)));
+            const toFetch = racing.filter(s => {
+                const k = s.id || s.url;
+                if (!k) return false;
+                const c = sessionEnrichmentCache.get(k);
+                return !c || Date.now() - c.ts > 300000;
+            });
+            if (!toFetch.length) return;
+            let changed = false;
+            await settleInBatches(toFetch, 3, async (stream) => {
+                const id = stream.id || stream.url;
+                try {
+                    const resp = await fetch(apiUrl('/api/fetchInfo'), {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id }), signal: AbortSignal.timeout(8000)
+                    });
+                    if (!resp.ok) return;
+                    const result = await resp.json();
+                    const info = result?.data || {};
+                    const sessions = info.sessions || info.eventSessions || [];
+                    if (!sessions.length && info.activeSession) {
+                        const s = info.activeSession;
+                        sessionEnrichmentCache.set(id, { sessions: [s], activeSession: s, ts: Date.now() });
+                        changed = true;
+                    } else if (sessions.length) {
+                        const now = Date.now();
+                        const clean = sessions.filter(s => s && s.name && !/live\s*streams?/i.test(s.name));
+                        const live = clean.find(s => /live|progress|started/i.test(s.status));
+                        if (live) {
+                            sessionEnrichmentCache.set(id, { sessions: clean, activeSession: live, ts: now });
+                        } else {
+                            const ts = (s) => new Date(s.startsAt || s.when || '').getTime();
+                            const withTime = clean.filter(s => Number.isFinite(ts(s))).map(s => ({ s, t: ts(s) })).sort((a, b) => a.t - b.t);
+                            const upcoming = withTime.filter(x => x.t > now && !/finished|cancelled/i.test(x.s.status));
+                            const next = upcoming[0] || withTime.filter(x => !/finished|cancelled/i.test(x.s.status)).pop() || null;
+                            const fallback = clean.find(s => !/finished|cancelled/i.test(s.status));
+                            sessionEnrichmentCache.set(id, { sessions: clean, activeSession: next?.s || fallback || null, ts: now });
+                        }
+                        changed = true;
+                    }
+                } catch {}
+            });
+            if (changed) scheduleRenderStreams({ force: true });
+        }
+
+        function applyBoxingCardData(existingStreams, cardData) {
+            let changed = false;
+            const fights = cardData.fights || [];
+            if (!fights.length) return false;
+            const slugUrl = existingStreams[0]?.url || '';
+            function existsInAnyStream(home, away) {
+                const h = (home || '').toLowerCase();
+                const a = (away || '').toLowerCase();
+                return allStreams.some(s => {
+                    const t = (s.title || '').toLowerCase();
+                    return t.includes(h) && t.includes(a);
+                });
+            }
+            existingStreams.forEach(stream => {
+                const title = (stream.title || '').toLowerCase();
+                const match = fights.find(f => {
+                    const home = (f.home || '').toLowerCase();
+                    const away = (f.away || '').toLowerCase();
+                    return title.includes(home) && title.includes(away);
+                }) || fights[0];
+                if (!match) return;
+                if (match.homeImage && match.homeImage !== stream.homeLogo) { stream.homeLogo = match.homeImage; changed = true; }
+                if (match.awayImage && match.awayImage !== stream.awayLogo) { stream.awayLogo = match.awayImage; changed = true; }
+                if (match.homeRecord || match.awayRecord) {
+                    if (match.homeRecord !== stream.homeRecord || match.awayRecord !== stream.awayRecord) changed = true;
+                    stream.homeRecord = match.homeRecord;
+                    stream.awayRecord = match.awayRecord;
+                }
+            });
+            fights.forEach(fight => {
+                if (existsInAnyStream(fight.home, fight.away) || existsInAnyStream(fight.away, fight.home)) return;
+                const s = {
+                    id: `boxing-card-${normalizeTeamKey(fight.home || '')}-${normalizeTeamKey(fight.away || '')}-${Date.now()}`,
+                    url: slugUrl,
+                    title: `${fight.away || ''} vs ${fight.home || ''}`,
+                    homeTeam: fight.home || '',
+                    awayTeam: fight.away || '',
+                    homeLogo: fight.homeImage || '',
+                    awayLogo: fight.awayImage || '',
+                    homeRecord: fight.homeRecord || '',
+                    awayRecord: fight.awayRecord || '',
+                    displayType: 'boxing',
+                    sectionTitle: 'boxing',
+                    matchNumber: fight.matchNumber || '',
+                    category: 'boxing',
+                    tournamentImage: 'https://buffstreams.ir/images/boxing.webp?v3e32',
+                    liveState: {},
+                };
+                allStreams.push(s);
+                changed = true;
+            });
+            return changed;
+        }
+
+        const boxingCardFetching = new Set();
+
+        async function enrichBoxingCards() {
+            if (!allStreams.length) return;
+            const boxing = allStreams.filter(s => s.url && s.url.includes('buffstreams.ir/title-game/boxing/'));
+            if (!boxing.length) return;
+            const byUrl = new Map();
+            boxing.forEach(s => { const arr = byUrl.get(s.url); if (arr) arr.push(s); else byUrl.set(s.url, [s]); });
+            let changed = false;
+            for (const [url, streams] of byUrl) {
+                const cached = boxingCardCache.get(url);
+                if (cached && Date.now() - cached.ts < 60000) {
+                    if (cached.data && applyBoxingCardData(streams, cached.data)) changed = true;
+                    continue;
+                }
+                if (boxingCardFetching.has(url)) continue;
+                boxingCardFetching.add(url);
+                try {
+                    const resp = await fetch(apiUrl('/api/boxing-card'), {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url }), signal: AbortSignal.timeout(10000)
+                    });
+                    if (!resp.ok) continue;
+                    const result = await resp.json();
+                    if (!result.success || !result.data?.fights?.length) continue;
+                    boxingCardCache.set(url, { data: result.data, ts: Date.now() });
+                    if (applyBoxingCardData(streams, result.data)) changed = true;
+                } catch (e) {
+                    if (!boxingCardCache.has(url)) boxingCardCache.set(url, { data: null, ts: Date.now() });
+                } finally {
+                    boxingCardFetching.delete(url);
+                }
+            }
+            if (changed) scheduleRenderStreams({ force: true });
         }
 
         async function refreshHomepageData() {
