@@ -5258,17 +5258,11 @@
                     const origin = headers.Origin || headers.origin || '';
                     const userAgent = headers['User-Agent'] || headers['user-agent'] || '';
                     const rawUrl = String(source.url || '').trim();
-                    // A source is truly HLS only if it carries an .m3u8 extension or
-                    // the backend has explicitly flagged it.  Non-adaptive streams
-                    // (MP4, direct rtmp, etc.) must NOT go through the HLS proxy ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
-                    // they load much faster when the browser hits the CDN directly.
-                    const isHls = Boolean(source.isM3U8) || /\.m3u8(\?|$)/i.test(rawUrl) || source.engine === 'hls' || /load-playlist|\/playlist\//i.test(rawUrl);
-
-                    // Only proxy real HLS manifests/segments.
                     const proxiedUrl = rawUrl;
                     return {
                         ...source,
-                        isM3U8: isHls,
+                        isM3U8: false,
+                        engine: 'iframe',
                         headers: {
                             ...headers,
                             ...(referer ? { Referer: referer } : {}),
@@ -5291,7 +5285,7 @@
                             }
                             const bitrate = q.match(/(\d+)k/);
                             if (bitrate) return Number(bitrate[1]);
-                            return isHls ? 1000 : 0;
+                            return 0;
                         })()
                     };
                 });
@@ -5403,7 +5397,7 @@
             async function selectServer(source) {
                 const playUrl = source.playUrl || source.url;
                 _lastPlayedUrl = playUrl;
-                const engine = source.engine || (source.isM3U8 ? 'hls' : 'iframe');
+                const engine = 'iframe';
                 hidePlayerLoading();
                 document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
                 const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(playUrl)}"]`);
@@ -5436,9 +5430,9 @@
                     const playUrl = source.playUrl || source.url;
                     const fallbackUrl = source.fallbackPlayUrl || '';
                     const serverLabel = String(source.server || source.label || source.name || '').trim();
-                    const qualityLabel = String(source.quality || '').trim() || (source.isM3U8 ? 'auto' : 'direct');
-                    const engine = source.engine || (source.isM3U8 ? 'hls' : 'iframe');
-                    const engineLabel = engine === 'iframe' ? 'Embed' : 'HLS';
+                    const qualityLabel = String(source.quality || '').trim() || 'embed';
+                    const engine = 'iframe';
+                    const engineLabel = 'Embed';
                     const titleLabel = serverLabel ? escapeHtml(serverLabel) : 'Server ' + (index + 1);
                     const metaLabel = (serverLabel ? escapeHtml(serverLabel) + ' ' : '') + escapeHtml(qualityLabel) + ' (' + engineLabel + ')';
                     const sourceReferer = String(source.headers?.Referer || source.headers?.referer || '').trim();
@@ -5451,7 +5445,7 @@
                 sources.forEach((source) => {
                     const playUrl = source.playUrl || source.url;
                     if (!playUrl || _embedUrlCache.has(playUrl)) return;
-                    const engine = source.engine || (source.isM3U8 ? 'hls' : 'iframe');
+                    const engine = 'iframe';
                     if (engine !== 'iframe') return;
                     fetch(apiUrl('/api/resolve-server-embed'), {
                         method: 'POST',
@@ -7971,22 +7965,13 @@
                             const state = readPlayerState();
                             const cachePreferred = state.preferredQualityUrl && preparedCache.find((s) => s.playUrl === state.preferredQualityUrl);
                             const cacheIframe = preparedCache.find((s) => String(s.engine || '').toLowerCase() === 'iframe' || s.isM3U8 === false);
-                            const cacheInitial = cacheIframe || cachePreferred || preparedCache.find((s) => s.isM3U8) || preparedCache[0];
+                            const cacheInitial = cacheIframe || cachePreferred || preparedCache[0];
                             if (cacheInitial) {
                                 document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
                                 const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(cacheInitial.playUrl || cacheInitial.url)}"]`);
                                 if (activeBtn) activeBtn.classList.add('active');
                                 setMeta(streamTitle, 'Loading cached sources...', 'Connecting to live feed', 'Syncing');
-                                if (String(cacheInitial.engine || '').toLowerCase() === 'iframe' || cacheInitial.isM3U8 === false) {
-                                    loadIframePlayer(cacheInitial.playUrl || cacheInitial.url);
-                                } else {
-                                    playSource(cacheInitial.playUrl, cacheInitial.isM3U8, {
-                                        preserveSourceQualityOptions: true,
-                                        subtitleCandidates: currentSubtitleCandidates,
-                                        fallbackUrl: cacheInitial.fallbackPlayUrl || '',
-                                        headers: cacheInitial.headers || {}
-                                    });
-                                }
+                                loadIframePlayer(cacheInitial.playUrl || cacheInitial.url);
                             }
                         }
                     }
@@ -8017,8 +8002,7 @@
                     const preferredQualityUrl = String(state.preferredQualityUrl || '').trim();
                     const preferredQuality = preferredQualityUrl && prepared.find((source) => source.playUrl === preferredQualityUrl);
                     const preferredIframe = prepared.find((source) => String(source.engine || '').toLowerCase() === 'iframe' || source.isM3U8 === false);
-                    const preferred720 = prepared.find((source) => /720p\b/i.test(String(source.quality || '')) && source.isM3U8) || prepared.find((source) => /720p\b/i.test(String(source.quality || '')));
-                    const initialSource = preferredIframe || preferredQuality || preferred720 || prepared.find((s) => s.isM3U8) || prepared[0];
+                    const initialSource = preferredIframe || preferredQuality || prepared[0];
                     if (initialSource) {
                         document.querySelectorAll('.server-btn').forEach((btn) => btn.classList.remove('active'));
                         const activeBtn = document.querySelector(`.server-btn[data-url="${CSS.escape(initialSource.playUrl || initialSource.url)}"]`);
@@ -8027,16 +8011,7 @@
                     if (initialSource) {
                         await reportStreamStatus(true, 'source_available');
                         if (preferredQuality) selectedQualitySourceUrl = preferredQuality.playUrl;
-                        if (String(initialSource.engine || '').toLowerCase() === 'iframe' || initialSource.isM3U8 === false) {
-                            await loadIframePlayer(initialSource.playUrl || initialSource.url);
-                        } else {
-                            await playSource(initialSource.playUrl, initialSource.isM3U8, {
-                                preserveSourceQualityOptions: true,
-                                subtitleCandidates: currentSubtitleCandidates,
-                                fallbackUrl: initialSource.fallbackPlayUrl || '',
-                                headers: initialSource.headers || {}
-                            });
-                        }
+                        await loadIframePlayer(initialSource.playUrl || initialSource.url);
                     } else {
                         isLivePlaying = false;
                         await reportStreamStatus(false, 'no_sources');
