@@ -730,13 +730,12 @@
             border-radius: var(--r-lg);
             border: 1px solid rgba(255, 255, 255, 0.07);
             background: rgba(255, 255, 255, 0.02);
-            transition: background 0.18s, border-color 0.18s, transform 0.18s ease;
+            transition: background 0.12s ease, border-color 0.12s ease;
         }
 
         .event-row:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 255, 255, 0.13);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.032);
+            border-color: rgba(255, 255, 255, 0.11);
         }
 
 .team {
@@ -992,7 +991,7 @@
             gap: 6px;
             min-width: 120px;
             white-space: nowrap;
-            transition: all 0.18s ease;
+            transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
             letter-spacing: 0.01em;
         }
 
@@ -1005,10 +1004,9 @@
         }
 
         .watch-btn:hover {
-            background: rgba(255, 74, 93, 0.2);
-            border-color: rgba(255, 64, 88, 0.92);
-            box-shadow: 0 0 22px rgba(255, 31, 62, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            transform: translateY(-1px);
+            background: rgba(255, 74, 93, 0.18);
+            border-color: rgba(255, 64, 88, 0.86);
+            box-shadow: 0 0 12px rgba(255, 31, 62, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .watch-btn:active {
@@ -1855,6 +1853,7 @@
         let homepageRefreshSeq = 0;
         let lastRenderedStreamsHtml = '';
         let lastUserScrollAt = 0;
+        let lastPointerInteractAt = 0;
         let renderFrame = null;
         let renderRetryTimer = null;
         let renderGeneration = 0;
@@ -1869,6 +1868,15 @@
         const PRODUCTION_API_ORIGIN = 'https://ghoulstreams-api.duckdns.org';
         const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? 'http://127.0.0.1:3001' : PRODUCTION_API_ORIGIN;
         const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
+
+        function markUserInteraction() {
+            lastPointerInteractAt = Date.now();
+        }
+
+        function isUserInteracting(graceMs = 1400) {
+            const lastActivity = Math.max(lastUserScrollAt, lastPointerInteractAt);
+            return Date.now() - lastActivity < graceMs;
+        }
 
         // GhoulStreams disables the old PWA cache locally so stale heavy pages cannot keep controlling localhost.
         if ('serviceWorker' in navigator) {
@@ -2906,9 +2914,9 @@
             if (renderFrame) return;
             renderFrame = setTimeout(() => {
                 renderFrame = null;
-                if (!force && Date.now() - lastUserScrollAt < 700) {
+                if (!force && isUserInteracting()) {
                     if (renderRetryTimer) clearTimeout(renderRetryTimer);
-                    renderRetryTimer = setTimeout(() => scheduleRenderStreams(), 750);
+                    renderRetryTimer = setTimeout(() => scheduleRenderStreams(), 900);
                     return;
                 }
                 renderStreams();
@@ -3098,7 +3106,7 @@
         }
 
         function renderStreams() {
-            if (Date.now() - lastUserScrollAt < 700) return;
+            if (isUserInteracting()) return;
             const normalized = allStreams
                 .map((stream, index) => ({ ...stream, displayType: detectSportType(stream), stableIndex: index }))
                 .filter((stream) => !getScheduleDrivenState(stream).stale);
@@ -3637,14 +3645,13 @@
                     livesportDirectory = matches;
                     allStreams.forEach(applyLiveSportScheduleData);
                     injectBoxingStreams(matches);
-                    if (Date.now() - lastUserScrollAt > 2500) scheduleRenderStreams({ force: true });
+                    if (!isUserInteracting(2500)) scheduleRenderStreams({ force: true });
                 }
             } catch (e) {
                 console.error('Failed to load livesport directory:', e);
             }
             enrichLiveStreams();
-            enrichBoxingCards();
-            setTimeout(() => refreshLiveSportDirectory(expectedSeq), 1000);
+            setTimeout(() => refreshLiveSportDirectory(expectedSeq), 5000);
         }
 
         async function loadStreams(expectedSeq = homepageRefreshSeq, options = {}) {
@@ -3713,7 +3720,7 @@
             const safeLimit = Math.max(1, limit || 1);
             for (let index = 0; index < items.length; index += safeLimit) {
                 await Promise.allSettled(items.slice(index, index + safeLimit).map(worker));
-                if (Date.now() - lastUserScrollAt < 700) {
+                if (isUserInteracting()) {
                     await new Promise((resolve) => setTimeout(resolve, 250));
                 }
             }
@@ -3825,37 +3832,7 @@
         const boxingCardFetching = new Set();
 
         async function enrichBoxingCards() {
-            if (!allStreams.length) return;
-            const boxing = allStreams.filter(s => s.url && s.url.includes('buffstreams.ir/title-game/boxing/'));
-            if (!boxing.length) return;
-            const byUrl = new Map();
-            boxing.forEach(s => { const arr = byUrl.get(s.url); if (arr) arr.push(s); else byUrl.set(s.url, [s]); });
-            let changed = false;
-            for (const [url, streams] of byUrl) {
-                const cached = boxingCardCache.get(url);
-                if (cached && Date.now() - cached.ts < 60000) {
-                    if (cached.data && applyBoxingCardData(streams, cached.data)) changed = true;
-                    continue;
-                }
-                if (boxingCardFetching.has(url)) continue;
-                boxingCardFetching.add(url);
-                try {
-                    const resp = await fetch(apiUrl('/api/boxing-card'), {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url }), signal: AbortSignal.timeout(10000)
-                    });
-                    if (!resp.ok) continue;
-                    const result = await resp.json();
-                    if (!result.success || !result.data?.fights?.length) continue;
-                    boxingCardCache.set(url, { data: result.data, ts: Date.now() });
-                    if (applyBoxingCardData(streams, result.data)) changed = true;
-                } catch (e) {
-                    if (!boxingCardCache.has(url)) boxingCardCache.set(url, { data: null, ts: Date.now() });
-                } finally {
-                    boxingCardFetching.delete(url);
-                }
-            }
-            if (changed) scheduleRenderStreams({ force: true });
+            return;
         }
 
         async function refreshHomepageData() {
@@ -3863,7 +3840,7 @@
                 pendingHomepageRefresh = true;
                 return;
             }
-            if (!document.hidden && Date.now() - lastUserScrollAt < 4000) {
+            if (!document.hidden && isUserInteracting(4000)) {
                 scheduleNextRefresh(15000);
                 return;
             }
@@ -4064,6 +4041,19 @@
         window.addEventListener('scroll', () => {
             lastUserScrollAt = Date.now();
         }, { passive: true });
+
+        window.addEventListener('pointerdown', markUserInteraction, { passive: true });
+        const streamsPanelEl = document.querySelector('.streams-panel');
+        if (streamsPanelEl) {
+            streamsPanelEl.addEventListener('pointerenter', () => {
+                isPointerInsideStreamsPanel = true;
+                markUserInteraction();
+            }, { passive: true });
+            streamsPanelEl.addEventListener('pointerleave', () => {
+                isPointerInsideStreamsPanel = false;
+                markUserInteraction();
+            }, { passive: true });
+        }
 
         window.addEventListener('resize', () => {
             if (!allStreams.length) return;
