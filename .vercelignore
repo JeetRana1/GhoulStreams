@@ -1,6 +1,5 @@
 server.js
 Stream.js
-api/
 node_modules/
 .env.vercel
 cfl_debug.json

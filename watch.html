@@ -3869,6 +3869,7 @@
                 ? 'http://127.0.0.1:3001'
                 : PRODUCTION_API_ORIGIN;
             const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
+            const PROXY_BASE = EXTERNAL_MEDIA_PROXY_BASE || (/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? API_BASE : window.location.origin);
             const sourceFailureMap = new Map();
             let hlsBackoffTimer = null;
             const PLAYER_STATE_KEY = 'watch_player_state';
@@ -5304,7 +5305,7 @@
                 const params = new URLSearchParams({ url: raw });
                 if (referer) params.set('referer', referer);
                 params.set('root_referer', window.location.href);
-                return apiUrl('/api/media-proxy') + '?' + params.toString();
+                return PROXY_BASE + '/api/media-proxy?' + params.toString();
             }
             function waitForPlaybackStart(video, timeoutMs = 6500) {
                 return new Promise((resolve) => {
@@ -5386,7 +5387,7 @@
                     }
                 }
                 _activeIframeUrl = targetUrl;
-                const proxyUrl = apiUrl('/api/iframe-proxy') + '?url=' + encodeURIComponent(targetUrl) + '&referer=' + encodeURIComponent(sourcePageUrl) + '&root_referer=' + encodeURIComponent(sourcePageUrl);
+                const proxyUrl = PROXY_BASE + '/api/iframe-proxy?url=' + encodeURIComponent(targetUrl) + '&referer=' + encodeURIComponent(sourcePageUrl) + '&root_referer=' + encodeURIComponent(sourcePageUrl);
                 frame.src = proxyUrl;
                 setPlayerMode('iframe');
                 hidePlayerLoading();

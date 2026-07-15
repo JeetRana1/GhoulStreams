@@ -8,6 +8,10 @@
     {
       "src": "*.{svg,png,jpg,jpeg,webp,gif,ico,json,webmanifest,js,mjs,css,txt}",
       "use": "@vercel/static"
+    },
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
     }
   ],
   "headers": [
@@ -86,6 +90,10 @@
     {
       "src": "/([^/]+)/recaps/test-player/(.*)",
       "dest": "/test-player.html"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
       "handle": "filesystem"
