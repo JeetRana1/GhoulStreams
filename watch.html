@@ -5391,8 +5391,8 @@
                     }
                 }
                 _activeIframeUrl = targetUrl;
-                const proxyUrl = apiUrl('/api/iframe-proxy') + '?url=' + encodeURIComponent(targetUrl) + '&referer=' + encodeURIComponent(sourcePageUrl) + '&root_referer=' + encodeURIComponent(sourcePageUrl);
-                frame.src = proxyUrl;
+                const isDirectEmbed = /(ok\.ru|vk\.com|vkvideo)/i.test(targetUrl);
+                frame.src = isDirectEmbed ? targetUrl : (apiUrl('/api/iframe-proxy') + '?url=' + encodeURIComponent(targetUrl) + '&referer=' + encodeURIComponent(sourcePageUrl) + '&root_referer=' + encodeURIComponent(sourcePageUrl));
                 setPlayerMode('iframe');
                 hidePlayerLoading();
                 const video = getVideoElement();
@@ -6496,7 +6496,8 @@
                     updateFullscreenButton();
                     syncFullscreenQualityBoost();
                     showControls(true);
-                    if (!document.fullscreenElement) unlockOrientationOnMobile();
+                    if (document.fullscreenElement) lockLandscapeOnMobile();
+                    else unlockOrientationOnMobile();
                 });
 
                 // Handle iOS pseudo fullscreen class changes
