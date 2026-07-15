@@ -1,19 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.{svg,png,jpg,jpeg,webp,gif,ico,json,webmanifest,js,mjs,css,txt}",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/*.mjs",
-      "use": "@vercel/node"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)\\.(js|mjs|css|json|webmanifest|svg|png|jpg|jpeg|webp|gif|ico|woff|woff2|ttf|otf|txt)",
