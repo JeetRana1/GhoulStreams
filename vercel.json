@@ -10,7 +10,7 @@
       "use": "@vercel/static"
     },
     {
-      "src": "api/*.js",
+      "src": "api/[...slug].mjs",
       "use": "@vercel/node"
     }
   ],
@@ -90,10 +90,6 @@
     {
       "src": "/([^/]+)/recaps/test-player/(.*)",
       "dest": "/test-player.html"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
     },
     {
       "handle": "filesystem"

@@ -3864,12 +3864,11 @@
                     return '';
                 }
             })();
-            const PRODUCTION_API_ORIGIN = 'https://ghoulstreams-api.duckdns.org';
             const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
                 ? 'http://127.0.0.1:3001'
-                : PRODUCTION_API_ORIGIN;
+                : window.location.origin;
             const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
-            const PROXY_BASE = EXTERNAL_MEDIA_PROXY_BASE || (/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? API_BASE : window.location.origin);
+            const PROXY_BASE = EXTERNAL_MEDIA_PROXY_BASE || API_BASE;
             const sourceFailureMap = new Map();
             let hlsBackoffTimer = null;
             const PLAYER_STATE_KEY = 'watch_player_state';
