@@ -3614,7 +3614,7 @@
                         <div class="player-frame is-paused" id="playerFrame">
                             <video id="videoPlayer" autoplay playsinline webkit-playsinline></video>
                             <div class="iframe-container" id="iframeContainer" style="display:none;width:100%;height:100%;position:absolute;top:0;left:0;z-index:5;background:#000;">
-                                <iframe id="embedFrame" style="width:100%;height:100%;border:none;background:#000;" allowfullscreen allow="autoplay;encrypted-media;picture-in-picture" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="eager"></iframe>
+                                <iframe id="embedFrame" style="width:100%;height:100%;border:none;background:#000;" allowfullscreen allow="autoplay;encrypted-media;picture-in-picture" sandbox="allow-scripts allow-forms" loading="eager"></iframe>
                             </div>
                             <div class="player-loading" id="playerLoading">
                                 <span class="loader"></span>
@@ -5391,7 +5391,7 @@
                     }
                 }
                 _activeIframeUrl = targetUrl;
-                const isDirectEmbed = /(ok\.ru|vk\.com|vkvideo|gooz\.aapmains\.net)/i.test(targetUrl);
+                const isDirectEmbed = /(ok\.ru|vk\.com|vkvideo)/i.test(targetUrl);
                 frame.src = isDirectEmbed ? targetUrl : (apiUrl('/api/iframe-proxy') + '?url=' + encodeURIComponent(targetUrl) + '&referer=' + encodeURIComponent(sourcePageUrl) + '&root_referer=' + encodeURIComponent(sourcePageUrl));
                 setPlayerMode('iframe');
                 hidePlayerLoading();
