@@ -383,7 +383,12 @@
     const grid = document.getElementById('recapsGrid');
     const tabsContainer = document.getElementById('categoryTabs');
     const PRODUCTION_API_ORIGIN = 'https://ghoulstreams-api.duckdns.org';
-    const API_BASE = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) ? 'http://127.0.0.1:3001' : PRODUCTION_API_ORIGIN;
+    const API_BASE = (() => {
+        const host = window.location.hostname;
+        if (/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(host))
+            return `http://${host}:3000`;
+        return PRODUCTION_API_ORIGIN;
+    })();
     const apiUrl = (path) => `${API_BASE}${String(path || '').startsWith('/') ? path : `/${path}`}`;
     let currentCategory = 'racing';
 
